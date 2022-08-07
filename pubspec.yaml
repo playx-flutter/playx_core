@@ -13,6 +13,7 @@ dependencies:
   shared_preferences: ^2.0.15
   flutter_readable: ^0.0.5
   get: ^4.6.5
+  equatable: ^2.0.3
 
 dev_dependencies:
   flutter_test:
