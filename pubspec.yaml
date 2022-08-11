@@ -1,7 +1,7 @@
 name: playx_core
-description: A new Flutter package project.
+description: core package for playx eco system contains shared classes and utilities.
 version: 0.0.1
-homepage: https://sourcya.com/
+homepage: https://github.com/playx-flutter/core
 
 environment:
   sdk: ">=2.17.3 <3.0.0"
