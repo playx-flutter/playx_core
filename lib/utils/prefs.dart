@@ -1,8 +1,17 @@
+import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 abstract class Prefs {
   static SharedPreferences get instance => Get.find<SharedPreferences>();
+
+  @protected
+  @visibleForTesting
+  static void setMockInitialValues(
+    Map<String, Object> values,
+  ) =>
+      // ignore: invalid_use_of_visible_for_testing_member
+      SharedPreferences.setMockInitialValues(values);
 
   static String? getString(
     String key,
