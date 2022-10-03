@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:playx_core/playx_core.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   late final SharedPreferences prefs;
@@ -18,7 +17,7 @@ void main() {
   );
   tearDown(
     () async {
-      await PlayXCore.disbose();
+      await PlayXCore.dispose();
     },
   );
 

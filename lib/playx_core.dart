@@ -1,10 +1,6 @@
 library playx_core;
 
-import 'package:flutter/cupertino.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-import 'playx_core.dart';
-
+import 'exports.dart';
 export 'exports.dart';
 
 abstract class PlayXCore {
@@ -14,8 +10,7 @@ abstract class PlayXCore {
     Get.put<SharedPreferences>(prefs, permanent: true);
   }
 
-  @visibleForTesting
-  static Future<void> disbose() async {
+  static Future<void> dispose() async {
     Get.reset();
   }
 }
