@@ -1,6 +1,6 @@
 name: playx_core
 description: core package for playx eco system contains shared classes and utilities.
-version: 0.0.3
+version: 0.0.4
 homepage: https://github.com/playx-flutter/core
 
 environment:

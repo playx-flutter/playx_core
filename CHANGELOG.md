@@ -1,3 +1,9 @@
+## 0.0.4
+- update Readme
+
+## 0.0.3
+- update packages
+
 ## 0.0.2
 
 - fix typos
