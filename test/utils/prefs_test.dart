@@ -6,6 +6,7 @@ void main() {
   setUpAll(
     () async {
       TestWidgetsFlutterBinding.ensureInitialized();
+      Prefs.setMockInitialValues({});
       prefs = await SharedPreferences.getInstance();
     },
   );
