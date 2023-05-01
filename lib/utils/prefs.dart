@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+///Wrapper for handling shared preferences to save and get preferences.
 abstract class Prefs {
   static SharedPreferences get instance => Get.find<SharedPreferences>();
 
