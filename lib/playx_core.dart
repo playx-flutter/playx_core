@@ -1,21 +1,13 @@
-library playx_core;
-
-import 'exports.dart';
-
-export 'exports.dart';
-
-/// Core of playx_core plugin.
-/// used setup and disposing required dependencies needed for playx_core.
-abstract class PlayXCore {
-  /// used initialize and install dependencies needed for playx_core.
-  static Future<void> bootCore() async {
-    /// inject SharedPreferences
-    final prefs = await SharedPreferences.getInstance();
-    Get.put<SharedPreferences>(prefs, permanent: true);
-  }
-
-  ///Dispose PlayxCore
-  static Future<void> dispose() async {
-    Get.reset();
-  }
-}
+export 'package:equatable/equatable.dart';
+export 'package:flutter_readable/flutter_readable.dart';
+export 'package:get/get.dart' hide Translations, ContextExtensionss;
+export 'package:playx_core/src/extensions/date_extensions.dart';
+export 'package:playx_core/src/extensions/duration_extensions.dart';
+export 'package:playx_core/src/extensions/num_duration_extensions.dart';
+export 'package:playx_core/src/extensions/num_extensions.dart';
+export 'package:playx_core/src/extensions/string_extensions.dart';
+export 'package:playx_core/src/playx_core.dart';
+export 'package:playx_core/src/prefs/prefs.dart';
+export 'package:playx_core/src/utils/app_scroll_behavior.dart';
+export 'package:playx_core/src/utils/common_utils.dart';
+export 'package:shared_preferences/shared_preferences.dart';
