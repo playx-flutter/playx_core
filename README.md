@@ -4,10 +4,11 @@ Core package for playx eco system contains shared classes and utilities.
 
 
 ## Features
-- common `utilities` and  `packages` across PlayX packages
+- Common `utilities` and  `packages` across PlayX packages
+- Common extensions that is needed for different apps.
 - `Prefs` facade  : Key value pair storage powered by `SharedPreferences`
-- `bootCore` function : inject and setup what is necessary   .
--  exports :  packages like `get` , `readable`.
+- `bootCore` function : inject and setup what is necessary .
+-  Exports :  packages like `get` , `readable`.
 
 ## Playx:
 `this packages is not for developers to use in day to day do not use it directly in your project`
@@ -20,7 +21,7 @@ Which comes prepakaged with Playx Theme with more features and is easy to use.
 in `pubspec.yaml` add these lines to `dependencies`
 
 ```yaml  
-playx_core: ^0.0.4
+playx_core: ^0.0.5
 ```  
 
 ## Usage
