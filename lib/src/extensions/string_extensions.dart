@@ -1,3 +1,5 @@
+import 'package:sprintf/sprintf.dart';
+
 ///Extension function on  string.
 extension StringExtensions on String {
   ///Extension function to capitalize first character of a string.
@@ -11,4 +13,6 @@ extension StringExtensions on String {
         .map((s) => s.isEmpty ? '' : s.capitalizeFirstChar())
         .join(' ');
   }
+
+  String format(List arguments) => sprintf(this, arguments);
 }
