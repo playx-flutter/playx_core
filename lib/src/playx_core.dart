@@ -1,7 +1,6 @@
 library playx_core;
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:playx_core/src/prefs/secure_prefs_settings.dart';
 import '../playx_core.dart';
 
 /// Core of playx_core plugin.
