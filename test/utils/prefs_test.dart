@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:playx_core/src/playx_core.dart';
+import 'package:playx_core/playx_core.dart';
 
 void main() {
   late final SharedPreferences prefs;
