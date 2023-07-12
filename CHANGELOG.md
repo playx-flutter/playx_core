@@ -1,4 +1,4 @@
-## 0.0.7
+## 0.0.7 - 0.0.8
 - Add `SecurePrefs` to be able to store encrypted keys in the device.
 - Upgrade Packages.
 
