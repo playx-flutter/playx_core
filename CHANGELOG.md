@@ -1,3 +1,8 @@
+## 0.0.7
+- Add `SecurePrefs` to be able to store encrypted keys in the device.
+- Upgrade Packages.
+
+
 ## 0.0.6
 - Add format extension for strings to format stings.
 
