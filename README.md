@@ -21,7 +21,7 @@ Which comes prepakaged with Playx Theme with more features and is easy to use.
 in `pubspec.yaml` add these lines to `dependencies`
 
 ```yaml  
-playx_core: ^0.0.8
+playx_core: ^0.0.9
 ```  
 
 ## Usage
