@@ -1,5 +1,7 @@
 
 # PlayX Core
+ [![pub package](https://img.shields.io/pub/v/playx_core.svg?color=1284C5)](https://pub.dev/packages/playx_core)
+
 Core package for playx eco system contains shared classes and utilities.
 
 
@@ -21,7 +23,7 @@ Which comes prepakaged with Playx Theme with more features and is easy to use.
 in `pubspec.yaml` add these lines to `dependencies`
 
 ```yaml  
-playx_core: ^0.0.8
+playx_core: ^0.0.9
 ```  
 
 ## Usage
