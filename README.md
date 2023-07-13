@@ -1,5 +1,7 @@
 
 # PlayX Core
+ [![pub package](https://img.shields.io/pub/v/playx_core.svg?color=1284C5)](https://pub.dev/packages/playx_core)
+
 Core package for playx eco system contains shared classes and utilities.
 
 
