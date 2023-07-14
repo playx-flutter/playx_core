@@ -35,15 +35,15 @@ abstract class SecurePrefs {
 
   static Future<bool> getBool(
     String key, {
-    bool? defaultValue,
+    bool defaultValue = false,
   }) async {
     final value = await getString(key);
-    if (value == null) return false;
+    if (value == null) return defaultValue;
     try {
       return value.toLowerCase() == 'true' || value.toLowerCase() == '1';
       // ignore: avoid_catches_without_on_clauses
     } catch (_) {
-      return false;
+      return defaultValue;
     }
   }
 
