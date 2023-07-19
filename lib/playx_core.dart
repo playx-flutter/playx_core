@@ -1,6 +1,6 @@
 export 'package:equatable/equatable.dart';
 export 'package:flutter_readable/flutter_readable.dart' hide RContextMediaQuery;
-export 'package:get/get.dart' hide Translations, ContextExtensionss;
+export 'package:get/get.dart' hide  ContextExtensionss;
 export 'package:intl/date_symbol_data_local.dart';
 export 'package:intl/intl.dart' hide TextDirection;
 export 'package:playx_core/src/extensions/date_extensions.dart';
