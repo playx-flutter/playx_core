@@ -1,3 +1,7 @@
+## 0.1.1
+- update packages and exports.
+
+
 ## 0.1.0
 - Enhancements to `SecurePrefs`.
 
