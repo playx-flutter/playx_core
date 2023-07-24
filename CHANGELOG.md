@@ -1,3 +1,7 @@
+## 0.1.2
+- Move `Intl` package, `DateExtensions` and `NumExtensions` to `playx_localization` package.
+
+
 ## 0.1.1
 - update packages and exports.
 
