@@ -1,3 +1,22 @@
+## 0.2.0
+
+> Note: This release has breaking changes.
+
+### BREAKING Changes
+- `Prefs` was renamed to `PlayxPrefs`.
+- `SecurePrefs` was renamed to `PlayxSecurePrefs`.
+- `SecurePrefsSettings` was renamed to `PlayxSecurePrefsSettings`.
+-  `getString`, `getInt`, `getDouble` and `getBool` methods in `PlayxPrefs` now return non nullable value of it's type with the ability to provide it with a fallback that is returned if the key not found .
+-  `getString`, `getInt`, `getDouble` and `getBool` methods in `PlayxSecurePrefsSettings` now return non nullable value of it's type with the ability to provide it with a fallback that is returned if the key not found .
+
+### New features
+- Update packages.
+- Added `PlayxEnv` : Wrapper for configure any the application with global variables using a `.env` file`.
+- Update `PlayxCore` `bootCore` method to take `PlayxEnvSettings` parameter which is used to configure `flutter_dotenv` and load the `.env` file.
+- Added new `maybeGetString`, `maybeGetInt`, `maybeGetDouble` and `maybeGetBool` methods in `PlayxPrefs` which return the value of it's type or null if the key not found or any error happened .
+- `maybeGetString`, `maybeGetInt`, `maybeGetDouble` and `maybeGetBool` methods in `PlayxSecurePrefsSettings` which return the value of it's type or null if the key not found or any error happened .
+
+
 ## 0.1.2
 - Move `Intl` package, `DateExtensions` and `NumExtensions` to `playx_localization` package.
 

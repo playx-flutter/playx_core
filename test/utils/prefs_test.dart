@@ -6,7 +6,7 @@ void main() {
   setUpAll(
     () async {
       TestWidgetsFlutterBinding.ensureInitialized();
-      Prefs.setMockInitialValues({});
+      PlayxPrefs.setMockInitialValues({});
       prefs = await SharedPreferences.getInstance();
     },
   );
@@ -29,7 +29,7 @@ void main() {
         'it return null if key does not exist',
         () {
           expect(
-            Prefs.getString('some_key'),
+            PlayxPrefs.getString('some_key'),
             null,
           );
         },
@@ -39,7 +39,7 @@ void main() {
         () async {
           await prefs.setString('key', 'value');
           expect(
-            Prefs.getString('key'),
+            PlayxPrefs.getString('key'),
             'value',
           );
         },

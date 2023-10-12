@@ -1,6 +1,7 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-class SecurePrefsSettings {
+///Settings for [PlayxSecurePrefsSettings] .
+class PlayxSecurePrefsSettings {
   final IOSOptions iosOptions;
   final AndroidOptions androidOptions;
   final LinuxOptions linuxOptions;
@@ -8,7 +9,7 @@ class SecurePrefsSettings {
   final WebOptions webOptions;
   final MacOsOptions macOsOptions;
 
-  const SecurePrefsSettings({
+  const PlayxSecurePrefsSettings({
     this.iosOptions =
         const IOSOptions(accessibility: KeychainAccessibility.first_unlock),
     this.androidOptions = const AndroidOptions(
