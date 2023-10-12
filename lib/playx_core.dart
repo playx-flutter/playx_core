@@ -9,5 +9,7 @@ export 'package:playx_core/src/utils/app_scroll_behavior.dart';
 export 'package:playx_core/src/utils/common_utils.dart';
 export 'package:shared_preferences/shared_preferences.dart';
 export 'package:playx_core/src/prefs/secure_prefs.dart';
-export 'package:playx_core/src/prefs/secure_prefs_settings.dart';
+export 'package:playx_core/src/prefs/model/secure_prefs_settings.dart';
 export 'package:flutter_secure_storage/flutter_secure_storage.dart';
+export 'package:playx_core/src/prefs/envs.dart';
+export 'package:playx_core/src/prefs/model/envs_settings.dart';

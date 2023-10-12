@@ -8,8 +8,9 @@ Core package for playx eco system contains shared classes and utilities.
 ## Features
 - Common `utilities` and  `packages` across PlayX packages
 - Common extensions that is needed for different apps.
-- `Prefs` facade  : Key value pair storage powered by `SharedPreferences`.
-- `SecurePreferences` facade : Key value pair encrypted storage powered by `SecurePreferences`.
+- `PlayxPrefs` facade  : Key value pair storage powered by `SharedPreferences`.
+- `PlayxSecurePrefs` facade : Key value pair encrypted storage powered by `SecurePreferences`.
+- `PlayxEnv` : Wrapper for configure any the application with global variables using a `.env` file`.
 - `bootCore` function : inject and setup what is necessary .
 -  Exports :  packages like `get` , `readable`.
 
@@ -24,7 +25,7 @@ Which comes prepackaged with Playx Theme with more features and is easy to use.
 in `pubspec.yaml` add these lines to `dependencies`
 
 ```yaml  
-playx_core: ^0.1.2
+playx_core: ^0.2.0
 ```  
 
 ## Usage
@@ -43,7 +44,7 @@ playx_core: ^0.1.2
 ```
 
 ### Thats it
-You can now access PlayxCore capabilities like ``Prefs`` on your app.
+You can now access PlayxCore capabilities like ``PlayxPrefs`` on your app.
 
 ## See Also:
 [Playx](https://pub.dev/packages/playx) : Playx eco system helps with redundant features , less code , more productivity , better organizing.
