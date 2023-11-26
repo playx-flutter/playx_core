@@ -4,7 +4,7 @@ import '../playx_core.dart';
 
 /// Core of playx_core plugin.
 /// used setup and disposing required dependencies needed for playx_core.
-abstract class PlayXCore {
+abstract class PlayxCore {
   /// used initialize and install dependencies needed for playx_core.
   static Future<void> bootCore({
     PlayxSecurePrefsSettings securePrefsSettings =
