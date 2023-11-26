@@ -15,4 +15,11 @@ extension StringExtensions on String {
   }
 
   String format(List arguments) => sprintf(this, arguments);
+
+
+  bool toBoolean() {
+    return toLowerCase() == "true" || toLowerCase() == "1";
+  }
+
 }
+

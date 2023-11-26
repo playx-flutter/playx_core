@@ -1,3 +1,16 @@
+## 0.3.1
+
+> Note: This release has breaking changes.
+
+### BREAKING Changes
+- `PlayXCore` was renamed to `PlayxCore`.
+
+### New features
+- Added new IterableExtensions to add extensions like flatten, flatMap, flatAsyncMap to Iterables.
+- Added new Kotlin inspired scope functions to `PlayxCore` like  `also`, `let`, `run`, `takeIf` and `takeUnless`.
+- Added new `toBoolean` extension to `String` to convert string to boolean.\
+- Added new example app to demonstrate the `PlayxCore` features.
+
 ## 0.2.0
 
 > Note: This release has breaking changes.

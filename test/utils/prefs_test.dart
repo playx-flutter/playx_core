@@ -13,12 +13,12 @@ void main() {
 
   setUp(
     () async {
-      await PlayXCore.bootCore();
+      await PlayxCore.bootCore();
     },
   );
   tearDown(
     () async {
-      await PlayXCore.dispose();
+      await PlayxCore.dispose();
     },
   );
 
@@ -29,7 +29,7 @@ void main() {
         'it return null if key does not exist',
         () {
           expect(
-            PlayxPrefs.getString('some_key'),
+            PlayxPrefs.maybeGetString('some_key'),
             null,
           );
         },
@@ -39,7 +39,7 @@ void main() {
         () async {
           await prefs.setString('key', 'value');
           expect(
-            PlayxPrefs.getString('key'),
+            PlayxPrefs.maybeGetString('key'),
             'value',
           );
         },
