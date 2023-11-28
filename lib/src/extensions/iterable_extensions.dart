@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 /// Extensions on [Iterable] class to make it easier to work with.
-extension IterableExtensions<T> on Iterable<T> {
+extension PlayxIterableExtensions<T> on Iterable<T> {
   /// Count the number of elements that satisfy predicate [predicate].
   int countWhere([
     bool Function(T element)? predicate,

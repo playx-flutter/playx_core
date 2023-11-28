@@ -1,8 +1,10 @@
 export 'package:equatable/equatable.dart';
-export 'package:flutter_readable/flutter_readable.dart' hide RContextMediaQuery,RContextLocalization;
+export 'package:flutter_readable/flutter_readable.dart' hide RContextMediaQuery,RContextLocalization, RIterable;
 export 'package:get/get.dart' hide  ContextExtensionss, Translations, Trans;
 export 'package:playx_core/src/extensions/duration_extensions.dart';
 export 'package:playx_core/src/extensions/string_extensions.dart';
+export 'package:playx_core/src/extensions/scope_functions.dart';
+export 'package:playx_core/src/extensions/iterable_extensions.dart';
 export 'package:playx_core/src/playx_core.dart';
 export 'package:playx_core/src/prefs/prefs.dart';
 export 'package:playx_core/src/utils/app_scroll_behavior.dart';
