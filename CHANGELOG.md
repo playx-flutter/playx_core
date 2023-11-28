@@ -1,3 +1,6 @@
+# 0.3.2
+- Update exports.
+
 ## 0.3.1
 
 > Note: This release has breaking changes.
