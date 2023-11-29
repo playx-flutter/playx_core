@@ -1,5 +1,5 @@
 export 'package:equatable/equatable.dart';
-export 'package:flutter_readable/flutter_readable.dart' hide RContextMediaQuery,RContextLocalization, RIterable;
+export 'package:flutter_readable/flutter_readable.dart' hide  RIterable;
 export 'package:get/get.dart' hide  ContextExtensionss, Translations, Trans;
 export 'package:playx_core/src/extensions/duration_extensions.dart';
 export 'package:playx_core/src/extensions/string_extensions.dart';
