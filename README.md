@@ -1,6 +1,6 @@
 
 # PlayX Core
- [![pub package](https://img.shields.io/pub/v/playx_core.svg?color=1284C5)](https://pub.dev/packages/playx_core)
+[![pub package](https://img.shields.io/pub/v/playx_core.svg?color=1284C5)](https://pub.dev/packages/playx_core)
 
 Core package for playx eco system contains shared classes and utilities.
 
@@ -12,41 +12,64 @@ Core package for playx eco system contains shared classes and utilities.
 - `PlayxSecurePrefs` facade : Key value pair encrypted storage powered by `SecurePreferences`.
 - `PlayxEnv` : Wrapper for configure any the application with global variables using a `.env` file`.
 - `bootCore` function : inject and setup what is necessary .
--  Exports :  packages like `get` , `readable`.
-
-## Playx:
-`this packages is not for developers to use in day to day do not use it directly in your project`
-
-Consider using our [Playx Package](https://pub.dev/packages/playx):
-Which comes prepackaged with Playx Theme with more features and is easy to use.
+-  Exports :  packages like `get`, `shardPreference`.
 
 ## Installation
 
 in `pubspec.yaml` add these lines to `dependencies`
 
 ```yaml  
-playx_core: ^0.2.0
+playx_core: ^0.3.4
 ```  
 
 ## Usage
-### Boot the core
+- Boot the core
 
-```dart
- void main ()async{
- WidgetsFlutterBinding.ensureInitialized();
-
-  /// boot the core
-  await PlayXCore.bootCore();
+  ```dart
+   void main ()async{
+   WidgetsFlutterBinding.ensureInitialized();
+ 
+    /// boot the core
+    await PlayXCore.bootCore();
   
-  /// run the real app
-  runApp(const MyApp());
-}
-```
+    /// run the real app
+    runApp(const MyApp());
+  }
+  ```
 
-### Thats it
-You can now access PlayxCore capabilities like ``PlayxPrefs`` on your app.
+- You can then use the `PlayxCore` to access the different utilities and packages.
+
+  Here is an example to use `PlayxPrefs` to store and retrieve data.
+
+  ```dart
+  /// store data
+  PlayxPrefs.setString('name', 'John Doe');
+  PlayxPrefs.setInt('age', 25);
+  PlayxPrefs.setDouble('height', 5.8);
+
+  /// retrieve data
+  String name = PlayxPrefs.getString('name');
+  int age = PlayxPrefs.getInt('age');
+  double? height = PlayxPrefs.maybeGetDouble('height');
+  ```
+
+## Documentation
+Check out the [documentation](https://pub.dev/documentation/playx_core/latest/) for detailed information on how to integrate and utilize playx_core in your Flutter applications.
+
+## Support and Contribution
+For any questions, issues, or feature requests, please visit the GitHub repository of [playx_core](https://github.com/playx-flutter/playx_core). Contributions are welcome!
 
 ## See Also:
 [Playx](https://pub.dev/packages/playx) : Playx eco system helps with redundant features , less code , more productivity , better organizing.
 
-[Playx_theme](https://pub.dev/packages/playx_theme) :multi theme features for flutter apps from playx eco system 
+[Playx_theme](https://pub.dev/packages/playx_theme) :multi theme features for flutter apps from playx eco system
+
+[Playx_localization](https://pub.dev/packages/playx_localization) : Localization and internationalization for flutter apps from playx eco system
+
+## Reference
+- [PlayX](https://pub.dev/packages/playx)
+- [flutter_readable](https://pub.dev/packages/flutter_readable)
+
+## License
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/playx-flutter/playx_core/blob/main/LICENSE) file for details
+

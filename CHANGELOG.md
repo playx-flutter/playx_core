@@ -1,3 +1,8 @@
+# 0.3.4
+- Remove `flutter_readable` package from dependencies.
+- Add more extensions to the package.
+- Add safe convert methods to `PlayxCore` to convert safely convert any dynamic value to the correct type.
+
 # 0.3.3
 - Update exports.
 
