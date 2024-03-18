@@ -5,5 +5,4 @@ extension BoolExtensions on bool {
 
   /// Reverse the value of bool
   bool toggle() => !this;
-
 }

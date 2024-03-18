@@ -1,6 +1,5 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-
 ///Settings for [PlayxEnvSettings].
 class PlayxEnvSettings {
   final String fileName;
