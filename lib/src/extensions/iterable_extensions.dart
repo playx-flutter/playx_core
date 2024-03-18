@@ -23,7 +23,7 @@ extension PlayxIterableExtensions<T> on Iterable<T> {
   List<T> withoutDuplicate() => toSet().toList();
 
   /// Returns a random item from the list or `null` if the list is empty.
-  T? get random => atOrNull(Random().nextInt(length));
+  T? get random => isEmpty ? null : atOrNull(Random().nextInt(length));
 
   /// Returns first element if list is not empty.
   T? firstOrNull() => isEmpty ? null : first;

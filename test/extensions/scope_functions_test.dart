@@ -31,12 +31,12 @@ void main() {
     group('takeUnless', () {
       test('takeUnless returns the object itself if the predicate is false',
           () {
-        final result = 5.takeUnless((it) => it > 3);
+        final result = 5.takeUnless((it) => it < 3);
         expect(result, 5);
       });
 
       test('takeUnless returns null if the predicate is true', () {
-        final result = 5.takeUnless((it) => it > 10);
+        final result = 5.takeUnless((it) => it < 10);
         expect(result, null);
       });
     });
