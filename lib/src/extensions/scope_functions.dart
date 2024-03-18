@@ -1,6 +1,5 @@
 /// Extensions that can be used on any type [T] by using kotlin inspired scope functions.
 extension ScopeFunctionExtensions<T> on T {
-
   /// Calls the specified function [block] with `this` value as its argument and
   /// returns its result.
   /// Often used for executing a code block only with non-null values.
@@ -19,7 +18,6 @@ extension ScopeFunctionExtensions<T> on T {
     block.call(this);
     return this;
   }
-
 
   /// Returns `this` value if it satisfies the given [predicate] or null if
   /// it doesn't.
@@ -46,8 +44,4 @@ extension ScopeFunctionExtensions<T> on T {
   //   return defaultValue;
   // });
   T run(T Function() block) => block.call();
-
 }
-
-
-

@@ -4,16 +4,27 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 abstract class PlayxEnv {
   static DotEnv get instance => dotenv;
 
- static Future<void> load(
+  /// Load the `.env` file and parse the content.
+  /// [fileName] is the name of the file to load, default to `.env`.
+  /// [parser] is the parser to use, default to [Parser()].
+  /// [mergeWith] is a map of variables to merge with the loaded ones, default to empty map.
+  /// [isOptional] is a flag to indicate if the file is optional, default to true.
+  static Future<void> load(
       {String fileName = '.env',
       Parser parser = const Parser(),
       Map<String, String> mergeWith = const {},
       bool isOptional = true}) async {
-    return dotenv.load(
-        fileName: fileName,
-        parser: parser,
-        mergeWith: mergeWith,
-        isOptional: isOptional);
+    try {
+      await dotenv.load(
+          fileName: fileName,
+          parser: parser,
+          mergeWith: mergeWith,
+          isOptional: isOptional);
+    } catch (_) {
+      if (!isOptional) {
+        rethrow;
+      }
+    }
   }
 
   /// return the [dotenv] value in [String] else returns null.

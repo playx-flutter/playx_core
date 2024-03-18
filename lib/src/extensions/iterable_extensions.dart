@@ -23,7 +23,7 @@ extension PlayxIterableExtensions<T> on Iterable<T> {
   List<T> withoutDuplicate() => toSet().toList();
 
   /// Returns a random item from the list or `null` if the list is empty.
-  T? get random => atOrNull(Random().nextInt(length));
+  T? get random => isEmpty ? null : atOrNull(Random().nextInt(length));
 
   /// Returns first element if list is not empty.
   T? firstOrNull() => isEmpty ? null : first;
@@ -49,10 +49,36 @@ extension PlayxIterableExtensions<T> on Iterable<T> {
   /// Returns the element where equals predicate or `null` if not found.
   T? firstWhereOrNull(bool Function(T e) predicate) {
     try {
-      return firstWhere(predicate);
+      return firstWhere(predicate, orElse: null);
     } catch (e) {
-      if (e is StateError) return null;
-      rethrow;
+      return null;
+    }
+  }
+
+  /// Returns the element where equals predicate or [value] if not found.
+  T firstWhereOr(bool Function(T e) predicate, T value) {
+    try {
+      return firstWhere(predicate, orElse: () => value);
+    } catch (e) {
+      return value;
+    }
+  }
+
+  /// Returns the element where equals predicate or `null` if not found.
+  T? lastWhereOrNull(bool Function(T e) predicate) {
+    try {
+      return lastWhere(predicate, orElse: null);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Returns the element where equals predicate or [value] if not found.
+  T lastWhereOr(bool Function(T e) predicate, T value) {
+    try {
+      return lastWhere(predicate, orElse: () => value);
+    } catch (e) {
+      return value;
     }
   }
 

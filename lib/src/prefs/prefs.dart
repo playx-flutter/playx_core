@@ -18,8 +18,8 @@ abstract class PlayxPrefs {
 
   /// return the shared preferences value in String else returns null.
   static String? maybeGetString(
-      String key,
-      ) {
+    String key,
+  ) {
     try {
       return instance.getString(key);
     } catch (_) {
@@ -31,7 +31,8 @@ abstract class PlayxPrefs {
   static String getString(
     String key, {
     String fallback = '',
-  }) => maybeGetString(key) ?? fallback;
+  }) =>
+      maybeGetString(key) ?? fallback;
 
   /// Set the shared preferences value in [String].
   static Future<void> setString(
@@ -39,8 +40,6 @@ abstract class PlayxPrefs {
     String value,
   ) =>
       instance.setString(key, value);
-
-
 
   /***************************int***************************/
 
@@ -59,7 +58,8 @@ abstract class PlayxPrefs {
   static int getInt(
     String key, {
     int fallback = -1,
-  }) => maybeGetInt(key) ?? fallback;
+  }) =>
+      maybeGetInt(key) ?? fallback;
 
   /// Set the shared preferences value in [int].
   static Future<void> setInt(
@@ -85,7 +85,8 @@ abstract class PlayxPrefs {
   static double? getDouble(
     String key, {
     double fallback = -1,
-  }) =>maybeGetDouble(key) ?? fallback;
+  }) =>
+      maybeGetDouble(key) ?? fallback;
 
   /// Set the shared preferences value in [double].
   static Future<void> setDouble(
@@ -94,14 +95,12 @@ abstract class PlayxPrefs {
   ) =>
       instance.setDouble(key, value);
 
-
   /***************************bool***************************/
-
 
   /// return the shared preferences value in [bool] else returns null.
   static bool? maybeGetBool(
-      String key,
-      ) {
+    String key,
+  ) {
     try {
       return instance.getBool(key);
     } catch (_) {
@@ -113,7 +112,8 @@ abstract class PlayxPrefs {
   static bool getBool(
     String key, {
     bool fallback = false,
-  }) =>maybeGetBool(key) ?? fallback;
+  }) =>
+      maybeGetBool(key) ?? fallback;
 
   /// Set the shared preferences value in [bool].
   static Future<void> setBool(
