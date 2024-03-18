@@ -10,7 +10,9 @@ void main() {
 
     test('also returns the object itself after executing the lambda function',
         () {
-      final result = 5.also((it) => print(it));
+      final result = 5.also((it) {
+        // Do something with it
+      });
       expect(result, 5);
     });
 
