@@ -1,3 +1,7 @@
+# 0.4.2
+
+- Update packages.
+
 # 0.4.1
 
 - Add Tests for the package. 

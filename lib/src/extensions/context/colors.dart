@@ -11,7 +11,7 @@ extension ContextColorsExtensions on BuildContext {
   Color get primaryColorLight => Theme.of(this).primaryColorLight;
 
   /// shortcut for `Theme.of(context).colorScheme.backgroundColor`
-  Color get backgroundColor => Theme.of(this).colorScheme.background;
+  Color get backgroundColor => Theme.of(this).colorScheme.surface;
 
   /// shortcut for `Theme.of(context).scaffoldBackgroundColor`
   Color get scaffoldBackgroundColor => Theme.of(this).scaffoldBackgroundColor;
