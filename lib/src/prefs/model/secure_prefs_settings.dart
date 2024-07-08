@@ -8,6 +8,7 @@ class PlayxSecurePrefsSettings {
   final WindowsOptions windowsOptions;
   final WebOptions webOptions;
   final MacOsOptions macOsOptions;
+  final bool clearOnReinstall;
 
   const PlayxSecurePrefsSettings({
     this.iosOptions =
@@ -19,5 +20,6 @@ class PlayxSecurePrefsSettings {
     this.windowsOptions = WindowsOptions.defaultOptions,
     this.webOptions = WebOptions.defaultOptions,
     this.macOsOptions = MacOsOptions.defaultOptions,
+    this.clearOnReinstall = true,
   });
 }

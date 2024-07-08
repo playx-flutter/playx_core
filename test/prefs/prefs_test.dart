@@ -13,7 +13,11 @@ void main() {
 
   setUp(
     () async {
-      await PlayxCore.bootCore();
+      await PlayxCore.bootCore(
+        securePrefsSettings: const PlayxSecurePrefsSettings(
+          clearOnReinstall: false,
+        ),
+      );
     },
   );
   tearDown(

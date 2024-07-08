@@ -1,9 +1,10 @@
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:get/get.dart';
+import '../../playx_core.dart';
 
 ///Wrapper for handling secure preferences to save and get preferences.
 abstract class PlayxSecurePrefs {
   static FlutterSecureStorage get instance => Get.find<FlutterSecureStorage>();
+
+  static const String _hasRunBefore = 'hasRunBefore';
 
   /// return the secure preferences value in [String] else returns null.
   static Future<String?> maybeGetString(String key) async =>
@@ -105,4 +106,14 @@ abstract class PlayxSecurePrefs {
     String key,
   ) =>
       instance.delete(key: key);
+
+  /// Clears Secure Storage On Reinstall
+  /// This method is used to clear the secure storage when the app is reinstalled.
+  /// As the secure storage is not cleared on app reinstall on ios.
+  static Future<void> clearOnReinstall() async {
+    if (!PlayxPrefs.getBool(_hasRunBefore)) {
+      await clear();
+      PlayxPrefs.setBool(_hasRunBefore, true);
+    }
+  }
 }
