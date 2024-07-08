@@ -1,3 +1,11 @@
+# 0.4.3
+
+- Update packages.
+- Add a new `clearOnReinstall` method to `PlayxSecurePrefs` to clear all the keys stored in the
+  secure prefs when the app is reinstalled.
+- Add a new `clearOnReinstall` parameter to `PlayxSecurePrefsSettings` to clear all the keys stored
+  in the secure prefs when the app is reinstalled which is set to true by default.
+
 # 0.4.2
 
 - Update packages.

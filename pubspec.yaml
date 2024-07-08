@@ -1,6 +1,6 @@
 name: playx_core
 description: Core package for playx eco system contains shared classes and utilities.
-version: 0.4.2
+version: 0.4.3
 homepage: https://github.com/playx-flutter/core
 repository: https://github.com/playx-flutter/playx_core
 issue_tracker: https://github.com/playx-flutter/playx_core/issues
@@ -21,7 +21,7 @@ dependencies:
   get: ^4.6.6
   equatable: ^2.0.5
   sprintf: ^7.0.0
-  flutter_secure_storage: ^9.1.1
+  flutter_secure_storage: ^9.2.2
   flutter_dotenv: ^5.1.0
 
 dev_dependencies:

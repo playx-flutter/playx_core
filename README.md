@@ -22,7 +22,7 @@ Core package for playx eco system contains shared classes and utilities.
 in `pubspec.yaml` add these lines to `dependencies`
 
 ```yaml  
-playx_core: ^0.3.4
+playx_core: ^0.4.3
 ```  
 
 ## Usage

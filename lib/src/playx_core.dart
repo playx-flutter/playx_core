@@ -23,6 +23,11 @@ abstract class PlayxCore {
       mOptions: securePrefsSettings.macOsOptions,
     );
     Get.put<FlutterSecureStorage>(securePrefs, permanent: true);
+
+    if (securePrefsSettings.clearOnReinstall) {
+      await PlayxSecurePrefs.clearOnReinstall();
+    }
+
     if (envSettings != null) {
       await PlayxEnv.load(
         fileName: envSettings.fileName,
