@@ -1,3 +1,16 @@
+# 0.5.0
+
+- Update packages.
+- Added `PlayxAsyncPrefs` for non-blocking shared preferences handling.
+- Introduced `PlayxPrefsWithCache` for faster data retrieval with in-memory caching.
+- Updated PlayxCore.bootCore() to include options for initializing the new preference classes.
+- Added `GetIt` integration for dependency injection management.
+- Updated `PlayxCore` to include `GetIt` instance management.
+- Added new `PlayxPlatform` class to provide platform-specific utilities.
+- Remove GetX dependency from the package.
+- Remove Scope Functions from the package as there is no need for them in flutter and can be
+  implemented if needed by a separate package.
+
 # 0.4.3
 
 - Update packages.
