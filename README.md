@@ -1,6 +1,8 @@
+
 # PlayX Core
-[![pub package](https://img.shields.io/pub/v/playx_core.svg?color=1284C5)](https://pub.dev/packages/playx_core)
-[![Build](https://github.com/playx-flutter/playx_core/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/playx-flutter/playx_core/actions/workflows/build.yml) <a href="https://codecov.io/gh/playx-flutter/playx_core"><img src="https://codecov.io/gh/playx-flutter/playx_core/branch/main/graph/badge.svg" alt="codecov"></a>
+
+[![pub package](https://img.shields.io/pub/v/playx_core.svg?color=1284C5)](https://pub.dev/packages/playx_core)  
+[![Build](https://github.com/playx-flutter/playx_core/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/playx-flutter/playx_core/actions/workflows/build.yml) <a href="https://codecov.io/gh/playx-flutter/playx_core"><img src="https://codecov.io/gh/playx-flutter/playx_core/branch/main/graph/badge.svg" alt="codecov"></a>  
 <a href="https://github.com/playx-flutter/playx_core/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-purple.svg" alt="License: MIT"></a>
 
 Core package for the PlayX ecosystem containing shared classes and utilities.
@@ -19,10 +21,10 @@ Core package for the PlayX ecosystem containing shared classes and utilities.
 
 Add `playx_core` to your `pubspec.yaml` dependencies:
 
-```yaml
+```yaml  
 dependencies:
-  playx_core: ^0.5.0
-```
+  playx_core: ^0.5.0  
+```  
 
 ## Usage
 
@@ -30,11 +32,11 @@ dependencies:
 
 Initialize the PlayX core in your `main` function:
 
-```dart
+```dart  
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Boot the core
+  // Boot the core  
   await PlayxCore.bootCore(
     securePrefsSettings: PlayxSecurePrefsSettings(),
     createPlayxPrefs: true,
@@ -42,29 +44,26 @@ void main() async {
     createPlayxPrefsWithCache: true,
   );
 
-  // Run the app
+  // Run the app  
   runApp(const MyApp());
-}
-```
+}  
+```  
 
 ### Accessing GetIt
 
 To use dependency injection, access the `GetIt` instance:
 
-```dart
-
-final getIt = PlayxCore.getIt;
-
-// Register services
+```dart  
+// Register services  
 getIt.registerSingleton<MyService>
 (
 MyService());
 
-// Retrieve services
+// Retrieve services  
 MyService myService = getIt<MyService>
 (
-);
-```
+);  
+```  
 
 ### Using Preferences
 
@@ -72,8 +71,8 @@ MyService myService = getIt<MyService>
 
 Store and retrieve data using `PlayxPrefs`:
 
-```dart
-// Store data
+```dart  
+// Store data  
 PlayxPrefs.setString
 ('name
 '
@@ -84,7 +83,7 @@ John Doe
 );PlayxPrefs.setInt('age', 25);
 PlayxPrefs.setDouble('height', 5.8);
 
-// Retrieve data
+// Retrieve data  
 String name = PlayxPrefs.getString('name');
 int age = PlayxPrefs.getInt('age');
 double? height = PlayxPrefs.
@@ -93,15 +92,15 @@ maybeGetDouble
 '
 height
 '
-);
-```
+);  
+```  
 
 #### PlayxSecurePrefs
 
 Use `PlayxSecurePrefs` for encrypted storage:
 
-```dart
-// Store data securely
+```dart  
+// Store data securely  
 await
 PlayxSecurePrefs.setString
 ('secureName
@@ -112,16 +111,16 @@ Jane Doe
 '
 );
 
-// Retrieve data securely
-String secureName = await PlayxSecurePrefs.getString('secureName');
-```
+// Retrieve data securely  
+String secureName = await PlayxSecurePrefs.getString('secureName');  
+```  
 
 #### PlayxAsyncPrefs
 
 For asynchronous key-value storage, use `PlayxAsyncPrefs`:
 
-```dart
-// Store data asynchronously
+```dart  
+// Store data asynchronously  
 await
 PlayxAsyncPrefs.setString
 ('asyncName
@@ -132,16 +131,16 @@ Async John
 '
 );
 
-// Retrieve data asynchronously
-String asyncName = await PlayxAsyncPrefs.getString('asyncName');
-```
+// Retrieve data asynchronously  
+String asyncName = await PlayxAsyncPrefs.getString('asyncName');  
+```  
 
 #### PlayxPrefsWithCache
 
 Utilize `PlayxPrefsWithCache` for caching preferences:
 
-```dart
-// Store data with caching
+```dart  
+// Store data with caching  
 await
 PlayxPrefsWithCache.setString
 ('cachedName
@@ -152,33 +151,30 @@ Cached Jane
 '
 );
 
-// Retrieve data with cache
-String cachedName = await PlayxPrefsWithCache.getString('cachedName');
-```
+// Retrieve data with cache  
+String cachedName = await PlayxPrefsWithCache.getString('cachedName');  
+```  
 
 ## Documentation
 
-For detailed documentation on using PlayX Core, visit
+For detailed documentation on using PlayX Core, visit  
 the [documentation](https://pub.dev/documentation/playx_core/latest/).
 
 ## Support and Contribution
 
-For questions, issues, or feature requests, please visit
+For questions, issues, or feature requests, please visit  
 the [GitHub repository](https://github.com/playx-flutter/playx_core). Contributions are welcome!
 
 ## See Also
 
-- [Playx](https://pub.dev/packages/playx): The PlayX ecosystem for redundant features, reduced code,
+- [Playx](https://pub.dev/packages/playx): The PlayX ecosystem for redundant features, reduced
+  code,  
   and improved productivity.
 - [Playx_theme](https://pub.dev/packages/playx_theme): Multi-theme features for Flutter apps.
-- [Playx_localization](https://pub.dev/packages/playx_localization): Localization and
+- [Playx_localization](https://pub.dev/packages/playx_localization): Localization and  
   internationalization for Flutter apps.
 
 ## License
 
-This project is licensed under the MIT License - see
-the [LICENSE](https://github.com/playx-flutter/playx_core/blob/main/LICENSE) file for details.
-
-```
-
-This README provides a comprehensive overview of the PlayX Core package, including its features, installation instructions, and usage examples for each component. It also highlights the addition of `PlayxAsyncPrefs`, `PlayxPrefsWithCache`, and `GetIt`.
+This project is licensed under the MIT License - see  
+the [LICENSE](https://github.com/playx-flutter/playx_core/blob/main/LICENSE) file for details.  
