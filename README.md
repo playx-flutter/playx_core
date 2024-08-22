@@ -1,6 +1,5 @@
 
 # PlayX Core
-
 [![pub package](https://img.shields.io/pub/v/playx_core.svg?color=1284C5)](https://pub.dev/packages/playx_core)  
 [![Build](https://github.com/playx-flutter/playx_core/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/playx-flutter/playx_core/actions/workflows/build.yml) <a href="https://codecov.io/gh/playx-flutter/playx_core"><img src="https://codecov.io/gh/playx-flutter/playx_core/branch/main/graph/badge.svg" alt="codecov"></a>  
 <a href="https://github.com/playx-flutter/playx_core/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-purple.svg" alt="License: MIT"></a>
@@ -23,7 +22,7 @@ Add `playx_core` to your `pubspec.yaml` dependencies:
 
 ```yaml  
 dependencies:
-  playx_core: ^0.5.0  
+  playx_core: ^0.5.2  
 ```  
 
 ## Usage
@@ -178,3 +177,4 @@ the [GitHub repository](https://github.com/playx-flutter/playx_core). Contributi
 
 This project is licensed under the MIT License - see  
 the [LICENSE](https://github.com/playx-flutter/playx_core/blob/main/LICENSE) file for details.  
+ 
