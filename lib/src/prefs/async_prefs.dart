@@ -30,7 +30,11 @@ abstract class PlayxAsyncPrefs {
   ///
   /// This method must be called before accessing [sharedPrefs].
   static Future<SharedPreferencesAsync> create() async {
-    _sharedPrefs = SharedPreferencesAsync();
+    try {
+      _sharedPrefs = SharedPreferencesAsync();
+    } catch (e) {
+      rethrow;
+    }
     return _sharedPrefs!;
   }
 

@@ -130,8 +130,10 @@ abstract class PlayxCore {
   /// This method should be called when the `playx_core` resources are no longer
   /// needed, ensuring that any open resources are properly released.
   static Future<void> dispose() async {
-    getIt.reset(dispose: true);
-    _getIt = null;
+    if (_getIt != null) {
+      _getIt!.reset();
+      _getIt = null;
+    }
     await PlayxPrefs.dispose();
     await PlayxAsyncPrefs.dispose();
     await PlayxPrefsWithCache.dispose();
