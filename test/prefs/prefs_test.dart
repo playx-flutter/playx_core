@@ -17,6 +17,7 @@ void main() {
         securePrefsSettings: const PlayxSecurePrefsSettings(
           clearOnReinstall: false,
         ),
+        createPlayxAsyncPrefs: false,
       );
     },
   );
@@ -32,7 +33,7 @@ void main() {
       'instance returns the shared preferences instance',
       () {
         expect(
-          PlayxPrefs.instance,
+          PlayxPrefs.sharedPrefs,
           isA<SharedPreferences>(),
         );
       },

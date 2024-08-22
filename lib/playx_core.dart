@@ -1,6 +1,6 @@
 export 'package:equatable/equatable.dart';
 export 'package:flutter_secure_storage/flutter_secure_storage.dart';
-export 'package:get/get.dart' hide ContextExtensionss, Translations, Trans;
+export 'package:get_it/get_it.dart';
 export 'package:shared_preferences/shared_preferences.dart';
 
 export 'src/extensions/bool_extensions.dart';
@@ -13,14 +13,16 @@ export 'src/extensions/date_time_extensions.dart';
 export 'src/extensions/duration_extensions.dart';
 export 'src/extensions/iterable_extensions.dart';
 export 'src/extensions/locale_extensions.dart';
-export 'src/extensions/scope_functions.dart';
 export 'src/extensions/string_extensions.dart';
 export 'src/playx_core.dart';
+export 'src/prefs/async_prefs.dart';
 export 'src/prefs/envs.dart';
 export 'src/prefs/model/envs_settings.dart';
 export 'src/prefs/model/secure_prefs_settings.dart';
 export 'src/prefs/prefs.dart';
+export 'src/prefs/prefs_with_cache.dart';
 export 'src/prefs/secure_prefs.dart';
 export 'src/utils/app_scroll_behavior.dart';
 export 'src/utils/common_utils.dart';
+export 'src/utils/playx_platform.dart';
 export 'src/utils/safe_convert.dart';
