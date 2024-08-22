@@ -1,6 +1,5 @@
 
 # PlayX Core
-
 [![pub package](https://img.shields.io/pub/v/playx_core.svg?color=1284C5)](https://pub.dev/packages/playx_core)  
 [![Build](https://github.com/playx-flutter/playx_core/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/playx-flutter/playx_core/actions/workflows/build.yml) <a href="https://codecov.io/gh/playx-flutter/playx_core"><img src="https://codecov.io/gh/playx-flutter/playx_core/branch/main/graph/badge.svg" alt="codecov"></a>  
 <a href="https://github.com/playx-flutter/playx_core/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-purple.svg" alt="License: MIT"></a>
@@ -22,8 +21,8 @@ Core package for the PlayX ecosystem containing shared classes and utilities.
 Add `playx_core` to your `pubspec.yaml` dependencies:
 
 ```yaml  
-dependencies:
-  playx_core: ^0.5.0  
+dependencies:  
+  playx_core: ^0.5.2  
 ```  
 
 ## Usage
@@ -33,19 +32,19 @@ dependencies:
 Initialize the PlayX core in your `main` function:
 
 ```dart  
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
+void main() async {  
+  WidgetsFlutterBinding.ensureInitialized();  
+  
   // Boot the core  
-  await PlayxCore.bootCore(
-    securePrefsSettings: PlayxSecurePrefsSettings(),
-    createPlayxPrefs: true,
-    createPlayxAsyncPrefs: true,
-    createPlayxPrefsWithCache: true,
-  );
-
+  await PlayxCore.bootCore(  
+    securePrefsSettings: PlayxSecurePrefsSettings(),  
+    createPlayxPrefs: true,  
+    createPlayxAsyncPrefs: true,  
+    createPlayxPrefsWithCache: true,  
+  );  
+  
   // Run the app  
-  runApp(const MyApp());
+  runApp(const MyApp());  
 }  
 ```  
 
@@ -55,14 +54,10 @@ To use dependency injection, access the `GetIt` instance:
 
 ```dart  
 // Register services  
-getIt.registerSingleton<MyService>
-(
-MyService());
-
+getIt.registerSingleton<MyService>(MyService());  
+  
 // Retrieve services  
-MyService myService = getIt<MyService>
-(
-);  
+MyService myService = getIt<MyService>();  
 ```  
 
 ### Using Preferences
@@ -73,26 +68,14 @@ Store and retrieve data using `PlayxPrefs`:
 
 ```dart  
 // Store data  
-PlayxPrefs.setString
-('name
-'
-,
-'
-John Doe
-'
-);PlayxPrefs.setInt('age', 25);
-PlayxPrefs.setDouble('height', 5.8);
-
+PlayxPrefs.setString('name','John Doe');  
+PlayxPrefs.setInt('age', 25);  
+PlayxPrefs.setDouble('height', 5.8);  
+  
 // Retrieve data  
-String name = PlayxPrefs.getString('name');
-int age = PlayxPrefs.getInt('age');
-double? height = PlayxPrefs.
-maybeGetDouble
-(
-'
-height
-'
-);  
+String name = PlayxPrefs.getString('name');  
+int age = PlayxPrefs.getInt('age');  
+double? height = PlayxPrefs.maybeGetDouble('height');  
 ```  
 
 #### PlayxSecurePrefs
@@ -101,16 +84,8 @@ Use `PlayxSecurePrefs` for encrypted storage:
 
 ```dart  
 // Store data securely  
-await
-PlayxSecurePrefs.setString
-('secureName
-'
-,
-'
-Jane Doe
-'
-);
-
+await PlayxSecurePrefs.setString('secureName','Jane Doe');  
+  
 // Retrieve data securely  
 String secureName = await PlayxSecurePrefs.getString('secureName');  
 ```  
@@ -121,16 +96,8 @@ For asynchronous key-value storage, use `PlayxAsyncPrefs`:
 
 ```dart  
 // Store data asynchronously  
-await
-PlayxAsyncPrefs.setString
-('asyncName
-'
-,
-'
-Async John
-'
-);
-
+await PlayxAsyncPrefs.setString('asyncName','Async John');  
+  
 // Retrieve data asynchronously  
 String asyncName = await PlayxAsyncPrefs.getString('asyncName');  
 ```  
@@ -141,16 +108,8 @@ Utilize `PlayxPrefsWithCache` for caching preferences:
 
 ```dart  
 // Store data with caching  
-await
-PlayxPrefsWithCache.setString
-('cachedName
-'
-,
-'
-Cached Jane
-'
-);
-
+await PlayxPrefsWithCache.setString('cachedName','Cached Jane');  
+  
 // Retrieve data with cache  
 String cachedName = await PlayxPrefsWithCache.getString('cachedName');  
 ```  
@@ -167,8 +126,7 @@ the [GitHub repository](https://github.com/playx-flutter/playx_core). Contributi
 
 ## See Also
 
-- [Playx](https://pub.dev/packages/playx): The PlayX ecosystem for redundant features, reduced
-  code,  
+- [Playx](https://pub.dev/packages/playx): The PlayX ecosystem for redundant features, reduced code,  
   and improved productivity.
 - [Playx_theme](https://pub.dev/packages/playx_theme): Multi-theme features for Flutter apps.
 - [Playx_localization](https://pub.dev/packages/playx_localization): Localization and  
@@ -178,3 +136,4 @@ the [GitHub repository](https://github.com/playx-flutter/playx_core). Contributi
 
 This project is licensed under the MIT License - see  
 the [LICENSE](https://github.com/playx-flutter/playx_core/blob/main/LICENSE) file for details.  
+ 
