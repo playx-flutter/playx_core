@@ -1,3 +1,13 @@
+# 0.5.3
+> Note: This release has breaking changes.
+- Update packages.
+- Update `safe_convert` methods 
+  - `asInt`, `asDouble`, `asBool`, `asString` and `asList`, `asMap`, `asListT`, `asListTFromJson` ,`asListInt`, `asListString`, `asT` now throws `FormatException` if the result was invalid.
+  - Added `asIntOr`, `asDoubleOr`, `asBoolOr`, `asStringOr`, `asListOr`, `asMapOr`, `asListTOr`, `asListTFromJsonOr`, `asListIntOr`, `asListStringOr`, `asTOr` methods to provide a fallback value if the result was invalid.
+  - Added new `asListTFromJson` method to convert a list of dynamic values to a list of a specific type.
+  - Added new `fromJson` to `asTOrNull`, `asT` and `asTOr`.
+- Add new Map utilities functions to map objects in isolate.
+
 # 0.5.1 - 0.5.2
 
 - Update Readme
