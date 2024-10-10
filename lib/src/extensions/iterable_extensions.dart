@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:playx_core/src/utils/mapper_utilities.dart';
+
 /// Extensions on [Iterable] class to make it easier to work with.
 extension PlayxIterableExtensions<T> on Iterable<T> {
   /// Count the number of elements that satisfy predicate [predicate].
@@ -14,9 +16,14 @@ extension PlayxIterableExtensions<T> on Iterable<T> {
 
   /// Asynchronously map each element of this collection by [action].
   Future<List<S>> asyncMap<S>(
-    FutureOr<S> Function(T e) action,
+    Mapper<T, S> mapper,
   ) async {
-    return Future.wait(map((i) async => await action(i)));
+    return Future.wait(map((i) async => mapper(i)));
+  }
+
+  /// Maps the value of the List<T> to a new value in an isolate.
+  Future<List<S>> asyncMapInIsolate<S>(Mapper<T, S> mapper) async {
+    return Future.wait(map((e) => e.mapAsyncInIsolate(mapper)));
   }
 
   /// Returns a new list after removing duplicates from the original list.

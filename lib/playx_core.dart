@@ -24,5 +24,6 @@ export 'src/prefs/prefs_with_cache.dart';
 export 'src/prefs/secure_prefs.dart';
 export 'src/utils/app_scroll_behavior.dart';
 export 'src/utils/common_utils.dart';
+export 'src/utils/mapper_utilities.dart';
 export 'src/utils/playx_platform.dart';
 export 'src/utils/safe_convert.dart';
