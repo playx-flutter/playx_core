@@ -1,4 +1,4 @@
-library playx_core;
+library;
 
 import 'package:get_it/get_it.dart';
 import 'package:playx_core/src/prefs/model/secure_prefs_settings.dart';
