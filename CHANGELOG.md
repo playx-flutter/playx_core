@@ -1,3 +1,9 @@
+# 0.5.4
+- refactor: Update packages.
+- refactor: Update `safe_convert` methods `asIntOr`, `asDoubleOr`, `asBoolOr`, `asStringOr`, `asListOr`, `asMapOr`, `asListTOr`, `asListTFromJsonOr`, `asListIntOr`, `asListStringOr`, `asTOr` to take dynamic json instead of a Map<String,dynamic> json value.
+- refactor: Move json safe convert functions to a new file
+- feat: Add new tests for the package.
+
 # 0.5.3
 > Note: This release has breaking changes.
 - Update packages.

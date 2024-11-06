@@ -27,3 +27,4 @@ export 'src/utils/common_utils.dart';
 export 'src/utils/mapper_utilities.dart';
 export 'src/utils/playx_platform.dart';
 export 'src/utils/safe_convert.dart';
+export 'src/utils/safe_json_convert.dart';
