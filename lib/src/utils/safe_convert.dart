@@ -335,7 +335,7 @@ T? asTOrNull<T>(
 /// Convert any map value with [key] to int or [fallback] safely.
 /// Throws a [FormatException] if the conversion fails.
 int asInt(
-  Map<String, dynamic>? json,
+  dynamic json,
   String key,
 ) {
   return toInt(
@@ -349,7 +349,7 @@ int asInt(
 /// Convert any map value with [key] to double or [fallback] safely.
 /// Throws a [FormatException] if the conversion fails.
 double asDouble(
-  Map<String, dynamic>? json,
+  dynamic json,
   String key,
 ) {
   return toDouble(
@@ -363,7 +363,7 @@ double asDouble(
 /// Convert any map value with [key] to bool or [fallback] safely.
 /// Throws a [FormatException] if the conversion fails.
 bool asBool(
-  Map<String, dynamic>? json,
+  dynamic json,
   String key,
 ) {
   return toBool(
@@ -377,7 +377,7 @@ bool asBool(
 /// Convert any map value with [key] to String or [fallback] safely.
 /// Throws a [FormatException] if the conversion fails.
 String asString(
-  Map<String, dynamic>? json,
+  dynamic json,
   String key,
 ) {
   return toString(
@@ -391,7 +391,7 @@ String asString(
 /// Convert any map value with [key] to Map<String, dynamic> or [fallback] safely.
 /// Throws a [FormatException] if the conversion fails.
 Map<String, dynamic> asMap(
-  Map<String, dynamic>? json,
+  dynamic json,
   String key,
 ) {
   return toMap(
@@ -405,7 +405,7 @@ Map<String, dynamic> asMap(
 /// Convert any map value with [key] to List or [fallback] safely.
 /// Throws a [FormatException] if the conversion fails.
 List asList(
-  Map<String, dynamic>? json,
+  dynamic json,
   String key,
 ) {
   return toList(
@@ -419,7 +419,7 @@ List asList(
 /// Convert any map value with [key] to List<T> or [fallback] safely.
 /// Throws a [FormatException] if the conversion fails.
 List<T> asListT<T>(
-  Map<String, dynamic>? json,
+  dynamic json,
   String key,
 ) {
   return toListT(
@@ -433,7 +433,7 @@ List<T> asListT<T>(
 /// Convert any map value with [key] to List<T> or [fallback] safely.
 /// Throws a [FormatException] if the conversion fails.
 List<T> asListFromJson<T>(
-    Map<String, dynamic>? json, String key, T Function(dynamic json) fromJson,
+    dynamic json, String key, T Function(dynamic json) fromJson,
     {List<T> fallback = const []}) {
   return toListFromJson(
     asTOrNull(
@@ -447,7 +447,7 @@ List<T> asListFromJson<T>(
 /// Convert any map value with [key] to List<int> or [fallback] safely.
 /// Throws a [FormatException] if the conversion fails.
 List<int> asListInt(
-  Map<String, dynamic>? json,
+  dynamic json,
   String key,
 ) {
   return asListT(
@@ -459,7 +459,7 @@ List<int> asListInt(
 /// Convert any map value with [key] to List<String> or [fallback] safely.
 /// Throws a [FormatException] if the conversion fails.
 List<String> asListString(
-  Map<String, dynamic>? json,
+  dynamic json,
   String key,
 ) {
   return asListT(
@@ -471,7 +471,7 @@ List<String> asListString(
 /// Convert any map value with [key] to T or [fallback] safely.
 /// Throws a [FormatException] if the conversion fails.
 T asT<T>(
-  Map<String, dynamic>? json,
+  dynamic json,
   T Function(dynamic json)? fromJson,
   String key,
 ) {
@@ -481,7 +481,7 @@ T asT<T>(
 
 /// Convert any map value with [key] to int or [fallback] safely.
 /// If [fallback] is not provided, it defaults to 0.
-int asIntOr(Map<String, dynamic>? json, String key, {int fallback = 0}) {
+int asIntOr(dynamic json, String key, {int fallback = 0}) {
   return toIntOr(
     asTOrNull(
       json,
@@ -493,8 +493,7 @@ int asIntOr(Map<String, dynamic>? json, String key, {int fallback = 0}) {
 
 /// Convert any map value with [key] to double or [fallback] safely.
 /// If [fallback] is not provided, it defaults to 0.0.
-double asDoubleOr(Map<String, dynamic>? json, String key,
-    {double fallback = 0.0}) {
+double asDoubleOr(dynamic json, String key, {double fallback = 0.0}) {
   return toDoubleOr(
       asTOrNull(
         json,
@@ -505,7 +504,7 @@ double asDoubleOr(Map<String, dynamic>? json, String key,
 
 /// Convert any map value with [key] to bool or [fallback] safely.
 /// If [fallback] is not provided, it defaults to false.
-bool asBoolOr(Map<String, dynamic>? json, String key, {bool fallback = false}) {
+bool asBoolOr(dynamic json, String key, {bool fallback = false}) {
   return toBoolOr(
       asTOrNull(
         json,
@@ -516,8 +515,7 @@ bool asBoolOr(Map<String, dynamic>? json, String key, {bool fallback = false}) {
 
 /// Convert any map value with [key] to String or [fallback] safely.
 /// If [fallback] is not provided, it defaults to an empty string.
-String asStringOr(Map<String, dynamic>? json, String key,
-    {String fallback = ''}) {
+String asStringOr(dynamic json, String key, {String fallback = ''}) {
   return toStringOr(
       asTOrNull(
         json,
@@ -528,7 +526,7 @@ String asStringOr(Map<String, dynamic>? json, String key,
 
 /// Convert any map value with [key] to Map<String, dynamic> or [fallback] safely.
 /// If [fallback] is not provided, it defaults to an empty map.
-Map<String, dynamic> asMapOr(Map<String, dynamic>? json, String key,
+Map<String, dynamic> asMapOr(dynamic json, String key,
     {Map<String, dynamic> fallback = const <String, dynamic>{}}) {
   return toMapOr(
       asTOrNull(
@@ -540,8 +538,7 @@ Map<String, dynamic> asMapOr(Map<String, dynamic>? json, String key,
 
 /// Convert any map value with [key] to List or [fallback] safely.
 /// If [fallback] is not provided, it defaults to an empty list.
-List asListOr(Map<String, dynamic>? json, String key,
-    {List fallback = const []}) {
+List asListOr(dynamic json, String key, {List fallback = const []}) {
   return toListOr(
       asTOrNull(
         json,
@@ -552,8 +549,7 @@ List asListOr(Map<String, dynamic>? json, String key,
 
 /// Convert any map value with [key] to List<T> or [fallback] safely.
 /// If [fallback] is not provided, it defaults to an empty list.
-List<T> asListTOr<T>(Map<String, dynamic>? json, String key,
-    {List<T> fallback = const []}) {
+List<T> asListTOr<T>(dynamic json, String key, {List<T> fallback = const []}) {
   return toListTOr(
       asTOrNull(
         json,
@@ -565,7 +561,7 @@ List<T> asListTOr<T>(Map<String, dynamic>? json, String key,
 /// Convert any map value with [key] to List<T> or [fallback] safely.
 /// If [fallback] is not provided, it defaults to an empty list.
 List<T> asListFromJsonOr<T>(
-    Map<String, dynamic>? json, String key, T Function(dynamic json) fromJson,
+    dynamic json, String key, T Function(dynamic json) fromJson,
     {List<T> fallback = const []}) {
   return toListFromJsonOr(
       asTOrNull(
@@ -578,22 +574,21 @@ List<T> asListFromJsonOr<T>(
 
 /// Convert any map value with [key] to List<int> or [fallback] safely.
 /// If [fallback] is not provided, it defaults to an empty list.
-List<int> asListIntOr(Map<String, dynamic>? json, String key,
+List<int> asListIntOr(dynamic json, String key,
     {List<int> fallback = const []}) {
   return asListTOr(json, key, fallback: fallback);
 }
 
 /// Convert any map value with [key] to List<String> or [fallback] safely.
 /// If [fallback] is not provided, it defaults to an empty list.
-List<String> asListStringOr(Map<String, dynamic>? json, String key,
+List<String> asListStringOr(dynamic json, String key,
     {List<String> fallback = const []}) {
   return asListTOr(json, key, fallback: fallback);
 }
 
 /// Convert any map value with [key] to T or [fallback] safely.
 /// If [fallback] is not provided, it defaults to 0.
-T asTOr<T>(
-    Map<String, dynamic>? json, String key, T Function(dynamic json)? fromJson,
+T asTOr<T>(dynamic json, String key, T Function(dynamic json)? fromJson,
     {required T fallback}) {
   return asTOrNull(
         json,

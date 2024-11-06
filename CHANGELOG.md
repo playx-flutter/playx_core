@@ -1,3 +1,8 @@
+# 0.5.4
+- Update packages.
+- Update `safe_convert` methods `asIntOr`, `asDoubleOr`, `asBoolOr`, `asStringOr`, `asListOr`, `asMapOr`, `asListTOr`, `asListTFromJsonOr`, `asListIntOr`, `asListStringOr`, `asTOr` to take dynamic json instead of a Map<String,dynamic> json value.
+
+
 # 0.5.3
 > Note: This release has breaking changes.
 - Update packages.
