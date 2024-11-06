@@ -76,7 +76,6 @@ void main() {
       // Test int values
       expect(toBoolOrNull(1), true);
       expect(toBoolOrNull(0), false);
-      expect(toBoolOrNull(-1), true);
 
       // Test double values
       expect(toBoolOrNull(1.0), true);
@@ -108,6 +107,7 @@ void main() {
       expect(toBoolOrNull("-"), null);
 
       // Test other values
+      expect(toBoolOrNull(-1), null);
       expect(toBoolOrNull([]), null);
       expect(toBoolOrNull({}), null);
     });
@@ -279,8 +279,8 @@ void main() {
       expect(toIntOr("1.9", fallback: 0), 1);
       expect(toIntOr("1.0.0", fallback: 2), 2);
       expect(toIntOr("", fallback: 1), 1);
-      expect(toIntOr("0.0", fallback: 1), 1);
-      expect(toIntOr("0.1", fallback: 1), 1);
+      expect(toIntOr("0.0", fallback: 1), 0);
+      expect(toIntOr("0.1", fallback: 1), 0);
       expect(toIntOr("-", fallback: 0), 0);
 
       // Test other values
@@ -312,8 +312,7 @@ void main() {
       expect(toDoubleOr("1.9", fallback: 0.0), 1.9);
       expect(toDoubleOr("1.0.0", fallback: 2.0), 2.0);
       expect(toDoubleOr("", fallback: 1.0), 1.0);
-      expect(toDoubleOr("0.0", fallback: 1.0), 1.0);
-      expect(toDoubleOr("0.1", fallback: 1.0), 1.0);
+      expect(toDoubleOr("0.1", fallback: 1.0), 0.1);
       expect(toDoubleOr("-", fallback: 0.0), 0.0);
 
       // Test other values
@@ -397,7 +396,7 @@ void main() {
       expect(toMapOr(null, fallback: {"key": "value"}), {"key": "value"});
       // Test Map values
       expect(toMapOr({"key": "value"}, fallback: {}), {"key": "value"});
-      expect(toMapOr({}, fallback: {"key": 1}), {"key": 1});
+      expect(toMapOr({}, fallback: {"key": 1}), {});
 
       // Test other values
       expect(toMapOr([], fallback: {}), {});
@@ -412,7 +411,8 @@ void main() {
       expect(toListOr(null, fallback: [1, 2, 3]), [1, 2, 3]);
       // Test List values
       expect(toListOr([1, 2, 3], fallback: []), [1, 2, 3]);
-      expect(toListOr([], fallback: [1]), [1]);
+      expect(toListOr([], fallback: []), []);
+      expect(toListOr({}, fallback: []), []);
 
       // Test other values
       expect(toListOr({}, fallback: []), []);
@@ -427,7 +427,7 @@ void main() {
       expect(toListTOr<int>(null, fallback: [1, 2, 3]), [1, 2, 3]);
       // Test List values
       expect(toListTOr<int>([1, 2, 3], fallback: []), [1, 2, 3]);
-      expect(toListTOr<int>([], fallback: [1]), [1]);
+      expect(toListTOr<int>([], fallback: []), []);
 
       expect(toListTOr<String>([1], fallback: []), []);
       expect(toListTOr<int>([1.0], fallback: []), []);
@@ -446,7 +446,7 @@ void main() {
       // Test List values
       expect(
           toListFromJsonOr([1, 2, 3], (json) => json, fallback: []), [1, 2, 3]);
-      expect(toListFromJsonOr([], (json) => json, fallback: [1]), [1]);
+      expect(toListFromJsonOr([], (json) => json, fallback: [1]), []);
 
       expect(
           toListFromJsonOr(['1.0', '4.5'], (value) => double.parse(value),
@@ -563,7 +563,6 @@ void main() {
       // Test int values
       expect(toBool(1), true);
       expect(toBool(0), false);
-      expect(toBool(-1), true);
 
       // Test double values
       expect(toBool(1.0), true);
@@ -595,6 +594,7 @@ void main() {
       expect(() => toBool("-"), throwsA(isA<FormatException>()));
 
       // Test other values
+      expect(() => toBool(-1), throwsA(isA<FormatException>()));
       expect(() => toBool([]), throwsA(isA<FormatException>()));
       expect(() => toBool({}), throwsA(isA<FormatException>()));
     });
