@@ -1,26 +1,27 @@
 import 'dart:ui';
 
-extension ColorExtensions on Color {
+extension PlayxColorExtensions on Color {
   /// Returns the color as a hex string with an optional leading hash sign.
   String toHex({bool leadingHashSign = true, bool includeAlpha = false}) {
     final buffer = StringBuffer();
     if (leadingHashSign) buffer.write('#');
-    if (includeAlpha) buffer.write(alpha.toRadixString(16).padLeft(2, '0'));
-    buffer.write(red.toRadixString(16).padLeft(2, '0'));
-    buffer.write(green.toRadixString(16).padLeft(2, '0'));
-    buffer.write(blue.toRadixString(16).padLeft(2, '0'));
-
+    if (includeAlpha) {
+      buffer.write((a * 255).toInt().toRadixString(16).padLeft(2, '0'));
+    }
+    buffer.write((r * 255).toInt().toRadixString(16).padLeft(2, '0'));
+    buffer.write((g * 255).toInt().toRadixString(16).padLeft(2, '0'));
+    buffer.write((b * 255).toInt().toRadixString(16).padLeft(2, '0'));
     return buffer.toString();
   }
 
   /// Returns a new color object by updating the alpha or red or green or blue value of the current color.
   Color copyWith({
-    int? alpha,
-    int? red,
-    int? green,
-    int? blue,
+    double? alpha,
+    double? red,
+    double? green,
+    double? blue,
   }) {
-    return Color.fromARGB(alpha ?? this.alpha, red ?? this.red,
-        green ?? this.green, blue ?? this.blue);
+    return Color.from(
+        alpha: alpha ?? a, red: red ?? r, green: green ?? g, blue: blue ?? b);
   }
 }

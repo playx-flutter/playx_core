@@ -154,7 +154,7 @@ abstract class PlayxAsyncPrefs {
   ///
   /// - [key]: The key of the value to retrieve.
   /// - [fallback]: The value to return if the key does not exist or an error occurs.
-  static Future<double?> getDouble(
+  static Future<double> getDouble(
     String key, {
     double fallback = -1,
   }) async =>
