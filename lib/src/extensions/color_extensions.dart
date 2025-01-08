@@ -5,8 +5,9 @@ extension PlayxColorExtensions on Color {
   String toHex({bool leadingHashSign = true, bool includeAlpha = false}) {
     final buffer = StringBuffer();
     if (leadingHashSign) buffer.write('#');
-    if (includeAlpha)
+    if (includeAlpha) {
       buffer.write((a * 255).toInt().toRadixString(16).padLeft(2, '0'));
+    }
     buffer.write((r * 255).toInt().toRadixString(16).padLeft(2, '0'));
     buffer.write((g * 255).toInt().toRadixString(16).padLeft(2, '0'));
     buffer.write((b * 255).toInt().toRadixString(16).padLeft(2, '0'));

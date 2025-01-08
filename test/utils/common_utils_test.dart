@@ -13,8 +13,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-      SystemChrome.latestStyle?.statusBarColor?.value,
-      Colors.red.value,
+      SystemChrome.latestStyle?.statusBarColor,
+      Colors.red,
     );
   });
 
