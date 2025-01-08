@@ -100,7 +100,7 @@ abstract class PlayxPrefs {
 
   /// Returns the shared preferences value for the given [key] as a non-null `double`,
   /// or [fallback] (defaults to -1.0) if it doesn't exist.
-  static double? getDouble(String key, {double fallback = -1}) =>
+  static double getDouble(String key, {double fallback = -1}) =>
       maybeGetDouble(key) ?? fallback;
 
   /// Sets the shared preferences value for the given [key] to the provided [value] of type `double`.

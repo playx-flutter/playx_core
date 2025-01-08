@@ -4,6 +4,7 @@ export 'package:get_it/get_it.dart';
 export 'package:shared_preferences/shared_preferences.dart';
 
 export 'src/extensions/bool_extensions.dart';
+export 'src/extensions/color_extensions.dart';
 export 'src/extensions/context/colors.dart';
 export 'src/extensions/context/localization.dart';
 export 'src/extensions/context/media_query.dart';
