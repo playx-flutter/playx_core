@@ -1,3 +1,6 @@
+# 1.0.0-beta.1
+- Add support for wasm support for web.
+- Update flutter_secure_storage: to v10.0.0-beta.2 which includes some breaking changes.
 
 # 0.5.5
 - refactor: Update packages.
