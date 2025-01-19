@@ -1,17 +1,54 @@
+# Changelog
 
-# 0.5.5
+## 0.6.0
+> Note: This release has breaking changes.
+
+#### Breaking Changes
+- **MapUtils**
+  - `mapAsync` and `mapAsyncInIsolate` now require the following parameters:
+    - `T data`: The data to be mapped.
+    - `Mapper<T, S> mapper`: A required named parameter for the transformation logic.
+- **Extensions on `Iterable<T>`**
+  - Updated `asyncMap` and `asyncMapInIsolate` to require `Mapper<T, S> mapper` as a named parameter.
+  - `NestedIterablesExtensions<T>`:
+    - Deprecated `asyncFlatMap`. Use `flatMapAsync` instead.
+    - Updated `flatMap` and `flatMapAsync` to require `Mapper<T, S> mapper` as a named parameter.
+
+#### New Features
+- **MapUtils**
+  - Enhanced `mapAsyncInIsolate` to map items in an isolate using `workerManager` by default.
+  - Added a new `useWorkManager` parameter:
+    - If `true`, uses `workerManager` to execute tasks.
+    - If `false`, falls back to the `compute` method.
+- **Playx Core (`bootCore`)**
+  - Introduced new settings:
+    - `PlayxPrefsSettings`: Handles configurations for `createPlayxPrefs`, `createPlayxAsyncPrefs`, and `createPlayxPrefsWithCache` methods, which are now moved from the `bootCore` method.
+    - `WorkManagerSettings`: Supports additional configurations in the `bootCore` method.
+- **PlayxSecurePrefsSettings**
+  - Added a `createSecurePrefs` parameter to control the creation of secure storage during the `boot` process.
+
+#### Refactor
+- **MapAsync Extension**:
+  - Updated the `mapAsync` and `mapAsyncInIsolate` methods in the `MapAsync<T>` extension:
+    - `mapAsync` now takes a `Mapper<T, S> mapper` as a required named parameter.
+    - `mapAsyncInIsolate` now includes the following parameters:
+      - `Mapper<T, S> mapper`: Required transformation logic.
+      - `bool useWorkManager`: Defaults to `true`. Specifies whether to use `workerManager` or `compute`.
+
+
+## 0.5.5
 - refactor: Update packages.
 - fix: `getDouble` method in `PlayxPrefs` and `PlayxAsyncPrefs` return double not double or null.
 - feat: Add ColorExtensions to convert color to hex string.
 
 
-# 0.5.4
+## 0.5.4
 - refactor: Update packages.
 - refactor: Update `safe_convert` methods `asIntOr`, `asDoubleOr`, `asBoolOr`, `asStringOr`, `asListOr`, `asMapOr`, `asListTOr`, `asListTFromJsonOr`, `asListIntOr`, `asListStringOr`, `asTOr` to take dynamic json instead of a Map<String,dynamic> json value.
 - refactor: Move json safe convert functions to a new file
 - feat: Add new tests for the package.
 
-# 0.5.3
+## 0.5.3
 > Note: This release has breaking changes.
 - Update packages.
 - Update `safe_convert` methods 
@@ -21,11 +58,11 @@
   - Added new `fromJson` to `asTOrNull`, `asT` and `asTOr`.
 - Add new Map utilities functions to map objects in isolate.
 
-# 0.5.1 - 0.5.2
+## 0.5.1 - 0.5.2
 
 - Update Readme
 
-# 0.5.0
+## 0.5.0
 
 - Update packages.
 - Added `PlayxAsyncPrefs` for non-blocking shared preferences handling.
@@ -38,7 +75,7 @@
 - Remove Scope Functions from the package as there is no need for them in flutter and can be
   implemented if needed by a separate package.
 
-# 0.4.3
+## 0.4.3
 
 - Update packages.
 - Add a new `clearOnReinstall` method to `PlayxSecurePrefs` to clear all the keys stored in the
@@ -46,11 +83,11 @@
 - Add a new `clearOnReinstall` parameter to `PlayxSecurePrefsSettings` to clear all the keys stored
   in the secure prefs when the app is reinstalled which is set to true by default.
 
-# 0.4.2
+## 0.4.2
 
 - Update packages.
 
-# 0.4.1
+## 0.4.1
 
 - Add Tests for the package. 
 - Remove functions that check date weekDay and month from `DateExtensions`and replace them
@@ -64,18 +101,18 @@
   set true.
 - Add new `FutureExtensions` Extensions on [Future] to provide additional functionality.`
 
-# 0.3.4
+## 0.3.4
 
 - Remove `flutter_readable` package from dependencies.
 - Add more extensions to the package.
 - Add safe convert methods to `PlayxCore` to convert safely convert any dynamic value to the correct
   type.
 
-# 0.3.3
+## 0.3.3
 
 - Update exports.
 
-# 0.3.2
+## 0.3.2
 
 - Update exports.
 

@@ -110,6 +110,11 @@ extension NestedIterablesExtensions<T> on Iterable<Iterable<T>> {
       flatten().map((e) => mapper(e));
 
   /// Returns a new list after flattening the original Iterable of Iterables and then mapping each element asynchronously.
+  @Deprecated('Use flatMapAsync instead.')
+  Future<Iterable<X>> asyncFlatMap<X>(Future<X> Function(T) f) async =>
+      flatten().asyncMap(mapper: f);
+
+  /// Returns a new list after flattening the original Iterable of Iterables and then mapping each element asynchronously.
   Future<Iterable<S>> flatMapAsync<S>({
     required Mapper<T, S> mapper,
   }) async =>
