@@ -61,7 +61,7 @@ String? toStringOrNull(value) {
   return null;
 }
 
-/// Convert any dynamic value to Map<String, dynamic> or null safely.
+/// Convert any dynamic value to [Map] or null safely.
 Map<String, dynamic>? toMapOrNull(value) {
   if (value == null) return null;
   if (value is Map && value.isEmpty) return <String, dynamic>{};
@@ -69,7 +69,7 @@ Map<String, dynamic>? toMapOrNull(value) {
   return null;
 }
 
-/// Convert any dynamic value to Map<String, dynamic> or null safely.
+/// Convert any dynamic value to [Map] or null safely.
 Map<T, S>? toMapOrNullAny<T, S>(value) {
   if (value == null) return null;
   if (value is Map<T, S>) return value;
@@ -84,7 +84,7 @@ List? toListOrNull(value) {
   return null;
 }
 
-/// Convert any dynamic value to List<T> or null safely.
+/// Convert any dynamic value to [List] of type [T] or null safely.
 List<T>? toListOrNullT<T>(value) {
   if (value == null) return null;
   if (value is List && value.isEmpty) return [];
@@ -92,7 +92,7 @@ List<T>? toListOrNullT<T>(value) {
   return null;
 }
 
-/// Convert any dynamic value to List<T> or null safely.
+/// Convert any dynamic value to [List] of type [T] or null safely.
 /// As it converts each item to T using [fromJson] function.
 List<T>? toListOrNullFromJson<T>(value, T Function(dynamic json) fromJson) {
   if (value == null) return null;
@@ -143,7 +143,7 @@ String toStringOr(value, {String fallback = ''}) {
   return toStringOrNull(value) ?? fallback;
 }
 
-/// Convert any dynamic value to Map<String, dynamic> or [fallback] safely.
+/// Convert any dynamic value to [Map] or [fallback] safely.
 /// If [fallback] is not provided, it defaults to an empty map.
 Map<String, dynamic> toMapOr(value,
     {Map<String, dynamic> fallback = const <String, dynamic>{}}) {
@@ -156,13 +156,13 @@ List toListOr(value, {List fallback = const []}) {
   return toListOrNull(value) ?? fallback;
 }
 
-/// Convert any dynamic value to List<T> or [fallback] safely.
+/// Convert any dynamic value to [List] of type [T] or [fallback] safely.
 /// If [fallback] is not provided, it defaults to an empty list.
 List<T> toListTOr<T>(value, {List<T> fallback = const []}) {
   return toListOrNullT(value) ?? fallback;
 }
 
-/// Convert any dynamic value to List<T> or [fallback] safely .
+/// Convert any dynamic value to [List] of type [T] or [fallback] safely .
 /// As it converts each item to T using [fromJson] function.
 /// If [fallback] is not provided, it defaults to an empty list.
 List<T> toListFromJsonOr<T>(value, T Function(dynamic json) fromJson,
@@ -203,7 +203,7 @@ String toString(value) {
       (throw FormatException('Invalid String value :$value'));
 }
 
-/// Convert any dynamic value to Map<String, dynamic>.
+/// Convert any dynamic value to [Map].
 /// If the conversion fails, it throws a [FormatException].
 Map<String, dynamic> toMap(value) {
   return toMapOrNull(value) ??
@@ -217,14 +217,14 @@ List toList(value) {
       (throw FormatException('Invalid List value :$value'));
 }
 
-/// Convert any dynamic value to List<T>.
+/// Convert any dynamic value to [List] of type [T].
 /// If the conversion fails, it throws a [FormatException].
 List<T> toListT<T>(value) {
   return toListOrNullT(value) ??
       (throw FormatException('Invalid List<$T> value :$value'));
 }
 
-/// Convert any dynamic value to List<T>.
+/// Convert any dynamic value to [List] of type [T].
 /// If the conversion fails, it throws a [FormatException].
 List<T> toListFromJson<T>(value, T Function(dynamic json) fromJson) {
   return toListOrNullFromJson(value, fromJson) ??
