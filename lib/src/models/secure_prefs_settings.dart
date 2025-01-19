@@ -8,7 +8,12 @@ class PlayxSecurePrefsSettings {
   final WindowsOptions windowsOptions;
   final WebOptions webOptions;
   final MacOsOptions macOsOptions;
+
+  /// If [clearOnReinstall] is set to `true`, the storage is cleared on app reinstall.
   final bool clearOnReinstall;
+
+  /// If [createSecurePrefs] is set to `true`, the storage will be created on boot.
+  final bool createSecurePrefs;
 
   const PlayxSecurePrefsSettings({
     this.iosOptions =
@@ -21,5 +26,6 @@ class PlayxSecurePrefsSettings {
     this.webOptions = WebOptions.defaultOptions,
     this.macOsOptions = MacOsOptions.defaultOptions,
     this.clearOnReinstall = true,
+    this.createSecurePrefs = true,
   });
 }
