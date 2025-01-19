@@ -17,7 +17,7 @@ void main() {
     test('asyncMap returns a list after mapping each element asynchronously',
         () async {
       final list = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-      final result = await list.asyncMap((e) async => e * 2);
+      final result = await list.asyncMap(mapper: (e) async => e * 2);
       expect(result, [2, 4, 6, 8, 10, 12, 14, 16, 18, 20]);
     });
 
@@ -355,7 +355,7 @@ void main() {
         [4, 5, 6],
         [7, 8, 9],
       ];
-      final result = list.flatMap((e) => e * 2);
+      final result = list.flatMap(mapper: (e) => e * 2);
       expect(result, [2, 4, 6, 8, 10, 12, 14, 16, 18]);
     });
 
@@ -367,7 +367,7 @@ void main() {
         [4, 5, 6],
         [7, 8, 9],
       ];
-      final result = await list.asyncFlatMap((e) async => e * 2);
+      final result = await list.flatMapAsync(mapper: (e) async => e * 2);
       expect(result, [2, 4, 6, 8, 10, 12, 14, 16, 18]);
     });
   });

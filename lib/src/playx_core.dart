@@ -1,11 +1,14 @@
 library;
 
 import 'package:get_it/get_it.dart';
-import 'package:playx_core/src/prefs/model/secure_prefs_settings.dart';
+import 'package:worker_manager/worker_manager.dart';
 
+import 'models/envs_settings.dart';
+import 'models/prefs_settings.dart';
+import 'models/secure_prefs_settings.dart';
+import 'models/work_manager_settings.dart';
 import 'prefs/async_prefs.dart';
 import 'prefs/envs.dart';
-import 'prefs/model/envs_settings.dart';
 import 'prefs/prefs.dart';
 import 'prefs/prefs_with_cache.dart';
 import 'prefs/secure_prefs.dart';
@@ -75,43 +78,41 @@ abstract class PlayxCore {
   /// - [envSettings]: Settings for environment configuration. If provided, the
   ///   environment variables will be loaded according to the specified settings.
   ///
-  /// - [createPlayxPrefs]: If `true`, initializes `PlayxPrefs`. Defaults to `true`.
+  /// - [prefsSettings]: Settings to configure the shared preferences. Defaults
+  ///  to an instance of `PlayxPrefsSettings`.
   ///
-  /// - [createPlayxAsyncPrefs]: If `true`, initializes `PlayxAsyncPrefs`. Defaults to `true`.
-  ///
-  /// - [createPlayxPrefsWithCache]: If `true`, initializes `PlayxPrefsWithCache`.
-  ///   Defaults to `false`.
+  /// - [workerManagerSettings]: Settings to configure the worker manager. If
+  ///  enabled, the worker manager will be initialized with the specified settings.
   ///
   /// Example:
   /// ```dart
   /// await PlayxCore.bootCore(
   ///   securePrefsSettings: PlayxSecurePrefsSettings(),
   ///   envSettings: PlayxEnvSettings(),
-  ///   createPlayxPrefs: true,
-  ///   createPlayxAsyncPrefs: false,
-  ///   createPlayxPrefsWithCache: true,
   /// );
   /// ```
   static Future<void> bootCore({
     PlayxSecurePrefsSettings securePrefsSettings =
         const PlayxSecurePrefsSettings(),
     PlayxEnvSettings? envSettings,
-    bool createPlayxPrefs = true,
-    bool createPlayxAsyncPrefs = true,
-    bool createPlayxPrefsWithCache = false,
+    PlayxPrefsSettings prefsSettings = const PlayxPrefsSettings(),
+    WorkManagerSettings workerManagerSettings = const WorkManagerSettings(),
   }) async {
-    if (createPlayxPrefs) {
+    if (prefsSettings.createPlayxPrefs) {
       await PlayxPrefs.create();
     }
-    if (createPlayxAsyncPrefs) {
+    if (prefsSettings.createPlayxAsyncPrefs) {
       await PlayxAsyncPrefs.create();
     }
 
-    if (createPlayxPrefsWithCache) {
-      await PlayxPrefsWithCache.create();
+    if (prefsSettings.createPlayxPrefsWithCache) {
+      await PlayxPrefsWithCache.create(
+          options: prefsSettings.prefsWithCacheOptions);
     }
 
-    await PlayxSecurePrefs.create(securePrefsSettings: securePrefsSettings);
+    if (securePrefsSettings.createSecurePrefs) {
+      await PlayxSecurePrefs.create(securePrefsSettings: securePrefsSettings);
+    }
 
     if (envSettings != null) {
       await PlayxEnv.load(
@@ -119,6 +120,13 @@ abstract class PlayxCore {
         parser: envSettings.parser,
         mergeWith: envSettings.mergeWith,
         isOptional: envSettings.isOptional,
+      );
+    }
+
+    if (workerManagerSettings.initWorkerManager) {
+      await workerManager.init(
+        isolatesCount: workerManagerSettings.isolatesCount,
+        dynamicSpawning: workerManagerSettings.dynamicSpawning,
       );
     }
 
@@ -137,5 +145,6 @@ abstract class PlayxCore {
     await PlayxPrefs.dispose();
     await PlayxAsyncPrefs.dispose();
     await PlayxPrefsWithCache.dispose();
+    workerManager.dispose();
   }
 }

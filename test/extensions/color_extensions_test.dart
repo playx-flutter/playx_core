@@ -30,33 +30,38 @@ void main() {
       test(
           'copyWith returns a new color object by updating the alpha value of the current color',
           () {
-        const color = Color(0xFF00FF00);
-        final newColor = color.copyWith(alpha: 0x88);
-        expect(newColor, const Color(0x8800FF00));
+        const color = Color.fromRGBO(0, 255, 0, 1);
+        final newColor = color.copyWith(alpha: .1);
+        expect(newColor.a, .1);
+        expect(newColor, const Color.fromRGBO(0, 255, 0, .1));
       });
 
       test(
           'copyWith returns a new color object by updating the red value of the current color',
           () {
         const color = Color(0xFF00FF00);
-        final newColor = color.copyWith(red: 0xFF);
-        expect(newColor, const Color(0xFFFFFF00));
+        final newColor = color.copyWith(red: 1);
+        expect(newColor.r, 1);
+        expect(newColor, const Color.fromRGBO(255, 255, 0, 1));
       });
 
       test(
           'copyWith returns a new color object by updating the green value of the current color',
           () {
         const color = Color(0xFF0000FF);
-        final newColor = color.copyWith(green: 0xFF);
-        expect(newColor, const Color(0xFF00FFFF));
+        final newColor = color.copyWith(green: 1);
+        expect(newColor.g, 1);
+
+        expect(newColor, const Color.fromRGBO(0, 255, 255, 1));
       });
 
       test(
           'copyWith returns a new color object by updating the blue value of the current color',
           () {
         const color = Color(0xFF00FF00);
-        final newColor = color.copyWith(blue: 0xFF);
-        expect(newColor, const Color(0xFF00FFFF));
+        final newColor = color.copyWith(blue: 1);
+        expect(newColor.b, 1);
+        expect(newColor, const Color.fromRGBO(0, 255, 255, 1));
       });
     });
   });

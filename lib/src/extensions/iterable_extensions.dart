@@ -15,16 +15,16 @@ extension PlayxIterableExtensions<T> on Iterable<T> {
   int countNotNull() => countWhere((e) => e != null);
 
   /// Asynchronously map each element of this collection by [action].
-  Future<List<S>> asyncMap<S>(
-    Mapper<T, S> mapper,
-  ) async {
-    return Future.wait(map((i) async => mapper(i)));
-  }
+  Future<List<S>> asyncMap<S>({
+    required Mapper<T, S> mapper,
+  }) async =>
+      Future.wait(map((i) async => mapper(i)));
 
-  /// Maps the value of the List<T> to a new value in an isolate.
-  Future<List<S>> asyncMapInIsolate<S>(Mapper<T, S> mapper) async {
-    return Future.wait(map((e) => e.mapAsyncInIsolate(mapper)));
-  }
+  /// Maps the value of the [List] of type [T] to a new value of type [S] in an isolate.
+  Future<List<S>> asyncMapInIsolate<S>(
+          {required Mapper<T, S> mapper, bool useWorkManager = true}) =>
+      Future.wait(map((e) =>
+          e.mapAsyncInIsolate(mapper: mapper, useWorkManager: useWorkManager)));
 
   /// Returns a new list after removing duplicates from the original list.
   List<T> withoutDuplicate() => toSet().toList();
@@ -104,9 +104,21 @@ extension NestedIterablesExtensions<T> on Iterable<Iterable<T>> {
   List<T> flatten() => [for (final sublist in this) ...sublist];
 
   /// Returns a new list after flattening the original Iterable of Iterables and then mapping each element.
-  Iterable<X> flatMap<X>(X Function(T) f) => flatten().map(f);
+  Iterable<S> flatMap<S>({
+    required S Function(T data) mapper,
+  }) =>
+      flatten().map((e) => mapper(e));
 
   /// Returns a new list after flattening the original Iterable of Iterables and then mapping each element asynchronously.
+  @Deprecated('Use flatMapAsync instead.')
   Future<Iterable<X>> asyncFlatMap<X>(Future<X> Function(T) f) async =>
-      flatten().asyncMap(f);
+      flatten().asyncMap(mapper: f);
+
+  /// Returns a new list after flattening the original Iterable of Iterables and then mapping each element asynchronously.
+  Future<Iterable<S>> flatMapAsync<S>({
+    required Mapper<T, S> mapper,
+  }) async =>
+      flatten().asyncMap(
+        mapper: mapper,
+      );
 }

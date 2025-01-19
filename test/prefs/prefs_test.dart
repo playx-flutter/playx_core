@@ -17,7 +17,9 @@ void main() {
         securePrefsSettings: const PlayxSecurePrefsSettings(
           clearOnReinstall: false,
         ),
-        createPlayxAsyncPrefs: false,
+        prefsSettings: PlayxPrefsSettings(
+          createPlayxAsyncPrefs: false,
+        ),
       );
     },
   );
