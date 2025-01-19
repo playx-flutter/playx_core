@@ -1,5 +1,9 @@
 # Changelog
 
+# 1.0.0-beta.3
+- Add new `printError` param to `**MapUtils** mapAsync` and `mapAsyncInIsolate` methods to determine whether to print errors or not.
+- Update `asyncMapInIsolate` in `NestedIterablesExtensions` to include a `printError` parameter and `printEachItemError` parameter to determine whether to print errors for each item or not.
+
 
 # 1.0.0-beta.2
 > Note: This release has breaking changes.
