@@ -1,7 +1,7 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 ///Settings for [PlayxSecurePrefsSettings] .
-class   {
+class PlayxSecurePrefsSettings {
   final IOSOptions iosOptions;
   final AndroidOptions androidOptions;
   final LinuxOptions linuxOptions;
