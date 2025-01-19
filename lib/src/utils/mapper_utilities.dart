@@ -1,6 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:worker_manager/worker_manager.dart';
+
+import 'logger.dart';
 
 typedef Mapper<T, S> = FutureOr<S> Function(T data);
 
@@ -18,21 +21,37 @@ class MapUtils {
   MapUtils._();
 
   /// Maps the value of the future to a new value.
-  static Future<S> mapAsync<T, S>(T data, Mapper<T, S> mapper) async {
+  static Future<S> mapAsync<T, S>(
+      {required T data, required Mapper<T, S> mapper}) async {
     try {
       return mapper(data);
-    } catch (e) {
+    } catch (e, s) {
+      PlayxLogger.printError(
+          header: 'MapAsync Error',
+          text: e.toString(),
+          stackTrace: s.toString());
       // Handle any errors in the main thread
       rethrow;
     }
   }
 
   /// Maps the value of the future to a new value in an isolate.
-  static Future<S> mapAsyncInIsolate<T, S>(T data, Mapper<T, S> mapper) async {
+  /// If [useWorkManager] is set to true, it will use [workerManager] to execute the task.
+  /// Otherwise, it will use [compute] to execute the task.
+  static Future<S> mapAsyncInIsolate<T, S>(
+      {required T data,
+      required Mapper<T, S> mapper,
+      bool useWorkManager = true}) async {
     try {
-      final res = await compute(_mapAsync<T, S>, [data, mapper]);
+      final res = useWorkManager
+          ? await workerManager.execute(() => _mapAsync<T, S>([data, mapper]))
+          : await compute(_mapAsync<T, S>, [data, mapper]);
       return res;
-    } catch (e) {
+    } catch (e, s) {
+      PlayxLogger.printError(
+          header: 'MapAsyncInIsolate Error',
+          text: e.toString(),
+          stackTrace: s.toString());
       // Handle errors occurring in the isolate
       rethrow;
     }
@@ -41,12 +60,14 @@ class MapUtils {
 
 extension MapAsync<T> on T {
   /// Maps the value of the T to a new value.
-  Future<S> mapAsync<S>(Mapper<T, S> mapper) async {
-    return MapUtils.mapAsync(this, mapper);
-  }
+  Future<S> mapAsync<S>({required Mapper<T, S> mapper}) =>
+      MapUtils.mapAsync(data: this, mapper: mapper);
 
-  //// Maps the value of the T to a new value in an isolate.
-  Future<S> mapAsyncInIsolate<S>(Mapper<T, S> mapper) async {
-    return MapUtils.mapAsyncInIsolate(this, mapper);
-  }
+  //// Maps the value of the [T] to a new value in an isolate.
+  /// If [useWorkManager] is set to true, it will use [WorkerManager] to execute the task.
+  /// Otherwise, it will use [compute] to execute the task.
+  Future<S> mapAsyncInIsolate<S>(
+          {required Mapper<T, S> mapper, bool useWorkManager = true}) =>
+      MapUtils.mapAsyncInIsolate(
+          data: this, mapper: mapper, useWorkManager: useWorkManager);
 }
