@@ -1,5 +1,12 @@
 # Changelog
 
+# 1.0.0-beta.2
+> Note: This release has breaking changes.
+
+- Update flutter_secure_storage: to v10.0.0-beta.4.
+- Added v0.6.0 changes.
+
+
 # 1.0.0-beta.1
 - Add support for wasm support for web.
 - Update flutter_secure_storage: to v10.0.0-beta.2 which includes some breaking changes.
