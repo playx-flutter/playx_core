@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
+import 'package:playx_core/src/utils/logger.dart';
 import 'package:playx_core/src/utils/mapper_utilities.dart';
 
 /// Extensions on [Iterable] class to make it easier to work with.
@@ -17,14 +19,33 @@ extension PlayxIterableExtensions<T> on Iterable<T> {
   /// Asynchronously map each element of this collection by [action].
   Future<List<S>> asyncMap<S>({
     required Mapper<T, S> mapper,
-  }) async =>
+  }) =>
       Future.wait(map((i) async => mapper(i)));
 
   /// Maps the value of the [List] of type [T] to a new value of type [S] in an isolate.
-  Future<List<S>> asyncMapInIsolate<S>(
-          {required Mapper<T, S> mapper, bool useWorkManager = true}) =>
-      Future.wait(map((e) =>
-          e.mapAsyncInIsolate(mapper: mapper, useWorkManager: useWorkManager)));
+  Future<List<S>> asyncMapInIsolate<S>({
+    required Mapper<T, S> mapper,
+    bool useWorkManager = true,
+    bool printError = kDebugMode,
+    bool printEachItemError = false,
+  }) async {
+    try {
+      final res = await Future.wait(map((e) => e.mapAsyncInIsolate(
+          mapper: mapper,
+          useWorkManager: useWorkManager,
+          printError: printEachItemError)));
+      return res;
+    } catch (e, s) {
+      if (printError) {
+        PlayxLogger.printError(
+          header: 'AsyncMapInIsolate Error',
+          text: e.toString(),
+          stackTrace: s.toString(),
+        );
+      }
+      rethrow;
+    }
+  }
 
   /// Returns a new list after removing duplicates from the original list.
   List<T> withoutDuplicate() => toSet().toList();

@@ -1,5 +1,6 @@
 # Changelog
 
+
 # 1.0.0-beta.2
 > Note: This release has breaking changes.
 
@@ -11,6 +12,9 @@
 - Add support for wasm support for web.
 - Update flutter_secure_storage: to v10.0.0-beta.2 which includes some breaking changes.
 
+## 0.6.1
+- Add new `printError` param to `**MapUtils** mapAsync` and `mapAsyncInIsolate` methods to determine whether to print errors or not.
+- Update `asyncMapInIsolate` in `NestedIterablesExtensions` to include a `printError` parameter and `printEachItemError` parameter to determine whether to print errors for each item or not.
 
 ## 0.6.0
 > Note: This release has breaking changes.
