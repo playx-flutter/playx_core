@@ -22,10 +22,10 @@ extension PlayxColorExtensions on Color {
     double? blue,
   }) {
     return Color.fromRGBO(
-      (red ?? r * 255).toInt(),
-      (green ?? g * 255).toInt(),
-      (blue ?? b * 255).toInt(),
-      (alpha ?? a),
+      red != null ? (red * 255).toInt() : this.red,
+      green != null ? (green * 255).toInt() : this.green,
+      blue != null ? (blue * 255).toInt() : this.blue,
+      alpha ?? (this.alpha / 255),
     );
   }
 }
