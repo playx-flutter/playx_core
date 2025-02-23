@@ -6,22 +6,26 @@ extension PlayxColorExtensions on Color {
     final buffer = StringBuffer();
     if (leadingHashSign) buffer.write('#');
     if (includeAlpha) {
-      buffer.write((a * 255).toInt().toRadixString(16).padLeft(2, '0'));
+      buffer.write(alpha.toRadixString(16).padLeft(2, '0'));
     }
-    buffer.write((r * 255).toInt().toRadixString(16).padLeft(2, '0'));
-    buffer.write((g * 255).toInt().toRadixString(16).padLeft(2, '0'));
-    buffer.write((b * 255).toInt().toRadixString(16).padLeft(2, '0'));
+    buffer.write(red.toRadixString(16).padLeft(2, '0'));
+    buffer.write(green.toRadixString(16).padLeft(2, '0'));
+    buffer.write(blue.toRadixString(16).padLeft(2, '0'));
     return buffer.toString();
   }
 
-  /// Returns a new color object by updating the alpha or red or green or blue value of the current color.
+  /// Returns a new color object by updating the alpha, red, green, or blue value of the current color.
   Color copyWith({
     double? alpha,
     double? red,
     double? green,
     double? blue,
   }) {
-    return Color.from(
-        alpha: alpha ?? a, red: red ?? r, green: green ?? g, blue: blue ?? b);
+    return Color.fromRGBO(
+      (red ?? r * 255).toInt(),
+      (green ?? g * 255).toInt(),
+      (blue ?? b * 255).toInt(),
+      (alpha ?? a),
+    );
   }
 }

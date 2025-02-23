@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.2
+- Update packages. 
+- Updates minimum supported SDK version to Flutter 3.24/Dart 3.5.
+
 ## 0.6.1
 - Add new `printError` param to `**MapUtils** mapAsync` and `mapAsyncInIsolate` methods to determine whether to print errors or not.
 - Update `asyncMapInIsolate` in `NestedIterablesExtensions` to include a `printError` parameter and `printEachItemError` parameter to determine whether to print errors for each item or not.
