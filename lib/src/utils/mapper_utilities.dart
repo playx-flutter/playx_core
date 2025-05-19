@@ -27,10 +27,7 @@ class MapUtils {
       return mapper(data);
     } catch (e, s) {
       if (printError) {
-        PlayxCore.logger.error(
-            'MapAsync Error',
-            error: e,
-            stackTrace: s);
+        PlayxCore.logger.error('MapAsync Error', error: e, stackTrace: s);
       }
       // Handle any errors in the main thread
       rethrow;
@@ -53,10 +50,8 @@ class MapUtils {
       return res;
     } catch (e, s) {
       if (printError) {
-        PlayxCore.logger.error(
-             'MapAsyncInIsolate Error',
-            error: e,
-            stackTrace: s);
+        PlayxCore.logger
+            .error('MapAsyncInIsolate Error', error: e, stackTrace: s);
       }
       // Handle errors occurring in the isolate
       rethrow;

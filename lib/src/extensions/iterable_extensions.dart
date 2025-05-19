@@ -37,10 +37,8 @@ extension PlayxIterableExtensions<T> on Iterable<T> {
       return res;
     } catch (e, s) {
       if (printError) {
-        PlayxCore.logger.error(
-            'AsyncMapInIsolate Error',
-            error: e,
-            stackTrace: s);
+        PlayxCore.logger
+            .error('AsyncMapInIsolate Error', error: e, stackTrace: s);
       }
       rethrow;
     }

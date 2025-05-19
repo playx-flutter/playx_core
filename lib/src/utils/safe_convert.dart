@@ -10,12 +10,14 @@ int? toIntOrNull(dynamic value) {
   if (value is int) return value;
   if (value is double) return value.toInt();
   if (value is bool) return value ? 1 : 0;
-  if (value is String) return int.tryParse(value) ?? double.tryParse(value)?.toInt();
+  if (value is String)
+    return int.tryParse(value) ?? double.tryParse(value)?.toInt();
   return null;
 }
 
 /// Converts [value] to [int] or returns [fallback] if conversion fails.
-int toIntOr(dynamic value, {int fallback = 0}) => toIntOrNull(value) ?? fallback;
+int toIntOr(dynamic value, {int fallback = 0}) =>
+    toIntOrNull(value) ?? fallback;
 
 /// Converts [value] to [int] or throws [FormatException] if conversion fails.
 int toInt(dynamic value) =>
@@ -33,7 +35,8 @@ num? toNumOrNull(dynamic value) {
 }
 
 /// Converts [value] to [num] or returns [fallback] if conversion fails.
-num toNumOr(dynamic value, {num fallback = 0}) => toNumOrNull(value) ?? fallback;
+num toNumOr(dynamic value, {num fallback = 0}) =>
+    toNumOrNull(value) ?? fallback;
 
 /// Converts [value] to [num] or throws [FormatException] if conversion fails.
 num toNum(dynamic value) =>
@@ -57,7 +60,8 @@ double toDoubleOr(dynamic value, {double fallback = 0.0}) =>
 
 /// Converts [value] to [double] or throws [FormatException] if conversion fails.
 double toDouble(dynamic value) =>
-    toDoubleOrNull(value) ?? (throw FormatException('Invalid double value: $value'));
+    toDoubleOrNull(value) ??
+    (throw FormatException('Invalid double value: $value'));
 
 // ---------------------- BOOL ----------------------
 
@@ -65,13 +69,22 @@ double toDouble(dynamic value) =>
 bool? toBoolOrNull(dynamic value) {
   if (value == null) return null;
   if (value is bool) return value;
-  if (value is num) return value == 1 ? true : value == 0 ? false : null;
+  if (value is num)
+    return value == 1
+        ? true
+        : value == 0
+            ? false
+            : null;
   if (value is String) {
     final lower = value.toLowerCase();
     if (lower == 'true') return true;
     if (lower == 'false') return false;
     final numVal = num.tryParse(lower);
-    return numVal == 1 ? true : numVal == 0 ? false : null;
+    return numVal == 1
+        ? true
+        : numVal == 0
+            ? false
+            : null;
   }
   return null;
 }
@@ -82,7 +95,8 @@ bool toBoolOr(dynamic value, {bool fallback = false}) =>
 
 /// Converts [value] to [bool] or throws [FormatException] if conversion fails.
 bool toBool(dynamic value) =>
-    toBoolOrNull(value) ?? (throw FormatException('Invalid bool value: $value'));
+    toBoolOrNull(value) ??
+    (throw FormatException('Invalid bool value: $value'));
 
 // --------------------- STRING ---------------------
 
@@ -101,7 +115,8 @@ String toStringOr(dynamic value, {String fallback = ''}) =>
 
 /// Converts [value] to [String] or throws [FormatException] if conversion fails.
 String toString(dynamic value) =>
-    toStringOrNull(value) ?? (throw FormatException('Invalid String value: $value'));
+    toStringOrNull(value) ??
+    (throw FormatException('Invalid String value: $value'));
 
 // --------------------- DATETIME ---------------------
 
@@ -120,9 +135,8 @@ DateTime toDateTimeOr(dynamic value, {required DateTime fallback}) =>
 
 /// Converts [value] to [DateTime] or throws [FormatException] if conversion fails.
 DateTime toDateTime(dynamic value) =>
-    toDateTimeOrNull(value) ?? (throw FormatException('Invalid DateTime value: $value'));
-
-
+    toDateTimeOrNull(value) ??
+    (throw FormatException('Invalid DateTime value: $value'));
 
 // --------------------- LOCAL DATETIME ---------------------
 
@@ -131,22 +145,19 @@ DateTime? toLocalDateTimeOrNull(dynamic value) {
   return toDateTimeOrNull(value)?.toLocal();
 }
 
-
 /// Converts [value] to [DateTime] in local time zone or returns [fallback] if conversion fails.
 DateTime toLocalDateTimeOr(dynamic value, {required DateTime fallback}) =>
     toLocalDateTimeOrNull(value) ?? fallback;
 
-
 /// Converts [value] to [DateTime] in local time zone or throws [FormatException] if conversion fails.
 DateTime toLocalDateTime(dynamic value) =>
-    toLocalDateTimeOrNull(value) ?? (throw FormatException('Invalid DateTime value: $value'));
-
-
+    toLocalDateTimeOrNull(value) ??
+    (throw FormatException('Invalid DateTime value: $value'));
 
 // --------------------- MAP ---------------------
 
 /// Safely converts [value] to a Map, or returns null if conversion fails.
-Map<T, S>? toMapOrNull<T,S>(dynamic value) {
+Map<T, S>? toMapOrNull<T, S>(dynamic value) {
   if (value == null) return null;
   if (value is Map<T, S>) return value;
   if (value is Map && value.isEmpty) return <T, S>{};
@@ -154,17 +165,17 @@ Map<T, S>? toMapOrNull<T,S>(dynamic value) {
 }
 
 /// Converts [value] to Map or returns [fallback] if conversion fails.
-Map<T, S> toMapOr<T,S>(dynamic value, {Map<T, S> fallback = const {}}) =>
+Map<T, S> toMapOr<T, S>(dynamic value, {Map<T, S> fallback = const {}}) =>
     toMapOrNull(value) ?? fallback;
 
 /// Converts [value] to Map or throws [FormatException] if conversion fails.
-Map<T, S> toMap<T,S>(dynamic value) =>
+Map<T, S> toMap<T, S>(dynamic value) =>
     toMapOrNull(value) ?? (throw FormatException('Invalid Map value: $value'));
 
 // --------------------- LIST ---------------------
 
 /// Safely converts [value] to List, or returns null if conversion fails.
-List<T>? toListOrNull<T>(dynamic value,{T Function(dynamic json)? fromJson}) {
+List<T>? toListOrNull<T>(dynamic value, {T Function(dynamic json)? fromJson}) {
   if (value == null) return null;
   if (value is List<T>) return value;
   if (value is List && value.isEmpty) return <T>[];
@@ -181,12 +192,14 @@ List<T>? toListOrNull<T>(dynamic value,{T Function(dynamic json)? fromJson}) {
 }
 
 /// Converts [value] to List or returns [fallback] if conversion fails.
-List<T> toListOr<T>(dynamic value, {List<T> fallback = const [], T Function(dynamic json)? fromJson}) =>
-    toListOrNull<T>(value,fromJson:fromJson) ?? fallback;
+List<T> toListOr<T>(dynamic value,
+        {List<T> fallback = const [], T Function(dynamic json)? fromJson}) =>
+    toListOrNull<T>(value, fromJson: fromJson) ?? fallback;
 
 /// Converts [value] to List or throws [FormatException] if conversion fails.
 List<T> toList<T>(dynamic value, {T Function(dynamic json)? fromJson}) =>
-    toListOrNull<T>(value, fromJson:fromJson) ?? (throw FormatException('Invalid List<$T> value: $value'));
+    toListOrNull<T>(value, fromJson: fromJson) ??
+    (throw FormatException('Invalid List<$T> value: $value'));
 
 // --------------------- GENERIC ---------------------
 
@@ -206,7 +219,7 @@ T? toTOrNull<T>(dynamic value, {required T Function(dynamic json) fromJson}) {
 
 /// Converts [value] to [T] using [fromJson] or returns [fallback] if conversion fails.
 T toTOr<T>(
-   dynamic value,{
+  dynamic value, {
   required T Function(dynamic json) fromJson,
   required T fallback,
 }) =>
@@ -215,4 +228,4 @@ T toTOr<T>(
 /// Converts [value] to [T] using [fromJson] or throws [FormatException] if conversion fails.
 T toT<T>(dynamic value, {required T Function(dynamic json) fromJson}) =>
     toTOrNull(value, fromJson: fromJson) ??
-        (throw FormatException('Invalid value for type $T: $value'));
+    (throw FormatException('Invalid value for type $T: $value'));

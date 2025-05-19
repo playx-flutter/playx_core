@@ -14,7 +14,8 @@ void setStatusBarColor({
     SystemUiOverlayStyle(
       statusBarColor: color,
       statusBarIconBrightness: isDark ? Brightness.dark : Brightness.light,
-      statusBarBrightness: isDark ? Brightness.light : Brightness.dark, // for iOS
+      statusBarBrightness:
+          isDark ? Brightness.light : Brightness.dark, // for iOS
     ),
   );
 }
@@ -27,11 +28,11 @@ void setNavigationBarColor({
   SystemChrome.setSystemUIOverlayStyle(
     SystemUiOverlayStyle(
       systemNavigationBarColor: color,
-      systemNavigationBarIconBrightness: isDark ? Brightness.dark : Brightness.light,
+      systemNavigationBarIconBrightness:
+          isDark ? Brightness.dark : Brightness.light,
     ),
   );
 }
-
 
 /// Locks the screen orientation.
 ///
@@ -92,7 +93,6 @@ Future<void> copyToClipboard(String text) async {
   await Clipboard.setData(ClipboardData(text: text));
 }
 
-
 /// Retrieves text from clipboard.
 Future<String?> getClipboardText() async {
   final data = await Clipboard.getData(Clipboard.kTextPlain);
@@ -103,4 +103,3 @@ Future<String?> getClipboardText() async {
 Future<void> clearClipboard() async {
   await Clipboard.setData(ClipboardData(text: ''));
 }
-

@@ -14,10 +14,13 @@ final _defaultColors = {
 class PlayxLoggerSettings {
   /// Field for enable and disable print logger
   final bool enabled;
+
   /// Field for enable and disable colored logs
   final bool useColors;
+
   /// Field for enable and disable print logger to console
   final bool printToConsole;
+
   /// Field to setup custom log colors
   ///```dart
   /// final logger = TalkerLogger(
@@ -54,10 +57,10 @@ class PlayxLoggerSettings {
   final LoggerFormatter formatter;
 
   /// Field to setup custom log colors
-   final LoggerOutput? output;
-   final LoggerFilter? filter;
+  final LoggerOutput? output;
+  final LoggerFilter? filter;
 
-   PlayxLoggerSettings({
+  PlayxLoggerSettings({
     this.enabled = kDebugMode,
     this.useColors = true,
     this.printToConsole = true,
@@ -69,8 +72,5 @@ class PlayxLoggerSettings {
     this.formatter = const ExtendedLoggerFormatter(),
     this.output,
     this.filter,
-
-
   });
-
 }

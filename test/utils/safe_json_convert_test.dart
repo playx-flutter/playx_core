@@ -140,7 +140,11 @@ void main() {
   group('Map conversion', () {
     test('asMapOrNull', () {
       expect(asMapOrNull(null, 'k'), null);
-      expect(asMapOrNull({'k': {'a': 1}}, 'k'), {'a': 1});
+      expect(
+          asMapOrNull({
+            'k': {'a': 1}
+          }, 'k'),
+          {'a': 1});
       expect(asMapOrNull({'k': []}, 'k'), null);
     });
 
@@ -150,14 +154,22 @@ void main() {
 
     test('asMap', () {
       expect(() => asMap({'k': 'bad'}, 'k'), throwsFormatException);
-      expect(asMap({'k': {'a': 1}}, 'k'), {'a': 1});
+      expect(
+          asMap({
+            'k': {'a': 1}
+          }, 'k'),
+          {'a': 1});
     });
   });
 
   group('List conversion', () {
     test('asListOrNull', () {
       expect(asListOrNull(null, 'k'), null);
-      expect(asListOrNull({'k': [1, 2]}, 'k'), [1, 2]);
+      expect(
+          asListOrNull({
+            'k': [1, 2]
+          }, 'k'),
+          [1, 2]);
       expect(asListOrNull({'k': 'bad'}, 'k'), null);
     });
 
@@ -167,16 +179,32 @@ void main() {
 
     test('asList', () {
       expect(() => asList({'k': 'bad'}, 'k'), throwsFormatException);
-      expect(asList({'k': [1]}, 'k'), [1]);
+      expect(
+          asList({
+            'k': [1]
+          }, 'k'),
+          [1]);
     });
   });
 
   group('List<int> conversion', () {
     test('asListIntOrNull', () {
       expect(asListIntOrNull(null, 'k'), null);
-      expect(asListIntOrNull({'k': [1, 2]}, 'k'), [1, 2]);
-      expect(asListIntOrNull({'k': ['1', '2']}, 'k'), [1, 2]);
-      expect(asListIntOrNull({'k': ['a', 'b']}, 'k'), null);
+      expect(
+          asListIntOrNull({
+            'k': [1, 2]
+          }, 'k'),
+          [1, 2]);
+      expect(
+          asListIntOrNull({
+            'k': ['1', '2']
+          }, 'k'),
+          [1, 2]);
+      expect(
+          asListIntOrNull({
+            'k': ['a', 'b']
+          }, 'k'),
+          null);
     });
 
     test('asListIntOr', () {
@@ -184,17 +212,37 @@ void main() {
     });
 
     test('asListInt', () {
-      expect(() => asListInt({'k': ['a', 'b']}, 'k'), throwsFormatException);
-      expect(asListInt({'k': [1, 2]}, 'k'), [1, 2]);
+      expect(
+          () => asListInt({
+                'k': ['a', 'b']
+              }, 'k'),
+          throwsFormatException);
+      expect(
+          asListInt({
+            'k': [1, 2]
+          }, 'k'),
+          [1, 2]);
     });
   });
 
   group('List<String> conversion', () {
     test('asListStringOrNull', () {
       expect(asListStringOrNull(null, 'k'), null);
-      expect(asListStringOrNull({'k': ['a', 'b']}, 'k'), ['a', 'b']);
-      expect(asListStringOrNull({'k': [1, 2]}, 'k'), ['1', '2']);
-      expect(asListStringOrNull({'k': [{}]}, 'k'), null);
+      expect(
+          asListStringOrNull({
+            'k': ['a', 'b']
+          }, 'k'),
+          ['a', 'b']);
+      expect(
+          asListStringOrNull({
+            'k': [1, 2]
+          }, 'k'),
+          ['1', '2']);
+      expect(
+          asListStringOrNull({
+            'k': [{}]
+          }, 'k'),
+          null);
     });
 
     test('asListStringOr', () {
@@ -202,24 +250,43 @@ void main() {
     });
 
     test('asListString', () {
-      expect( asListString({'k': [1, 2]}, 'k'), ['1', '2']);
-      expect(asListString({'k': ['a', 'b']}, 'k'), ['a', 'b']);
-      expect(() => asListString({'k': [{}]}, 'k'), throwsFormatException);
+      expect(
+          asListString({
+            'k': [1, 2]
+          }, 'k'),
+          ['1', '2']);
+      expect(
+          asListString({
+            'k': ['a', 'b']
+          }, 'k'),
+          ['a', 'b']);
+      expect(
+          () => asListString({
+                'k': [{}]
+              }, 'k'),
+          throwsFormatException);
     });
   });
 
   group('Generic conversion', () {
     test('asTOrNull', () {
-      expect(asTOrNull<int>({'k': '5'}, 'k', fromJson: (v) => int.tryParse(v) ?? 0), 5);
-      expect(asTOrNull<int>({'k': 'bad'}, 'k', fromJson: (v) => int.tryParse(v) ?? 0), 0);
+      expect(
+          asTOrNull<int>({'k': '5'}, 'k',
+              fromJson: (v) => int.tryParse(v) ?? 0),
+          5);
+      expect(
+          asTOrNull<int>({'k': 'bad'}, 'k',
+              fromJson: (v) => int.tryParse(v) ?? 0),
+          0);
     });
-
   });
 
   group('Generic List conversion', () {
     test('asListOrNull generic', () {
       expect(
-        asListOrNull<int>({'k': ['1', '2']}, 'k', fromJson: (v) => int.tryParse(v) ?? 0),
+        asListOrNull<int>({
+          'k': ['1', '2']
+        }, 'k', fromJson: (v) => int.tryParse(v) ?? 0),
         [1, 2],
       );
     });

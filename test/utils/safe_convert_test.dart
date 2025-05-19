@@ -46,7 +46,6 @@ void main() {
     });
   });
 
-
   group('Num conversion', () {
     test('toNumOrNull', () {
       expect(toNumOrNull(null), null);
@@ -111,8 +110,10 @@ void main() {
   group('DateTime conversion', () {
     test('toDateTimeOrNull', () {
       expect(toDateTimeOrNull(null), null);
-      expect(toDateTimeOrNull('2020-01-01T00:00:00Z'), DateTime.parse('2020-01-01T00:00:00Z'));
-      expect(toDateTimeOrNull(1577836800000), DateTime.fromMillisecondsSinceEpoch(1577836800000));
+      expect(toDateTimeOrNull('2020-01-01T00:00:00Z'),
+          DateTime.parse('2020-01-01T00:00:00Z'));
+      expect(toDateTimeOrNull(1577836800000),
+          DateTime.fromMillisecondsSinceEpoch(1577836800000));
       expect(toDateTimeOrNull('bad'), null);
     });
 
@@ -123,18 +124,19 @@ void main() {
 
     test('toDateTime', () {
       expect(() => toDateTime('bad'), throwsFormatException);
-      expect(toDateTime('2020-01-01T00:00:00Z'), DateTime.parse('2020-01-01T00:00:00Z'));
+      expect(toDateTime('2020-01-01T00:00:00Z'),
+          DateTime.parse('2020-01-01T00:00:00Z'));
     });
   });
-
-
 
   // local date time
   group('Local DateTime conversion', () {
     test('toLocalDateTimeOrNull', () {
       expect(toLocalDateTimeOrNull(null), null);
-      expect(toLocalDateTimeOrNull('2020-01-01T00:00:00Z'), DateTime.parse('2020-01-01T00:00:00Z').toLocal());
-      expect(toLocalDateTimeOrNull(1577836800000), DateTime.fromMillisecondsSinceEpoch(1577836800000).toLocal());
+      expect(toLocalDateTimeOrNull('2020-01-01T00:00:00Z'),
+          DateTime.parse('2020-01-01T00:00:00Z').toLocal());
+      expect(toLocalDateTimeOrNull(1577836800000),
+          DateTime.fromMillisecondsSinceEpoch(1577836800000).toLocal());
       expect(toLocalDateTimeOrNull('bad'), null);
     });
 
@@ -145,7 +147,8 @@ void main() {
 
     test('toLocalDateTime', () {
       expect(() => toLocalDateTime('bad'), throwsFormatException);
-      expect(toLocalDateTime('2020-01-01T00:00:00Z'), DateTime.parse('2020-01-01T00:00:00Z').toLocal());
+      expect(toLocalDateTime('2020-01-01T00:00:00Z'),
+          DateTime.parse('2020-01-01T00:00:00Z').toLocal());
     });
   });
 
@@ -190,11 +193,14 @@ void main() {
     });
 
     test('toTOr', () {
-      expect(toTOr<int>('bad', fromJson: (v) => int.tryParse(v) ?? 0, fallback: 7), 0);
+      expect(
+          toTOr<int>('bad', fromJson: (v) => int.tryParse(v) ?? 0, fallback: 7),
+          0);
     });
 
     test('toT', () {
-      expect(() => toT<int>('bad', fromJson: (v) => throw FormatException()), throwsFormatException);
+      expect(() => toT<int>('bad', fromJson: (v) => throw FormatException()),
+          throwsFormatException);
       expect(toT<int>('5', fromJson: (v) => int.parse(v)), 5);
     });
   });

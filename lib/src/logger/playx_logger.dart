@@ -41,7 +41,8 @@ class PlayxLogger {
     PlayxLoggerSettings? settings,
     bool setAsDefault = true,
   }) {
-    final logger = TalkerPlayxLogger(settings: settings ?? PlayxLoggerSettings(), name: name);
+    final logger = TalkerPlayxLogger(
+        settings: settings ?? PlayxLoggerSettings(), name: name);
     name ??= 'PLAYX LOGGER';
     _loggers[name] = logger;
 
@@ -80,7 +81,7 @@ class PlayxLogger {
 
   /// Logs an error-level [message] with optional [error], [stackTrace], and [tag].
   static void error(dynamic message,
-      {Object? error, StackTrace? stackTrace, String? tag}) =>
+          {Object? error, StackTrace? stackTrace, String? tag}) =>
       _defaultLogger?.error(
         message,
         error: error,
@@ -110,7 +111,7 @@ class PlayxLogger {
 
   /// Alias for [error]
   static void e(dynamic message,
-      {Object? error, StackTrace? stackTrace, String? tag}) =>
+          {Object? error, StackTrace? stackTrace, String? tag}) =>
       _defaultLogger?.error(
         message,
         error: error,

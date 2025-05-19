@@ -67,8 +67,7 @@ abstract class PlayxCore {
     return _getIt!;
   }
 
-
-  static PlayxBaseLogger get logger=> PlayxLogger.getLogger('PLAYX CORE')!;
+  static PlayxBaseLogger get logger => PlayxLogger.getLogger('PLAYX CORE')!;
 
   /// Initializes and installs the dependencies needed for `playx_core`.
   ///
@@ -116,7 +115,6 @@ abstract class PlayxCore {
       await PlayxPrefsWithCache.create(
           options: prefsSettings.prefsWithCacheOptions);
     }
-
 
     if (securePrefsSettings.createSecurePrefs) {
       await PlayxSecurePrefs.create(securePrefsSettings: securePrefsSettings);

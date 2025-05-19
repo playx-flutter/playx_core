@@ -168,27 +168,25 @@ DateTime asLocalDateTimeOr(dynamic json, String key,
   return toLocalDateTimeOr(value, fallback: fallback);
 }
 
-
-
 /// ====================
 /// Map conversions
 /// ====================
 
 /// Returns a Map if the value at [key] is a map, otherwise null.
-Map<T,S>? asMapOrNull<T,S>(dynamic json, String key) {
+Map<T, S>? asMapOrNull<T, S>(dynamic json, String key) {
   final value = _getJsonValueOrNull(json, key);
   return toMapOrNull(value);
 }
 
 /// Returns a Map for the value at [key].
 /// Throws a [FormatException] if the value is not a map.
-Map<T, S> asMap<T,S>(dynamic json, String key) {
+Map<T, S> asMap<T, S>(dynamic json, String key) {
   final value = _getJsonValueOrNull(json, key);
   return toMap(value);
 }
 
 /// Returns a Map for the value at [key], or [fallback] if conversion fails.
-Map<T, S> asMapOr<T,S>(dynamic json, String key,
+Map<T, S> asMapOr<T, S>(dynamic json, String key,
     {Map<T, S> fallback = const {}}) {
   final value = _getJsonValueOrNull(json, key);
   return toMapOr(value, fallback: fallback);
@@ -210,15 +208,16 @@ List<int>? asListIntOrNull(dynamic json, String key,
 
 /// Returns a List[int] for the value at [key].
 /// Throws a [FormatException] if the value is not a list of ints.
-List<int> asListInt(dynamic json, String key,{int Function(dynamic json)? fromJson}) {
-  return asListOrNull(json, key,fromJson: fromJson)??
+List<int> asListInt(dynamic json, String key,
+    {int Function(dynamic json)? fromJson}) {
+  return asListOrNull(json, key, fromJson: fromJson) ??
       (throw FormatException('Invalid List<int> value for key: $key'));
 }
 
 /// Returns a List[int] for the value at [key], or [fallback] if conversion fails.
 List<int> asListIntOr(dynamic json, String key,
     {List<int> fallback = const [], int Function(dynamic json)? fromJson}) {
-  return asListOrNull(json, key,fromJson: fromJson)??fallback;
+  return asListOrNull(json, key, fromJson: fromJson) ?? fallback;
 }
 
 /// ====================
@@ -226,23 +225,28 @@ List<int> asListIntOr(dynamic json, String key,
 /// ====================
 
 /// Returns a List if the value at [key] is a list of strings, otherwise null.
-List<String>? asListStringOrNull(dynamic json, String key,{String Function(dynamic json)? fromJson}) {
-  final list = asListOrNull<dynamic>(json, key,fromJson: fromJson)?.map(toStringOrNull).toList();
+List<String>? asListStringOrNull(dynamic json, String key,
+    {String Function(dynamic json)? fromJson}) {
+  final list = asListOrNull<dynamic>(json, key, fromJson: fromJson)
+      ?.map(toStringOrNull)
+      .toList();
   if (list == null || list.any((element) => element == null)) return null;
   return list.whereType<String>().toList();
 }
 
 /// Returns a List for the value at [key].
 /// Throws a [FormatException] if the value is not a list of strings.
-List<String> asListString(dynamic json, String key, {String Function(dynamic json)? fromJson}) {
-  return asListStringOrNull(json, key,fromJson: fromJson)??
+List<String> asListString(dynamic json, String key,
+    {String Function(dynamic json)? fromJson}) {
+  return asListStringOrNull(json, key, fromJson: fromJson) ??
       (throw FormatException('Invalid List<String> value for key: $key'));
 }
 
 /// Returns a List for the value at [key], or [fallback] if conversion fails.
 List<String> asListStringOr(dynamic json, String key,
-    {List<String> fallback = const [], String Function(dynamic json)? fromJson}) {
-  return asListStringOrNull(json, key,fromJson: fromJson)??fallback;
+    {List<String> fallback = const [],
+    String Function(dynamic json)? fromJson}) {
+  return asListStringOrNull(json, key, fromJson: fromJson) ?? fallback;
 }
 
 /// ====================
@@ -260,8 +264,6 @@ List<T>? asListOrNull<T>(dynamic json, String key,
   return list.whereType<T>().toList();
 }
 
-
-
 /// Converts the value at [key] to a List.
 List<T> asList<T>(dynamic json, String key,
     {T Function(dynamic json)? fromJson}) {
@@ -274,8 +276,6 @@ List<T> asListOr<T>(dynamic json, String key,
     {List<T> fallback = const [], T Function(dynamic json)? fromJson}) {
   return asListOrNull(json, key, fromJson: fromJson) ?? fallback;
 }
-
-
 
 /// ====================
 /// Generic conversion
@@ -304,4 +304,3 @@ T? asTOrNull<T>(dynamic json, String key,
   }
   return null;
 }
-

@@ -11,7 +11,7 @@ void main() {
     testWidgets('setStatusBarColor does not throw', (tester) async {
       await tester.pumpWidget(const SizedBox());
       expect(
-            () => setStatusBarColor(color: Colors.red, isDark: true),
+        () => setStatusBarColor(color: Colors.red, isDark: true),
         returnsNormally,
       );
       await tester.pumpAndSettle();
@@ -29,7 +29,6 @@ void main() {
         SystemChrome.latestStyle?.statusBarBrightness,
         Brightness.light,
       );
-
     });
   });
 
@@ -37,7 +36,7 @@ void main() {
     testWidgets('setNavigationBarColor does not throw', (tester) async {
       await tester.pumpWidget(const SizedBox());
       expect(
-            () => setNavigationBarColor(color: Colors.green, isDark: false),
+        () => setNavigationBarColor(color: Colors.green, isDark: false),
         returnsNormally,
       );
       await tester.pumpAndSettle();
@@ -58,9 +57,11 @@ void main() {
       expect(() => setOrientation(), returnsNormally);
     });
 
-    testWidgets('setOrientation landscape with rotation does not throw', (tester) async {
+    testWidgets('setOrientation landscape with rotation does not throw',
+        (tester) async {
       await tester.pumpWidget(const SizedBox());
-      expect(() => setOrientation(isPortrait: false, allowRotation: true), returnsNormally);
+      expect(() => setOrientation(isPortrait: false, allowRotation: true),
+          returnsNormally);
     });
   });
 
@@ -93,7 +94,8 @@ void main() {
   });
 
   group('Full screen', () {
-    testWidgets('enterFullScreen and exitFullScreen do not throw', (tester) async {
+    testWidgets('enterFullScreen and exitFullScreen do not throw',
+        (tester) async {
       await tester.pumpWidget(const SizedBox());
       await tester.pumpAndSettle();
       expect(() => enterFullScreen(), returnsNormally);
