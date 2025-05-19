@@ -99,3 +99,8 @@ Future<String?> getClipboardText() async {
   return data?.text;
 }
 
+/// Clear the clipboard.
+Future<void> clearClipboard() async {
+  await Clipboard.setData(ClipboardData(text: ''));
+}
+
