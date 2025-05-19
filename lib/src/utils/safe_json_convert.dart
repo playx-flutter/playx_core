@@ -22,12 +22,14 @@ int? asIntOrNull(dynamic json, String key) {
 /// Returns an int for the value at [key].
 /// Throws a [FormatException] if the value cannot be converted.
 int asInt(dynamic json, String key) {
-  return toInt(asTOrNull(json, key));
+  final value = _getJsonValueOrNull(json, key);
+  return toInt(value);
 }
 
 /// Returns an int for the value at [key], or [fallback] if conversion fails.
 int asIntOr(dynamic json, String key, {int fallback = 0}) {
-  return toIntOr(asTOrNull(json, key), fallback: fallback);
+  final value = _getJsonValueOrNull(json, key);
+  return toIntOr(value, fallback: fallback);
 }
 
 /// ====================
@@ -43,12 +45,14 @@ double? asDoubleOrNull(dynamic json, String key) {
 /// Returns a double for the value at [key].
 /// Throws a [FormatException] if the value cannot be converted.
 double asDouble(dynamic json, String key) {
-  return toDouble(asTOrNull(json, key));
+  final value = _getJsonValueOrNull(json, key);
+  return toDouble(value);
 }
 
 /// Returns a double for the value at [key], or [fallback] if conversion fails.
 double asDoubleOr(dynamic json, String key, {double fallback = 0.0}) {
-  return toDoubleOr(asTOrNull(json, key), fallback: fallback);
+  final value = _getJsonValueOrNull(json, key);
+  return toDoubleOr(value, fallback: fallback);
 }
 
 /// ====================
@@ -58,24 +62,20 @@ double asDoubleOr(dynamic json, String key, {double fallback = 0.0}) {
 /// Returns a num (int or double) if the value at [key] can be converted, otherwise null.
 num? asNumOrNull(dynamic json, String key) {
   final value = _getJsonValueOrNull(json, key);
-  final intValue = toIntOrNull(value);
-  if (intValue != null) return intValue;
-  return toDoubleOrNull(value);
+  return toNumOrNull(value);
 }
 
 /// Returns a num (int or double) for the value at [key].
 /// Throws a [FormatException] if the value cannot be converted.
 num asNum(dynamic json, String key) {
-  final val = asTOrNull<num>(json, key);
-  if (val != null) return val;
-  throw FormatException('Invalid num value for key: $key');
+  final value = _getJsonValueOrNull(json, key);
+  return toNum(value);
 }
 
 /// Returns a num (int or double) for the value at [key], or [fallback] if conversion fails.
 num asNumOr(dynamic json, String key, {num fallback = 0}) {
-  final val = asTOrNull<num>(json, key);
-  if (val != null) return val;
-  return fallback;
+  final value = _getJsonValueOrNull(json, key);
+  return toNumOr(value, fallback: fallback);
 }
 
 /// ====================
@@ -91,12 +91,15 @@ bool? asBoolOrNull(dynamic json, String key) {
 /// Returns a bool for the value at [key].
 /// Throws a [FormatException] if the value cannot be converted.
 bool asBool(dynamic json, String key) {
-  return toBool(asTOrNull(json, key));
+  final value = _getJsonValueOrNull(json, key);
+  return toBool(value);
 }
 
 /// Returns a bool for the value at [key], or [fallback] if conversion fails.
 bool asBoolOr(dynamic json, String key, {bool fallback = false}) {
-  return toBoolOr(asTOrNull(json, key), fallback: fallback);
+  final value = _getJsonValueOrNull(json, key);
+
+  return toBoolOr(value, fallback: fallback);
 }
 
 /// ====================
@@ -112,12 +115,14 @@ String? asStringOrNull(dynamic json, String key) {
 /// Returns a String for the value at [key].
 /// Throws a [FormatException] if the value cannot be converted.
 String asString(dynamic json, String key) {
-  return toString(asTOrNull(json, key));
+  final value = _getJsonValueOrNull(json, key);
+  return toString(value);
 }
 
 /// Returns a String for the value at [key], or [fallback] if conversion fails.
 String asStringOr(dynamic json, String key, {String fallback = ''}) {
-  return toStringOr(asTOrNull(json, key), fallback: fallback);
+  final value = _getJsonValueOrNull(json, key);
+  return toStringOr(value, fallback: fallback);
 }
 
 /// ====================
@@ -134,113 +139,143 @@ DateTime? asDateTimeOrNull(dynamic json, String key) {
 /// Throws a [FormatException] if the value cannot be parsed.
 DateTime asDateTime(dynamic json, String key) {
   final value = _getJsonValueOrNull(json, key);
-  return toDateTime(asTOrNull(json, key));
+  return toDateTime(value);
 }
 
 /// Returns a DateTime for the value at [key], or [fallback] if parsing fails.
 DateTime asDateTimeOr(dynamic json, String key, {required DateTime fallback}) {
-  return toDateTimeOr(asTOrNull(json, key), fallback: fallback);
+  final value = _getJsonValueOrNull(json, key);
+  return toDateTimeOr(value, fallback: fallback);
 }
 
+/// Returns a local [DateTime] with current timezone if the value at [key] can be parsed, otherwise null.
+DateTime? asLocalDateTimeOrNull(dynamic json, String key) {
+  final value = _getJsonValueOrNull(json, key);
+  return toLocalDateTimeOrNull(value);
+}
+
+/// Returns a local [DateTime] for the value at [key].
+/// Throws a [FormatException] if the value cannot be parsed.
+DateTime asLocalDateTime(dynamic json, String key) {
+  final value = _getJsonValueOrNull(json, key);
+  return toLocalDateTime(value);
+}
+
+/// Returns a local [DateTime] for the value at [key], or [fallback] if parsing fails.
+DateTime asLocalDateTimeOr(dynamic json, String key,
+    {required DateTime fallback}) {
+  final value = _getJsonValueOrNull(json, key);
+  return toLocalDateTimeOr(value, fallback: fallback);
+}
+
+
+
 /// ====================
-/// Map<String, dynamic> conversions
+/// Map conversions
 /// ====================
 
-/// Returns a Map<String, dynamic> if the value at [key] is a map, otherwise null.
-Map<String, dynamic>? asMapOrNull(dynamic json, String key) {
+/// Returns a Map if the value at [key] is a map, otherwise null.
+Map<T,S>? asMapOrNull<T,S>(dynamic json, String key) {
   final value = _getJsonValueOrNull(json, key);
   return toMapOrNull(value);
 }
 
-/// Returns a Map<String, dynamic> for the value at [key].
+/// Returns a Map for the value at [key].
 /// Throws a [FormatException] if the value is not a map.
-Map<String, dynamic> asMap(dynamic json, String key) {
-  return toMap(asTOrNull(json, key));
+Map<T, S> asMap<T,S>(dynamic json, String key) {
+  final value = _getJsonValueOrNull(json, key);
+  return toMap(value);
 }
 
-/// Returns a Map<String, dynamic> for the value at [key], or [fallback] if conversion fails.
-Map<String, dynamic> asMapOr(dynamic json, String key,
-    {Map<String, dynamic> fallback = const {}}) {
-  return toMapOr(asTOrNull(json, key), fallback: fallback);
+/// Returns a Map for the value at [key], or [fallback] if conversion fails.
+Map<T, S> asMapOr<T,S>(dynamic json, String key,
+    {Map<T, S> fallback = const {}}) {
+  final value = _getJsonValueOrNull(json, key);
+  return toMapOr(value, fallback: fallback);
 }
 
 /// ====================
-/// List<int> conversions
+/// List[int] conversions
 /// ====================
 
-/// Returns a List<int> if the value at [key] is a list of ints, otherwise null.
+/// Returns a List[int] if the value at [key] is a list of ints, otherwise null.
 List<int>? asListIntOrNull(dynamic json, String key,
     {int Function(dynamic json)? fromJson}) {
-  final list = asListOrNull<int>(json, key, fromJson: fromJson)
+  final list = asListOrNull<dynamic>(json, key, fromJson: fromJson)
       ?.map(toIntOrNull)
       .toList();
   if (list == null || list.any((element) => element == null)) return null;
   return list.whereType<int>().toList();
 }
 
+/// Returns a List[int] for the value at [key].
+/// Throws a [FormatException] if the value is not a list of ints.
+List<int> asListInt(dynamic json, String key,{int Function(dynamic json)? fromJson}) {
+  return asListOrNull(json, key,fromJson: fromJson)??
+      (throw FormatException('Invalid List<int> value for key: $key'));
+}
+
+/// Returns a List[int] for the value at [key], or [fallback] if conversion fails.
+List<int> asListIntOr(dynamic json, String key,
+    {List<int> fallback = const [], int Function(dynamic json)? fromJson}) {
+  return asListOrNull(json, key,fromJson: fromJson)??fallback;
+}
+
 /// ====================
-/// List<String> conversions
+/// List[String] conversions
 /// ====================
 
-/// Returns a List<String> if the value at [key] is a list of strings, otherwise null.
+/// Returns a List if the value at [key] is a list of strings, otherwise null.
 List<String>? asListStringOrNull(dynamic json, String key,{String Function(dynamic json)? fromJson}) {
-  final list = asListOrNull(json, key,fromJson: fromJson)?.map(toStringOrNull).toList();
+  final list = asListOrNull<dynamic>(json, key,fromJson: fromJson)?.map(toStringOrNull).toList();
   if (list == null || list.any((element) => element == null)) return null;
   return list.whereType<String>().toList();
 }
 
-/// Returns a List<String> for the value at [key].
+/// Returns a List for the value at [key].
 /// Throws a [FormatException] if the value is not a list of strings.
-List<String> asListString(dynamic json, String key) {
-  final list = asListOrNull(json, key)?.map(toStringOrNull).toList();
-  if (list == null || list.any((element) => element == null)) {
-    throw FormatException('Invalid List<String> value for key: $key');
-  }
-  return list.whereType<String>().toList();
+List<String> asListString(dynamic json, String key, {String Function(dynamic json)? fromJson}) {
+  return asListStringOrNull(json, key,fromJson: fromJson)??
+      (throw FormatException('Invalid List<String> value for key: $key'));
 }
 
-/// Returns a List<String> for the value at [key], or [fallback] if conversion fails.
+/// Returns a List for the value at [key], or [fallback] if conversion fails.
 List<String> asListStringOr(dynamic json, String key,
     {List<String> fallback = const [], String Function(dynamic json)? fromJson}) {
-  final list = asListOrNull(json, key,fromJson: fromJson)?.map(toStringOrNull).toList();
-  if (list == null || list.any((element) => element == null)) return fallback;
-  return list.whereType<String>().toList();
+  return asListStringOrNull(json, key,fromJson: fromJson)??fallback;
 }
 
 /// ====================
-/// List<T> conversions (generic)
+/// List conversions (generic)
 /// ====================
 
-/// Converts the value at [key] to a List<T>.
-List<T> asList<T>(dynamic json, String key,
-    {T Function(dynamic json)? fromJson}) {
-  return toListT(asTOrNull(
-    json,
-    key,
-  ));
-}
-
-/// Converts the value at [key] to a List<T>.
-List<T> asListOr<T>(dynamic json, String key,
-    {List<T> fallback = const [], T Function(dynamic json)? fromJson}) {
-  return toListTOr(asTOrNull(json, key), fallback: fallback);
-}
-
-/// Converts the value at [key] to a List<T>? using [fromJson].
+/// Converts the value at [key] to a List? using [fromJson].
 /// Returns null if conversion fails or any element cannot be converted.
 List<T>? asListOrNull<T>(dynamic json, String key,
     {T Function(dynamic json)? fromJson}) {
-  final list = asListOrNull(json, key, fromJson: fromJson)?.map((e) {
-    try {
-      return fromJson?.call(e);
-    } catch (_) {
-      return null;
-    }
-  }).toList();
+  final value = _getJsonValueOrNull(json, key);
+  final list = toListOrNull<T>(value, fromJson: fromJson);
 
   if (list == null || list.any((element) => element == null)) return null;
   return list.whereType<T>().toList();
 }
+
+
+
+/// Converts the value at [key] to a List.
+List<T> asList<T>(dynamic json, String key,
+    {T Function(dynamic json)? fromJson}) {
+  return asListOrNull(json, key, fromJson: fromJson) ??
+      (throw FormatException('Invalid List<$T> value for key: $key'));
+}
+
+/// Converts the value at [key] to a List.
+List<T> asListOr<T>(dynamic json, String key,
+    {List<T> fallback = const [], T Function(dynamic json)? fromJson}) {
+  return asListOrNull(json, key, fromJson: fromJson) ?? fallback;
+}
+
+
 
 /// ====================
 /// Generic conversion
@@ -261,7 +296,7 @@ T? asTOrNull<T>(dynamic json, String key,
     if (0 is T) return toIntOrNull(value) as T?;
     if ('' is T) return toStringOrNull(value) as T?;
     if (false is T) return toBoolOrNull(value) as T?;
-    if ([] is T) return toListOrNullT(value) as T?;
+    if ([] is T) return toListOrNull(value) as T?;
     if (<String, dynamic>{} is T) return toMapOrNull(value) as T?;
     if (DateTime.now() is T) return toDateTimeOrNull(value) as T?;
   } catch (_) {
@@ -269,3 +304,4 @@ T? asTOrNull<T>(dynamic json, String key,
   }
   return null;
 }
+

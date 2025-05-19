@@ -145,7 +145,7 @@ DateTime toLocalDateTime(dynamic value) =>
 
 // --------------------- MAP ---------------------
 
-/// Safely converts [value] to a Map<String, dynamic>, or returns null if conversion fails.
+/// Safely converts [value] to a Map, or returns null if conversion fails.
 Map<T, S>? toMapOrNull<T,S>(dynamic value) {
   if (value == null) return null;
   if (value is Map<T, S>) return value;
@@ -153,18 +153,18 @@ Map<T, S>? toMapOrNull<T,S>(dynamic value) {
   return null;
 }
 
-/// Converts [value] to Map<String, dynamic> or returns [fallback] if conversion fails.
+/// Converts [value] to Map or returns [fallback] if conversion fails.
 Map<T, S> toMapOr<T,S>(dynamic value, {Map<T, S> fallback = const {}}) =>
     toMapOrNull(value) ?? fallback;
 
-/// Converts [value] to Map<String, dynamic> or throws [FormatException] if conversion fails.
+/// Converts [value] to Map or throws [FormatException] if conversion fails.
 Map<T, S> toMap<T,S>(dynamic value) =>
     toMapOrNull(value) ?? (throw FormatException('Invalid Map value: $value'));
 
 // --------------------- LIST ---------------------
 
-/// Safely converts [value] to List<T>, or returns null if conversion fails.
-List<T>? toListOrNullT<T>(dynamic value,{T Function(dynamic json)? fromJson}) {
+/// Safely converts [value] to List, or returns null if conversion fails.
+List<T>? toListOrNull<T>(dynamic value,{T Function(dynamic json)? fromJson}) {
   if (value == null) return null;
   if (value is List<T>) return value;
   if (value is List && value.isEmpty) return <T>[];
@@ -180,13 +180,13 @@ List<T>? toListOrNullT<T>(dynamic value,{T Function(dynamic json)? fromJson}) {
   return null;
 }
 
-/// Converts [value] to List<T> or returns [fallback] if conversion fails.
-List<T> toListTOr<T>(dynamic value, {List<T> fallback = const [], T Function(dynamic json)? fromJson}) =>
-    toListOrNullT<T>(value,fromJson:fromJson) ?? fallback;
+/// Converts [value] to List or returns [fallback] if conversion fails.
+List<T> toListOr<T>(dynamic value, {List<T> fallback = const [], T Function(dynamic json)? fromJson}) =>
+    toListOrNull<T>(value,fromJson:fromJson) ?? fallback;
 
-/// Converts [value] to List<T> or throws [FormatException] if conversion fails.
-List<T> toListT<T>(dynamic value, {T Function(dynamic json)? fromJson}) =>
-    toListOrNullT<T>(value, fromJson:fromJson) ?? (throw FormatException('Invalid List<$T> value: $value'));
+/// Converts [value] to List or throws [FormatException] if conversion fails.
+List<T> toList<T>(dynamic value, {T Function(dynamic json)? fromJson}) =>
+    toListOrNull<T>(value, fromJson:fromJson) ?? (throw FormatException('Invalid List<$T> value: $value'));
 
 // --------------------- GENERIC ---------------------
 
