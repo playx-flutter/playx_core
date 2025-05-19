@@ -1,9 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:worker_manager/worker_manager.dart';
-
-import 'logger.dart';
+import 'package:playx_core/playx_core.dart';
 
 typedef Mapper<T, S> = FutureOr<S> Function(T data);
 
@@ -29,10 +27,7 @@ class MapUtils {
       return mapper(data);
     } catch (e, s) {
       if (printError) {
-        PlayxLogger.printError(
-            header: 'MapAsync Error',
-            text: e.toString(),
-            stackTrace: s.toString());
+        PlayxCore.logger.error('MapAsync Error', error: e, stackTrace: s);
       }
       // Handle any errors in the main thread
       rethrow;
@@ -55,10 +50,8 @@ class MapUtils {
       return res;
     } catch (e, s) {
       if (printError) {
-        PlayxLogger.printError(
-            header: 'MapAsyncInIsolate Error',
-            text: e.toString(),
-            stackTrace: s.toString());
+        PlayxCore.logger
+            .error('MapAsyncInIsolate Error', error: e, stackTrace: s);
       }
       // Handle errors occurring in the isolate
       rethrow;

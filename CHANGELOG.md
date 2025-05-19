@@ -1,5 +1,79 @@
 # Changelog
 
+##  v0.7.0
+
+> Note: This release has breaking changes.
+
+
+### ✨ Features
+
+* **New System Utilities** (`common_utils.dart`)
+
+  * `setNavigationBarColor`: Set navigation bar color and icon brightness.
+  * `setOrientation`: Lock screen orientation with optional rotation.
+  * `hideKeyboard` / `showKeyboard`: Control keyboard visibility.
+  * `enterFullScreen` / `exitFullScreen`: Toggle immersive full-screen mode.
+  * `copyToClipboard` / `getClipboardText` / `clearClipboard`: Manage clipboard content.
+  * `setStatusBarColor` now sets `statusBarBrightness` for improved iOS support.
+
+---
+
+### 🧠 Type Conversion Enhancements
+
+* **Safe Conversion Utilities** (`safe_convert.dart` & `safe_json_convert.dart`)
+
+  * Added:
+
+    * `toNumOrNull`, `toNumOr`, `toNum`
+    * `toDateTimeOrNull`, `toDateTimeOr`, `toDateTime`
+    * `toLocalDateTimeOrNull`, `toLocalDateTimeOr`, `toLocalDateTime`
+  * Improved:
+
+    * List conversion with optional `fromJson`
+    * Renamed generic list conversion functions for consistency:
+        *  toListOrNullT → toListOrNull 
+        * toListTOr → toListOr 
+        * oListT → toList
+    * Map conversion support for generic types (`<T, S>`)
+    * `asTOrNull`: Now cleaner and more robust
+  * Refactored for consistency, better error handling, and improved documentation.
+
+---
+
+### 🚀 **New Logging System ** 🔥
+
+This version introduces a **modern, powerful, and highly configurable logging system** using the [`talker_logger`](https://pub.dev/packages/talker_logger) package.
+
+#### ✅ **What's New**
+
+* 🔄 **Replaced** old `PlayxLogger` with a modular and extensible system.
+
+#### 🧱 Core Components
+
+* `PlayxBaseLogger`: Abstract base for all logger implementations.
+* `TalkerPlayxLogger`: Concrete logger using `talker_logger`, supports customization (name, colors, log levels, filters, formatters).
+* `PlayxLoggerSettings`: Configure behavior globally (log level, console output, filters, etc.).
+* `PlayxLogger`: Static utility class to manage and use named logger instances.
+
+#### 🔧 Integration Highlights
+
+* `PlayxCore` now initializes a default logger named **`'PLAYX CORE'`** on setup.
+
+* Internal operations like **preference booting**, **environment loading**, and **error tracking** now leverage the enhanced logger:
+
+  ```dart
+  PlayxLogger.d('Debug message');
+  PlayxCore.logger.error('An error occurred', error:error);
+  ```
+
+* Existing utilities (`MapperUtilities`, `IterableExtensions`) now use the new logger for standardized logging.
+
+#### 🧩 Dependency
+
+* Added: `talker_logger: ^4.7.7` to `pubspec.yaml`.
+
+---
+
 ## 0.6.2 - 0.6.3
 - Update packages. 
 - Updates minimum supported SDK version to Flutter 3.24/Dart 3.5.

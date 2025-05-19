@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
-import 'package:playx_core/src/utils/logger.dart';
-import 'package:playx_core/src/utils/mapper_utilities.dart';
+
+import '../../playx_core.dart';
 
 /// Extensions on [Iterable] class to make it easier to work with.
 extension PlayxIterableExtensions<T> on Iterable<T> {
@@ -37,11 +37,8 @@ extension PlayxIterableExtensions<T> on Iterable<T> {
       return res;
     } catch (e, s) {
       if (printError) {
-        PlayxLogger.printError(
-          header: 'AsyncMapInIsolate Error',
-          text: e.toString(),
-          stackTrace: s.toString(),
-        );
+        PlayxCore.logger
+            .error('AsyncMapInIsolate Error', error: e, stackTrace: s);
       }
       rethrow;
     }
