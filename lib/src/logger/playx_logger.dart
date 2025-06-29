@@ -40,6 +40,7 @@ class PlayxLogger {
     String? name,
     PlayxLoggerSettings? settings,
     bool setAsDefault = true,
+
   }) {
     final logger = TalkerPlayxLogger(
         settings: settings ?? PlayxLoggerSettings(), name: name);
