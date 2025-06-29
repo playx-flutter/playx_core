@@ -7,7 +7,7 @@ enum Weekday {
   saturday,
   sunday;
 
-  static fromDate(DateTime date) {
+  static Weekday fromDate(DateTime date) {
     return Weekday.values[date.weekday - 1];
   }
 }
@@ -26,7 +26,7 @@ enum Month {
   november,
   december;
 
-  static fromDate(DateTime date) {
+  static Month fromDate(DateTime date) {
     return Month.values[date.month - 1];
   }
 }

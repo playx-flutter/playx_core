@@ -13,7 +13,6 @@ class WebUtils {
     window.history.replaceState(null, '', uri.toString());
   }
 
-
   /// Sets the background color of the `<body>` element directly via inline style.
   ///
   /// This overrides any background-color set by CSS classes.
@@ -23,7 +22,6 @@ class WebUtils {
       body.style.backgroundColor = colorHex;
     }
   }
-
 
   /// Sets the title of the web tab and application switcher.
   ///
@@ -85,5 +83,4 @@ class WebUtils {
     final newUri = currentUri.replace(queryParameters: newParams);
     window.history.replaceState(null, '', newUri.toString());
   }
-
 }

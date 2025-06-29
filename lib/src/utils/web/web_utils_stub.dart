@@ -13,12 +13,17 @@ class WebUtils {
   static void setBodyBackgroundColor(String colorHex) {}
 
   /// Stub: Sets only the app switcher title, as `document.title` is not supported.
-  static void setAppTitle({required String title,Color? primaryColor, bool webOnly = true, }) {
-    if(webOnly) {
+  static void setAppTitle({
+    required String title,
+    Color? primaryColor,
+    bool webOnly = true,
+  }) {
+    if (webOnly) {
       return;
     }
     SystemChrome.setApplicationSwitcherDescription(
-      ApplicationSwitcherDescription(label: title, primaryColor: primaryColor?.toARGB32()),
+      ApplicationSwitcherDescription(
+          label: title, primaryColor: primaryColor?.toARGB32()),
     );
   }
 
