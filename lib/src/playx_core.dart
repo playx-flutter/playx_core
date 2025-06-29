@@ -102,8 +102,8 @@ abstract class PlayxCore {
     PlayxPrefsSettings prefsSettings = const PlayxPrefsSettings(),
     WorkManagerSettings workerManagerSettings = const WorkManagerSettings(),
   }) async {
-    PlayxLogger.initLogger(name: 'PLAYX CORE');
-    logger.debug('Booting Preferences...');
+    PlayxLogger.initLogger(name: 'PLAYX CORE', useColoredFormatter: true);
+    logger.i('Booting Preferences...');
     if (prefsSettings.createPlayxPrefs) {
       await PlayxPrefs.create();
     }
@@ -120,7 +120,7 @@ abstract class PlayxCore {
       await PlayxSecurePrefs.create(securePrefsSettings: securePrefsSettings);
     }
 
-    logger.d('Booting Environment...');
+    logger.i('Booting Environment...');
     if (envSettings != null) {
       await PlayxEnv.load(
         fileName: envSettings.fileName,
@@ -138,7 +138,7 @@ abstract class PlayxCore {
     }
 
     _getIt = GetIt.instance;
-    logger.debug('PlayxCore initialized');
+    logger.i('PlayxCore initialized');
   }
 
   /// Disposes the resources used by `playx_core`.
