@@ -2,705 +2,206 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:playx_core/src/utils/safe_convert.dart';
 
 void main() {
-  group('Test to Or null functions', () {
-    // test toIntOrNull
-    test('Test toIntOrNull', () {
-      // Test null
+  group('Int conversion', () {
+    test('toIntOrNull', () {
       expect(toIntOrNull(null), null);
-      // Test int values
-      expect(toIntOrNull(1), 1);
-      expect(toIntOrNull(0), 0);
-      expect(toIntOrNull(-1), -1);
-
-      // Test double values
-      expect(toIntOrNull(1.0), 1);
-      expect(toIntOrNull(0.0), 0);
-
-      // Test bool values
+      expect(toIntOrNull(42), 42);
+      expect(toIntOrNull(42.9), 42);
+      expect(toIntOrNull('42'), 42);
+      expect(toIntOrNull('42.5'), 42);
+      expect(toIntOrNull('not a number'), null);
       expect(toIntOrNull(true), 1);
       expect(toIntOrNull(false), 0);
-
-      // Test string values
-      expect(toIntOrNull("1"), 1);
-      expect(toIntOrNull("1.0"), 1);
-      expect(toIntOrNull("1.1"), 1);
-      expect(toIntOrNull("1.9"), 1);
-      expect(toIntOrNull("1.0.0"), null);
-      expect(toIntOrNull(""), null);
-      expect(toIntOrNull("0.0"), 0);
-      expect(toIntOrNull("0.1"), 0);
-      expect(toIntOrNull("-"), null);
-
-      // Test other values
       expect(toIntOrNull([]), null);
-      expect(toIntOrNull({}), null);
     });
 
-    // test toDoubleOrNull
-    test('Test toDoubleOrNull', () {
-      // Test null
+    test('toIntOr', () {
+      expect(toIntOr('bad', fallback: 7), 7);
+      expect(toIntOr(5, fallback: 7), 5);
+    });
+
+    test('toInt', () {
+      expect(() => toInt('bad'), throwsFormatException);
+      expect(toInt('123'), 123);
+    });
+  });
+
+  group('Double conversion', () {
+    test('toDoubleOrNull', () {
       expect(toDoubleOrNull(null), null);
-      // Test int values
       expect(toDoubleOrNull(1), 1.0);
-      expect(toDoubleOrNull(0), 0.0);
-      expect(toDoubleOrNull(-1), -1.0);
-
-      // Test double values
-      expect(toDoubleOrNull(1.0), 1.0);
-      expect(toDoubleOrNull(0.0), 0.0);
-
-      // Test bool values
+      expect(toDoubleOrNull('1.5'), 1.5);
+      expect(toDoubleOrNull('bad'), null);
       expect(toDoubleOrNull(true), 1.0);
-      expect(toDoubleOrNull(false), 0.0);
-
-      // Test string values
-      expect(toDoubleOrNull("1"), 1.0);
-      expect(toDoubleOrNull("1.0"), 1.0);
-      expect(toDoubleOrNull("1.1"), 1.1);
-      expect(toDoubleOrNull("1.9"), 1.9);
-      expect(toDoubleOrNull("1.0.0"), null);
-      expect(toDoubleOrNull(""), null);
-      expect(toDoubleOrNull("0.0"), 0.0);
-      expect(toDoubleOrNull("0.1"), 0.1);
-      expect(toDoubleOrNull("-"), null);
-
-      // Test other values
-      expect(toDoubleOrNull([]), null);
-      expect(toDoubleOrNull({}), null);
     });
 
-    // test toBoolOrNull
-    test('Test toBoolOrNull', () {
-      // Test null
+    test('toDoubleOr', () {
+      expect(toDoubleOr('bad', fallback: 2.2), 2.2);
+      expect(toDoubleOr(3.3, fallback: 2.2), 3.3);
+    });
+
+    test('toDouble', () {
+      expect(() => toDouble('bad'), throwsFormatException);
+      expect(toDouble('2.5'), 2.5);
+    });
+  });
+
+  group('Num conversion', () {
+    test('toNumOrNull', () {
+      expect(toNumOrNull(null), null);
+      expect(toNumOrNull(1), 1);
+      expect(toNumOrNull(1.5), 1.5);
+      expect(toNumOrNull('1'), 1);
+      expect(toNumOrNull('1.5'), 1.5);
+      expect(toNumOrNull('bad'), null);
+    });
+
+    test('toNumOr', () {
+      expect(toNumOr('bad', fallback: 2.2), 2.2);
+      expect(toNumOr(3.3, fallback: 2.2), 3.3);
+    });
+
+    test('toNum', () {
+      expect(() => toNum('bad'), throwsFormatException);
+      expect(toNum('2.5'), 2.5);
+    });
+  });
+
+  group('Bool conversion', () {
+    test('toBoolOrNull', () {
       expect(toBoolOrNull(null), null);
-      // Test int values
-      expect(toBoolOrNull(1), true);
-      expect(toBoolOrNull(0), false);
-
-      // Test double values
-      expect(toBoolOrNull(1.0), true);
-      expect(toBoolOrNull(0.0), false);
-
-      // Test bool values
       expect(toBoolOrNull(true), true);
-      expect(toBoolOrNull(false), false);
-
-      // Test string values
-      expect(toBoolOrNull("true"), true);
-      expect(toBoolOrNull("false"), false);
-      expect(toBoolOrNull("TRUE"), true);
-      expect(toBoolOrNull("FALSE"), false);
-      expect(toBoolOrNull("True"), true);
-      expect(toBoolOrNull("False"), false);
-
-      // Test string correct 1 or 0 values
-      expect(toBoolOrNull("1"), true);
-      expect(toBoolOrNull("1.0"), true);
-      expect(toBoolOrNull("0.0"), false);
-
-      // Test string incorrect values
-      expect(toBoolOrNull("1.1"), null);
-      expect(toBoolOrNull("1.9"), null);
-      expect(toBoolOrNull("1.0.0"), null);
-      expect(toBoolOrNull(""), null);
-      expect(toBoolOrNull("0.1"), null);
-      expect(toBoolOrNull("-"), null);
-
-      // Test other values
-      expect(toBoolOrNull(-1), null);
-      expect(toBoolOrNull([]), null);
-      expect(toBoolOrNull({}), null);
+      expect(toBoolOrNull(1), true);
+      expect(toBoolOrNull('false'), false);
+      expect(toBoolOrNull('bad'), null);
     });
 
-    // test toStringOrNull
-    test('Test toStringOrNull', () {
-      // Test null
+    test('toBoolOr', () {
+      expect(toBoolOr('bad', fallback: true), true);
+      expect(toBoolOr('true', fallback: false), true);
+    });
+
+    test('toBool', () {
+      expect(() => toBool('bad'), throwsFormatException);
+      expect(toBool('false'), false);
+    });
+  });
+
+  group('String conversion', () {
+    test('toStringOrNull', () {
       expect(toStringOrNull(null), null);
-      // Test int values
-      expect(toStringOrNull(1), "1");
-      expect(toStringOrNull(0), "0");
-      expect(toStringOrNull(-1), "-1");
-
-      // Test double values
-      expect(toStringOrNull(1.0), "1.0");
-      expect(toStringOrNull(0.0), "0.0");
-
-      // Test bool values
-      expect(toStringOrNull(true), "true");
-      expect(toStringOrNull(false), "false");
-
-      // Test string values
-      expect(toStringOrNull("test"), "test");
-      expect(toStringOrNull("Test"), "Test");
-      expect(toStringOrNull("TRUE"), "TRUE");
-
-      // Test other values
+      expect(toStringOrNull(123), '123');
+      expect(toStringOrNull(true), 'true');
+      expect(toStringOrNull('abc'), 'abc');
       expect(toStringOrNull([]), null);
-      expect(toStringOrNull({}), null);
     });
 
-    // test toMapOrNull
-    test('Test toMapOrNull', () {
-      // Test null
+    test('toStringOr', () {
+      expect(toStringOr(null, fallback: 'fallback'), 'fallback');
+      expect(toStringOr(1, fallback: 'fallback'), '1');
+    });
+
+    test('toString', () {
+      expect(() => toString({}), throwsFormatException);
+      expect(toString(5), '5');
+    });
+  });
+
+  group('DateTime conversion', () {
+    test('toDateTimeOrNull', () {
+      expect(toDateTimeOrNull(null), null);
+      expect(toDateTimeOrNull('2020-01-01T00:00:00Z'),
+          DateTime.parse('2020-01-01T00:00:00Z'));
+      expect(toDateTimeOrNull(1577836800000),
+          DateTime.fromMillisecondsSinceEpoch(1577836800000));
+      expect(toDateTimeOrNull('bad'), null);
+    });
+
+    test('toDateTimeOr', () {
+      final fallback = DateTime(2000);
+      expect(toDateTimeOr('bad', fallback: fallback), fallback);
+    });
+
+    test('toDateTime', () {
+      expect(() => toDateTime('bad'), throwsFormatException);
+      expect(toDateTime('2020-01-01T00:00:00Z'),
+          DateTime.parse('2020-01-01T00:00:00Z'));
+    });
+  });
+
+  // local date time
+  group('Local DateTime conversion', () {
+    test('toLocalDateTimeOrNull', () {
+      expect(toLocalDateTimeOrNull(null), null);
+      expect(toLocalDateTimeOrNull('2020-01-01T00:00:00Z'),
+          DateTime.parse('2020-01-01T00:00:00Z').toLocal());
+      expect(toLocalDateTimeOrNull(1577836800000),
+          DateTime.fromMillisecondsSinceEpoch(1577836800000).toLocal());
+      expect(toLocalDateTimeOrNull('bad'), null);
+    });
+
+    test('toLocalDateTimeOr', () {
+      final fallback = DateTime(2000);
+      expect(toLocalDateTimeOr('bad', fallback: fallback), fallback);
+    });
+
+    test('toLocalDateTime', () {
+      expect(() => toLocalDateTime('bad'), throwsFormatException);
+      expect(toLocalDateTime('2020-01-01T00:00:00Z'),
+          DateTime.parse('2020-01-01T00:00:00Z').toLocal());
+    });
+  });
+
+  group('Map conversion', () {
+    test('toMapOrNull', () {
       expect(toMapOrNull(null), null);
-      // Test Map values
-      expect(toMapOrNull({"key": "value"}), {"key": "value"});
-      expect(toMapOrNull({}), {});
-      expect(toMapOrNull({"key": 1}), {"key": 1});
-
-      // Test other values
+      expect(toMapOrNull({'a': 1}), {'a': 1});
       expect(toMapOrNull([]), null);
-      expect(toMapOrNull(1), null);
-      expect(toMapOrNull("test"), null);
-      expect(toMapOrNull(true), null);
     });
 
-    test('Test toMapOrNullAny', () {
-      // Test null
-      expect(toMapOrNullAny(null), null);
-      // Test Map values
-      expect(toMapOrNullAny({"key": "value"}), {"key": "value"});
-      expect(toMapOrNullAny({}), {});
-
-      expect(toMapOrNullAny<String, int>({"key": 1}), {"key": 1});
-      expect(toMapOrNullAny<String, int>({"key": 1.0}), null);
-      expect(toMapOrNullAny<String, int>({"key": "1"}), null);
-
-      // Test other values
-      expect(toMapOrNullAny<String, int>([]), null);
-      expect(toMapOrNullAny<String, int>(1), null);
-      expect(toMapOrNullAny<String, int>("test"), null);
-      expect(toMapOrNullAny<String, int>(true), null);
+    test('toMapOr', () {
+      expect(toMapOr('bad', fallback: {'x': 1}), {'x': 1});
     });
 
-    test('Test toListOrNull', () {
-      // Test null
+    test('toMap', () {
+      expect(() => toMap('bad'), throwsFormatException);
+      expect(toMap({'a': 1}), {'a': 1});
+    });
+  });
+
+  group('List conversion', () {
+    test('toListOrNull', () {
       expect(toListOrNull(null), null);
-      // Test List values
-      expect(toListOrNull([1, 2, 3]), [1, 2, 3]);
-      expect(toListOrNull([]), []);
-      expect(toListOrNull([1]), [1]);
-
-      // Test other values
-      expect(toListOrNull({}), null);
-      expect(toListOrNull(1), null);
-      expect(toListOrNull("test"), null);
-      expect(toListOrNull(true), null);
+      expect(toListOrNull([1, 2]), [1, 2]);
+      expect(toListOrNull('bad'), null);
     });
 
-    test('Test toListOrNullT', () {
-      // Test null
-      expect(toListOrNullT<int>(null), null);
-      // Test List values
-      expect(toListOrNullT<int>([1, 2, 3]), [1, 2, 3]);
-      expect(toListOrNullT<int>([]), []);
-      expect(toListOrNullT<int>([1]), [1]);
-
-      expect(toListOrNullT<String>([1]), null);
-      expect(toListOrNullT<int>([1.0]), null);
-
-      // Test other values
-      expect(toListOrNullT<int>({}), null);
-      expect(toListOrNullT<int>(1), null);
-      expect(toListOrNullT<int>("test"), null);
-      expect(toListOrNullT<int>(true), null);
+    test('toListOr', () {
+      expect(toListOr('bad', fallback: [1]), [1]);
     });
 
-    test('Test toListOrNullFromJson', () {
-      // Test null
-      expect(toListOrNullFromJson(null, (json) => json), null);
-      // Test List values
-      expect(toListOrNullFromJson([1, 2, 3], (json) => json), [1, 2, 3]);
-
-      expect(
-          toListOrNullFromJson(['1.0', '4.5'], (value) => double.parse(value)),
-          [1.0, 4.5]);
-
-      expect(toListOrNullFromJson([], (json) => json), []);
-
-      expect(toListOrNullFromJson([1], (json) => json), [1]);
-
-      expect(
-          toListOrNullFromJson(['true', 'false'], (value) => bool.parse(value)),
-          [true, false]);
-
-      // Test other values
-      expect(toListOrNullFromJson({}, (json) => json), null);
-      expect(toListOrNullFromJson(1, (json) => json), null);
-      expect(toListOrNullFromJson("test", (json) => json), null);
-      expect(toListOrNullFromJson(true, (json) => json), null);
-    });
-
-    test('Test toTOrNull', () {
-      // Test null
-      expect(toTOrNull<int>(null, fromJson: (json) => json), null);
-      // Test List values
-      expect(toTOrNull<int>(1, fromJson: (json) => json), 1);
-
-      expect(toTOrNull<String>("test", fromJson: (json) => json), "test");
-
-      expect(toTOrNull<double>(1.0, fromJson: (json) => json), 1.0);
-      expect(toTOrNull<double>('1.0', fromJson: (value) => double.parse(value)),
-          1.0);
-
-      expect(toTOrNull<bool>(true, fromJson: (json) => json), true);
-      expect(toTOrNull<bool>('true', fromJson: (value) => bool.parse(value)),
-          true);
-
-      // Test other values
-      expect(toTOrNull<int>({}, fromJson: (json) => json), null);
-      expect(toTOrNull<int>([], fromJson: (json) => json), null);
-      expect(toTOrNull<int>(1, fromJson: (json) => json), 1);
-    });
-  });
-
-  group('Test to Or functions', () {
-    // test toIntOr
-    test('Test toIntOr', () {
-      // Test null
-      expect(toIntOr(null, fallback: 1), 1);
-      // Test int values
-      expect(toIntOr(1, fallback: 0), 1);
-      expect(toIntOr(0, fallback: 1), 0);
-      expect(toIntOr(-1, fallback: 0), -1);
-
-      // Test double values
-      expect(toIntOr(1.0, fallback: 0), 1);
-      expect(toIntOr(0.0, fallback: 0), 0);
-
-      // Test bool values
-      expect(toIntOr(true, fallback: 0), 1);
-      expect(toIntOr(false, fallback: 0), 0);
-
-      // Test string values
-      expect(toIntOr("1", fallback: 0), 1);
-      expect(toIntOr("1.0", fallback: 0), 1);
-      expect(toIntOr("1.1", fallback: 0), 1);
-      expect(toIntOr("1.9", fallback: 0), 1);
-      expect(toIntOr("1.0.0", fallback: 2), 2);
-      expect(toIntOr("", fallback: 1), 1);
-      expect(toIntOr("0.0", fallback: 1), 0);
-      expect(toIntOr("0.1", fallback: 1), 0);
-      expect(toIntOr("-", fallback: 0), 0);
-
-      // Test other values
-      expect(toIntOr([], fallback: 0), 0);
-      expect(toIntOr({}, fallback: 0), 0);
-    });
-
-    // test toDoubleOr
-    test('Test toDoubleOr', () {
-      // Test null
-      expect(toDoubleOr(null, fallback: 1.0), 1.0);
-      // Test int values
-      expect(toDoubleOr(1, fallback: 0.0), 1.0);
-      expect(toDoubleOr(0, fallback: 1.0), 0.0);
-      expect(toDoubleOr(-1, fallback: 0.0), -1.0);
-
-      // Test double values
-      expect(toDoubleOr(1.0, fallback: 0.0), 1.0);
-      expect(toDoubleOr(0.0, fallback: 1.0), 0.0);
-
-      // Test bool values
-      expect(toDoubleOr(true, fallback: 0.0), 1.0);
-      expect(toDoubleOr(false, fallback: 1.0), 0.0);
-
-      // Test string values
-      expect(toDoubleOr("1", fallback: 0.0), 1.0);
-      expect(toDoubleOr("1.0", fallback: 0.0), 1.0);
-      expect(toDoubleOr("1.1", fallback: 0.0), 1.1);
-      expect(toDoubleOr("1.9", fallback: 0.0), 1.9);
-      expect(toDoubleOr("1.0.0", fallback: 2.0), 2.0);
-      expect(toDoubleOr("", fallback: 1.0), 1.0);
-      expect(toDoubleOr("0.1", fallback: 1.0), 0.1);
-      expect(toDoubleOr("-", fallback: 0.0), 0.0);
-
-      // Test other values
-      expect(toDoubleOr([], fallback: 0.0), 0.0);
-      expect(toDoubleOr({}, fallback: 0.0), 0.0);
-    });
-
-    // test toBoolOr
-    test('Test toBoolOr', () {
-      // Test null
-      expect(toBoolOr(null, fallback: true), true);
-      // Test int values
-      expect(toBoolOr(1, fallback: false), true);
-      expect(toBoolOr(0, fallback: true), false);
-      expect(toBoolOr(-1, fallback: true), true);
-
-      // Test double values
-      expect(toBoolOr(1.0, fallback: false), true);
-      expect(toBoolOr(0.0, fallback: true), false);
-
-      // Test bool values
-      expect(toBoolOr(true, fallback: false), true);
-      expect(toBoolOr(false, fallback: true), false);
-
-      // Test string values
-      expect(toBoolOr("true", fallback: false), true);
-      expect(toBoolOr("false", fallback: true), false);
-      expect(toBoolOr("TRUE", fallback: false), true);
-      expect(toBoolOr("FALSE", fallback: true), false);
-      expect(toBoolOr("True", fallback: false), true);
-      expect(toBoolOr("False", fallback: true), false);
-
-      // Test string correct 1 or 0 values
-      expect(toBoolOr("1", fallback: false), true);
-      expect(toBoolOr("1.0", fallback: false), true);
-      expect(toBoolOr("0.0", fallback: true), false);
-
-      // Test string incorrect values
-      expect(toBoolOr("1.1", fallback: true), true);
-      expect(toBoolOr("1.9", fallback: false), false);
-      expect(toBoolOr("1.0.0", fallback: true), true);
-      expect(toBoolOr("", fallback: false), false);
-      expect(toBoolOr("0.1", fallback: true), true);
-      expect(toBoolOr("-", fallback: false), false);
-
-      // Test other values
-      expect(toBoolOr([], fallback: true), true);
-      expect(toBoolOr({}, fallback: false), false);
-    });
-
-    // test toStringOr
-    test('Test toStringOr', () {
-      // Test null
-      expect(toStringOr(null, fallback: "1"), "1");
-      // Test int values
-      expect(toStringOr(1, fallback: "0"), "1");
-      expect(toStringOr(0, fallback: "1"), "0");
-      expect(toStringOr(-1, fallback: "0"), "-1");
-
-      // Test double values
-      expect(toStringOr(1.0, fallback: "0"), "1.0");
-      expect(toStringOr(0.0, fallback: "0"), "0.0");
-
-      // Test bool values
-      expect(toStringOr(true, fallback: "0"), "true");
-      expect(toStringOr(false, fallback: "1"), "false");
-
-      // Test string values
-      expect(toStringOr("test", fallback: "1"), "test");
-      expect(toStringOr("Test", fallback: "1"), "Test");
-      expect(toStringOr("TRUE", fallback: "1"), "TRUE");
-
-      // Test other values
-      expect(toStringOr([], fallback: "1"), "1");
-      expect(toStringOr({}, fallback: "1"), "1");
-    });
-
-    // test toMapOr
-    test('Test toMapOr', () {
-      // Test null
-      expect(toMapOr(null, fallback: {"key": "value"}), {"key": "value"});
-      // Test Map values
-      expect(toMapOr({"key": "value"}, fallback: {}), {"key": "value"});
-      expect(toMapOr({}, fallback: {"key": 1}), {});
-
-      // Test other values
-      expect(toMapOr([], fallback: {}), {});
-      expect(toMapOr(1, fallback: {}), {});
-      expect(toMapOr("test", fallback: {}), {});
-      expect(toMapOr(true, fallback: {}), {});
-    });
-
-    // test toListOr
-    test('Test toListOr', () {
-      // Test null
-      expect(toListOr(null, fallback: [1, 2, 3]), [1, 2, 3]);
-      // Test List values
-      expect(toListOr([1, 2, 3], fallback: []), [1, 2, 3]);
-      expect(toListOr([], fallback: []), []);
-      expect(toListOr({}, fallback: []), []);
-
-      // Test other values
-      expect(toListOr({}, fallback: []), []);
-      expect(toListOr(1, fallback: []), []);
-      expect(toListOr("test", fallback: []), []);
-      expect(toListOr(true, fallback: []), []);
-    });
-
-    // test toListOrT
-    test('Test toListOrT', () {
-      // Test null
-      expect(toListTOr<int>(null, fallback: [1, 2, 3]), [1, 2, 3]);
-      // Test List values
-      expect(toListTOr<int>([1, 2, 3], fallback: []), [1, 2, 3]);
-      expect(toListTOr<int>([], fallback: []), []);
-
-      expect(toListTOr<String>([1], fallback: []), []);
-      expect(toListTOr<int>([1.0], fallback: []), []);
-      // Test other values
-      expect(toListTOr<int>({}, fallback: []), []);
-      expect(toListTOr<int>(1, fallback: []), []);
-      expect(toListTOr<int>("test", fallback: []), []);
-      expect(toListTOr<int>(true, fallback: []), []);
-    });
-
-    // test toListOrFromJson
-    test('Test toListOrFromJson', () {
-      // Test null
-      expect(toListFromJsonOr(null, (json) => json, fallback: [1, 2, 3]),
-          [1, 2, 3]);
-      // Test List values
-      expect(
-          toListFromJsonOr([1, 2, 3], (json) => json, fallback: []), [1, 2, 3]);
-      expect(toListFromJsonOr([], (json) => json, fallback: [1]), []);
-
-      expect(
-          toListFromJsonOr(['1.0', '4.5'], (value) => double.parse(value),
-              fallback: []),
-          [1.0, 4.5]);
-
-      // Test other values
-      expect(toListFromJsonOr({}, (json) => json, fallback: []), []);
-      expect(toListFromJsonOr(1, (json) => json, fallback: []), []);
-      expect(toListFromJsonOr("test", (json) => json, fallback: []), []);
-      expect(toListFromJsonOr(true, (json) => json, fallback: []), []);
-    });
-
-    // test toTOr
-    test('Test toTOr', () {
-      // Test null
-      expect(toTOr<int>(null, fromJson: (json) => json, fallback: 1), 1);
-      // Test List values
-      expect(toTOr<int>(1, fromJson: (json) => json, fallback: 0), 1);
-      expect(toTOr<String>("test", fromJson: (json) => json, fallback: "1"),
-          "test");
-
-      expect(toTOr<double>(1.0, fromJson: (json) => json, fallback: 0.0), 1.0);
-      expect(
-          toTOr<double>('1.0',
-              fromJson: (value) => double.parse(value), fallback: 0.0),
-          1.0);
-
-      expect(
-          toTOr<bool>(true, fromJson: (json) => json, fallback: false), true);
-      expect(
-          toTOr<bool>('true',
-              fromJson: (value) => bool.parse(value), fallback: false),
-          true);
-
-      // Test other values
-      expect(toTOr<int>({}, fromJson: (json) => json, fallback: 0), 0);
-      expect(toTOr<int>([], fromJson: (json) => json, fallback: 0), 0);
-      expect(toTOr<int>(1, fromJson: (json) => json, fallback: 1), 1);
-    });
-  });
-
-  group('Test to functions with error', () {
-    // test toIntOr
-    test('Test toInt with error', () {
-      // Test null
-      expect(() => toInt(null), throwsA(isA<FormatException>()));
-      // Test int values
-      expect(toInt(1), 1);
-      expect(toInt(0), 0);
-      expect(toInt(-1), -1);
-
-      // Test double values
-      expect(toInt(1.0), 1);
-      expect(toInt(0.0), 0);
-
-      // Test bool values
-      expect(toInt(true), 1);
-      expect(toInt(false), 0);
-
-      // Test string values
-      expect(toInt("1"), 1);
-      expect(toInt("1.0"), 1);
-      expect(toInt("1.1"), 1);
-      expect(toInt("1.9"), 1);
-      expect(() => toInt("1.0.0"), throwsA(isA<FormatException>()));
-      expect(() => toInt(""), throwsA(isA<FormatException>()));
-      expect(toInt("0.0"), 0);
-      expect(toInt("0.1"), 0);
-      expect(() => toInt("-"), throwsA(isA<FormatException>()));
-
-      // Test other values
-      expect(() => toInt([]), throwsA(isA<FormatException>()));
-      expect(() => toInt({}), throwsA(isA<FormatException>()));
-    });
-
-    // test toDoubleOr
-    test('Test toDouble with error', () {
-      // Test null
-      expect(() => toDouble(null), throwsA(isA<FormatException>()));
-      // Test int values
-      expect(toDouble(1), 1.0);
-      expect(toDouble(0), 0.0);
-      expect(toDouble(-1), -1.0);
-
-      // Test double values
-      expect(toDouble(1.0), 1.0);
-      expect(toDouble(0.0), 0.0);
-
-      // Test bool values
-      expect(toDouble(true), 1.0);
-      expect(toDouble(false), 0.0);
-
-      // Test string values
-      expect(toDouble("1"), 1.0);
-      expect(toDouble("1.0"), 1.0);
-      expect(toDouble("1.1"), 1.1);
-      expect(toDouble("1.9"), 1.9);
-      expect(() => toDouble("1.0.0"), throwsA(isA<FormatException>()));
-      expect(() => toDouble(""), throwsA(isA<FormatException>()));
-      expect(toDouble("0.0"), 0.0);
-      expect(toDouble("0.1"), 0.1);
-      expect(() => toDouble("-"), throwsA(isA<FormatException>()));
-
-      // Test other values
-      expect(() => toDouble([]), throwsA(isA<FormatException>()));
-      expect(() => toDouble({}), throwsA(isA<FormatException>()));
-    });
-
-    // test toBoolOr
-    test('Test toBool with error', () {
-      // Test null
-      expect(() => toBool(null), throwsA(isA<FormatException>()));
-      // Test int values
-      expect(toBool(1), true);
-      expect(toBool(0), false);
-
-      // Test double values
-      expect(toBool(1.0), true);
-      expect(toBool(0.0), false);
-
-      // Test bool values
-      expect(toBool(true), true);
-      expect(toBool(false), false);
-
-      // Test string values
-      expect(toBool("true"), true);
-      expect(toBool("false"), false);
-      expect(toBool("TRUE"), true);
-      expect(toBool("FALSE"), false);
-      expect(toBool("True"), true);
-      expect(toBool("False"), false);
-
-      // Test string correct 1 or 0 values
-      expect(toBool("1"), true);
-      expect(toBool("1.0"), true);
-      expect(toBool("0.0"), false);
-
-      // Test string incorrect values
-      expect(() => toBool("1.1"), throwsA(isA<FormatException>()));
-      expect(() => toBool("1.9"), throwsA(isA<FormatException>()));
-      expect(() => toBool("1.0.0"), throwsA(isA<FormatException>()));
-      expect(() => toBool(""), throwsA(isA<FormatException>()));
-      expect(() => toBool("0.1"), throwsA(isA<FormatException>()));
-      expect(() => toBool("-"), throwsA(isA<FormatException>()));
-
-      // Test other values
-      expect(() => toBool(-1), throwsA(isA<FormatException>()));
-      expect(() => toBool([]), throwsA(isA<FormatException>()));
-      expect(() => toBool({}), throwsA(isA<FormatException>()));
-    });
-
-    // test toMapOr
-    test('Test toMap with error', () {
-      // Test null
-      expect(() => toMap(null), throwsA(isA<FormatException>()));
-      // Test Map values
-      expect(toMap({"key": "value"}), {"key": "value"});
-      expect(toMap({}), {});
-      expect(toMap({"key": 1}), {"key": 1});
-
-      // Test other values
-      expect(() => toMap([]), throwsA(isA<FormatException>()));
-      expect(() => toMap(1), throwsA(isA<FormatException>()));
-      expect(() => toMap("test"), throwsA(isA<FormatException>()));
-      expect(() => toMap(true), throwsA(isA<FormatException>()));
-    });
-
-    // test toListOr
-    test('Test toList with error', () {
-      // Test null
-      expect(() => toList(null), throwsA(isA<FormatException>()));
-      // Test List values
-      expect(toList([1, 2, 3]), [1, 2, 3]);
-      expect(toList([]), []);
+    test('toList', () {
+      expect(() => toList('bad'), throwsFormatException);
       expect(toList([1]), [1]);
+    });
+  });
 
-      // Test other values
-      expect(() => toList({}), throwsA(isA<FormatException>()));
-      expect(() => toList(1), throwsA(isA<FormatException>()));
-      expect(() => toList("test"), throwsA(isA<FormatException>()));
-      expect(() => toList(true), throwsA(isA<FormatException>()));
+  group('Generic conversion', () {
+    test('toTOrNull', () {
+      expect(toTOrNull<int>('5', fromJson: (v) => int.tryParse(v) ?? 0), 5);
+      expect(toTOrNull<int>('bad', fromJson: (v) => int.tryParse(v) ?? 0), 0);
     });
 
-    // test toListOrT
-    test('Test toListT with error', () {
-      // Test null
-      expect(() => toListT<int>(null), throwsA(isA<FormatException>()));
-      // Test List values
-      expect(toListT<int>([1, 2, 3]), [1, 2, 3]);
-      expect(toListT<int>([]), []);
-      expect(toListT<int>([1]), [1]);
-
-      expect(() => toListT<String>([1]), throwsA(isA<FormatException>()));
-      expect(() => toListT<int>([1.0]), throwsA(isA<FormatException>()));
-
-      // Test other values
-      expect(() => toListT<int>({}), throwsA(isA<FormatException>()));
-      expect(() => toListT<int>(1), throwsA(isA<FormatException>()));
-      expect(() => toListT<int>("test"), throwsA(isA<FormatException>()));
-      expect(() => toListT<int>(true), throwsA(isA<FormatException>()));
+    test('toTOr', () {
+      expect(
+          toTOr<int>('bad', fromJson: (v) => int.tryParse(v) ?? 0, fallback: 7),
+          0);
     });
 
-    // test toListOrFromJson
-    test('Test toListFromJson with error', () {
-      // Test null
-      expect(() => toListFromJson(null, (json) => json),
-          throwsA(isA<FormatException>()));
-      // Test List values
-      expect(toListFromJson([1, 2, 3], (json) => json), [1, 2, 3]);
-
-      expect(toListFromJson(['1.0', '4.5'], (value) => double.parse(value)),
-          [1.0, 4.5]);
-
-      expect(toListFromJson([], (json) => json), []);
-
-      expect(toListFromJson([1], (json) => json), [1]);
-
-      expect(toListFromJson(['true', 'false'], (value) => bool.parse(value)),
-          [true, false]);
-
-      // Test other values
-      expect(() => toListFromJson({}, (json) => json),
-          throwsA(isA<FormatException>()));
-      expect(() => toListFromJson(1, (json) => json),
-          throwsA(isA<FormatException>()));
-      expect(() => toListFromJson("test", (json) => json),
-          throwsA(isA<FormatException>()));
-      expect(() => toListFromJson(true, (json) => json),
-          throwsA(isA<FormatException>()));
-    });
-
-    // test toTOr
-    test('Test toT with error', () {
-      // Test null
-      expect(() => toT<int>(null, fromJson: (json) => json),
-          throwsA(isA<FormatException>()));
-      // Test List values
-      expect(toT<int>(1, fromJson: (json) => json), 1);
-
-      expect(toT<String>("test", fromJson: (json) => json), "test");
-
-      expect(toT<double>(1.0, fromJson: (json) => json), 1.0);
-      expect(toT<double>('1.0', fromJson: (value) => double.parse(value)), 1.0);
-
-      expect(toT<bool>(true, fromJson: (json) => json), true);
-      expect(toT<bool>('true', fromJson: (value) => bool.parse(value)), true);
-
-      // Test other values
-      expect(() => toT<int>({}, fromJson: (json) => json),
-          throwsA(isA<FormatException>()));
-      expect(() => toT<int>([], fromJson: (json) => json),
-          throwsA(isA<FormatException>()));
-      expect(toT<int>(1, fromJson: (json) => json), 1);
+    test('toT', () {
+      expect(() => toT<int>('bad', fromJson: (v) => throw FormatException()),
+          throwsFormatException);
+      expect(toT<int>('5', fromJson: (v) => int.parse(v)), 5);
     });
   });
 }

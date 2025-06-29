@@ -8,10 +8,18 @@ jobs:
       run:
         working-directory: ./
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - flutter-version: 3.24.0
+            flutter-channel: stable
+          - flutter-version: latest
+            flutter-channel: stable
     steps:
       - uses: actions/checkout@v2
-
-      - uses: subosito/flutter-action@v1.5.3
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ matrix.flutter }}
 
       - name: Install deps
         run: flutter packages get

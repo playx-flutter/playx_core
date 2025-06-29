@@ -1,6 +1,8 @@
 library;
 
 import 'package:get_it/get_it.dart';
+import 'package:playx_core/src/logger/base_logger.dart';
+import 'package:playx_core/src/logger/playx_logger.dart';
 import 'package:worker_manager/worker_manager.dart';
 
 import 'models/envs_settings.dart';
@@ -65,6 +67,8 @@ abstract class PlayxCore {
     return _getIt!;
   }
 
+  static PlayxBaseLogger get logger => PlayxLogger.getLogger('PLAYX CORE')!;
+
   /// Initializes and installs the dependencies needed for `playx_core`.
   ///
   /// This method sets up various components based on the provided parameters.
@@ -98,6 +102,8 @@ abstract class PlayxCore {
     PlayxPrefsSettings prefsSettings = const PlayxPrefsSettings(),
     WorkManagerSettings workerManagerSettings = const WorkManagerSettings(),
   }) async {
+    PlayxLogger.initLogger(name: 'PLAYX CORE');
+    logger.debug('Booting Preferences...');
     if (prefsSettings.createPlayxPrefs) {
       await PlayxPrefs.create();
     }
@@ -114,6 +120,7 @@ abstract class PlayxCore {
       await PlayxSecurePrefs.create(securePrefsSettings: securePrefsSettings);
     }
 
+    logger.d('Booting Environment...');
     if (envSettings != null) {
       await PlayxEnv.load(
         fileName: envSettings.fileName,
@@ -131,6 +138,7 @@ abstract class PlayxCore {
     }
 
     _getIt = GetIt.instance;
+    logger.debug('PlayxCore initialized');
   }
 
   /// Disposes the resources used by `playx_core`.

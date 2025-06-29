@@ -22,7 +22,7 @@ Add `playx_core` to your `pubspec.yaml` dependencies:
 
 ```yaml  
 dependencies:  
-  playx_core: ^0.5.4  
+  playx_core: ^0.6.2  
 ```  
 
 ## Usage
