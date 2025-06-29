@@ -30,25 +30,25 @@ abstract class PlayxBaseLogger {
   void log(dynamic message, {String? tag});
 
   /// Alias for [debug]
-  void d(dynamic message, {String? tag}) => debug;
+  void d(dynamic message, {String? tag}) => debug(message, tag: tag);
 
   /// Alias for [info]
-  void i(dynamic message, {String? tag}) => info;
+  void i(dynamic message, {String? tag}) => info(message, tag: tag);
 
   /// Alias for [warning]
-  void w(dynamic message, {String? tag}) => warning;
+  void w(dynamic message, {String? tag}) => warning(message, tag: tag);
 
   /// Alias for [error]
   void e(dynamic message,
-          {Object? error, StackTrace? stackTrace, String? tag}) =>
-      error;
+          {Object? error, StackTrace? stackTrace, String? tag}) => this.error(message,
+          error: error, stackTrace: stackTrace, tag: tag);
 
   /// Alias for [critical]
-  void c(dynamic message, {String? tag}) => critical;
+  void c(dynamic message, {String? tag}) => critical(message, tag: tag);
 
   /// Alias for [good]
-  void v(dynamic message, {String? tag}) => verbose;
+  void v(dynamic message, {String? tag}) => verbose(message, tag: tag);
 
   /// Alias for [log]
-  void l(dynamic message, {String? tag}) => log;
+  void l(dynamic message, {String? tag}) => log(message, tag: tag);
 }

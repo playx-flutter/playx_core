@@ -1,6 +1,17 @@
+import 'package:talker_flutter/talker_flutter.dart';
+
 import 'talker_playx_logger.dart';
 import 'playx_logger_settings.dart';
 import 'base_logger.dart';
+class DefaultColoredLoggerFormatter implements LoggerFormatter {
+  @override
+  String fmt(LogDetails details, TalkerLoggerSettings settings) {
+    final msg = details.message?.toString() ?? '';
+    final coloredMsg =
+    msg.split('\n').map((e) => details.pen.write(e)).toList().join('\n');
+    return coloredMsg;
+  }
+}
 
 /// A centralized static logger utility for Playx-based applications.
 ///
@@ -40,9 +51,12 @@ class PlayxLogger {
     String? name,
     PlayxLoggerSettings? settings,
     bool setAsDefault = true,
+    bool useColoredFormatter = false,
   }) {
     final logger = TalkerPlayxLogger(
-        settings: settings ?? PlayxLoggerSettings(), name: name);
+        settings: settings ?? PlayxLoggerSettings(
+          formatter: useColoredFormatter? DefaultColoredLoggerFormatter() : ExtendedLoggerFormatter(),
+        ), name: name);
     name ??= 'PLAYX LOGGER';
     _loggers[name] = logger;
 
@@ -50,6 +64,8 @@ class PlayxLogger {
       _defaultLogger = logger;
     }
   }
+
+
 
   /// Retrieves a logger instance by its [name].
   ///
