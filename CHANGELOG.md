@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.7.2
+- Enhance logging methods in `PlayxCore` to use the new `PlayxLogger` system.
+
 ## 0.7.1
 
 - Updated dependencies.
