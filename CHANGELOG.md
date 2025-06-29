@@ -1,5 +1,5 @@
 # Changelog
-# 1.0.0-beta.4
+# 1.0.0-beta.4 - 1.0.0-beta.5
 - Added v0.7.0 changes.
 
 # 1.0.0-beta.3
