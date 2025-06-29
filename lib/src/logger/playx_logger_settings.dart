@@ -68,7 +68,7 @@ class PlayxLoggerSettings {
     this.printDateTime = false,
     this.level = LogLevel.verbose,
     this.lineSymbol = '─',
-    this.maxLineWidth = 140,
+    this.maxLineWidth = 120,
     this.formatter = const ExtendedLoggerFormatter(),
     this.output,
     this.filter,
