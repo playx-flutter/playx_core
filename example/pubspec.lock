@@ -310,7 +310,7 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "0.7.1"
+    version: "0.7.3"
   plugin_platform_interface:
     dependency: transitive
     description:

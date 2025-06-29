@@ -1,8 +1,9 @@
-import 'package:talker_flutter/talker_flutter.dart';
-
+import 'package:talker_logger/talker_logger.dart';
 import 'talker_playx_logger.dart';
 import 'playx_logger_settings.dart';
 import 'base_logger.dart';
+
+/// A default logger formatter that uses colored output for log messages.
 class DefaultColoredLoggerFormatter implements LoggerFormatter {
   @override
   String fmt(LogDetails details, TalkerLoggerSettings settings) {
@@ -47,7 +48,7 @@ class PlayxLogger {
   ///
   /// When [setAsDefault] is `true` (default), this logger will be assigned
   /// as the default logger for static logging methods like [debug], [error], etc.
-  static void initLogger({
+  static PlayxBaseLogger initLogger({
     String? name,
     PlayxLoggerSettings? settings,
     bool setAsDefault = true,
@@ -63,6 +64,7 @@ class PlayxLogger {
     if (setAsDefault || _defaultLogger == null) {
       _defaultLogger = logger;
     }
+    return logger;
   }
 
 
