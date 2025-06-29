@@ -1,6 +1,6 @@
 name: playx_core
 description: Core package for playx eco system contains shared classes and utilities.
-version: 1.0.0-beta.3
+version: 1.0.0-beta.4
 homepage: https://github.com/playx-flutter/playx_core
 repository: https://github.com/playx-flutter/playx_core
 issue_tracker: https://github.com/playx-flutter/playx_core/issues
@@ -27,6 +27,7 @@ dependencies:
   worker_manager: ^7.2.6
   talker_logger: ^4.9.1
   web: ^1.1.1
+  talker_flutter: ^4.9.1
 
 dev_dependencies:
   flutter_test:
