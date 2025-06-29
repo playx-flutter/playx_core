@@ -1,10 +1,13 @@
 import 'package:flutter/foundation.dart'
-    show kIsWeb, TargetPlatform, defaultTargetPlatform;
+    show kIsWeb, TargetPlatform, defaultTargetPlatform, kIsWasm;
 
 /// Utility class for determining the current platform type and characteristics.
 class PlayxPlatform {
   /// Returns `true` if the platform is the web.
   static bool get isWeb => kIsWeb;
+
+  /// Returns `true` if the platform is WebAssembly.
+  static bool get isWasm => kIsWasm;
 
   /// Returns `true` if the platform is Android.
   static bool get isAndroid =>

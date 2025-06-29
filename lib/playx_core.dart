@@ -32,6 +32,7 @@ export 'src/utils/mapper_utilities.dart';
 export 'src/utils/playx_platform.dart';
 export 'src/utils/safe_convert.dart';
 export 'src/utils/safe_json_convert.dart';
+export 'src/utils/web/web_utils.dart';
 export 'src/logger/base_logger.dart';
 export 'src/logger/playx_logger.dart';
 export 'src/logger/playx_logger_settings.dart';

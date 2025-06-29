@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.7.1
+
+- Updated dependencies.
+- Added `isWasm` to `PlayxPlatform` to detect if the app is running in a WebAssembly environment.
+- Introduced `WebUtils`, a new utility class providing common browser-side features for web apps:
+  - Update the browser URL and query parameters without navigation.
+  - Control fullscreen mode (enter, exit, toggle).
+  - Set the browser tab title and application switcher label.
+  - Change `<body>` background color directly or by CSS class.
+  - Open links in new tabs.
+  - Reload the page.
+
+
 ##  v0.7.0
 
 > Note: This release has breaking changes.

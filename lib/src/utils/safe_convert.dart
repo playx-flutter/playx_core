@@ -10,8 +10,9 @@ int? toIntOrNull(dynamic value) {
   if (value is int) return value;
   if (value is double) return value.toInt();
   if (value is bool) return value ? 1 : 0;
-  if (value is String)
+  if (value is String) {
     return int.tryParse(value) ?? double.tryParse(value)?.toInt();
+  }
   return null;
 }
 
@@ -69,12 +70,13 @@ double toDouble(dynamic value) =>
 bool? toBoolOrNull(dynamic value) {
   if (value == null) return null;
   if (value is bool) return value;
-  if (value is num)
+  if (value is num) {
     return value == 1
         ? true
         : value == 0
             ? false
             : null;
+  }
   if (value is String) {
     final lower = value.toLowerCase();
     if (lower == 'true') return true;
