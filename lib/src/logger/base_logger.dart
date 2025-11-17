@@ -40,8 +40,8 @@ abstract class PlayxBaseLogger {
 
   /// Alias for [error]
   void e(dynamic message,
-          {Object? error, StackTrace? stackTrace, String? tag}) => this.error(message,
-          error: error, stackTrace: stackTrace, tag: tag);
+          {Object? error, StackTrace? stackTrace, String? tag}) =>
+      this.error(message, error: error, stackTrace: stackTrace, tag: tag);
 
   /// Alias for [critical]
   void c(dynamic message, {String? tag}) => critical(message, tag: tag);
