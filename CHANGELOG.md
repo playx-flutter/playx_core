@@ -1,5 +1,9 @@
 # Changelog
 
+##  1.0.0-beta.6
+- Update packages
+
+
 ## 0.7.4
 - Update packages
 - Add new asTOr and asT safe json convert functions.
