@@ -304,3 +304,13 @@ T? asTOrNull<T>(dynamic json, String key,
   }
   return null;
 }
+
+T asTOr<T>(dynamic json, String key,
+    {T Function(dynamic json)? fromJson, required T fallback}) {
+  return asTOrNull(json, key, fromJson: fromJson) ?? fallback;
+}
+
+T asT<T>(dynamic json, String key, {T Function(dynamic json)? fromJson}) {
+  return asTOrNull(json, key, fromJson: fromJson) ??
+      (throw FormatException('Invalid <$T> value for key: $key'));
+}

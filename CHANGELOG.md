@@ -1,4 +1,9 @@
 # Changelog
+
+## 0.7.4
+- Update packages
+- Add new asTOr and asT safe json convert functions.
+
 # 1.0.0-beta.4 - 1.0.0-beta.5
 - Added v0.7.0 changes.
 
@@ -6,6 +11,9 @@
 - Add new `printError` param to `**MapUtils** mapAsync` and `mapAsyncInIsolate` methods to determine whether to print errors or not.
 - Update `asyncMapInIsolate` in `NestedIterablesExtensions` to include a `printError` parameter and `printEachItemError` parameter to determine whether to print errors for each item or not.
 
+
+## 0.7.2-0.7.3
+- Enhance logging methods in `PlayxCore` to use the new `PlayxLogger` system.
 
 # 1.0.0-beta.2
 > Note: This release has breaking changes.
@@ -108,7 +116,6 @@ This version introduces a **modern, powerful, and highly configurable logging sy
 ## 0.6.2 - 0.6.3
 - Update packages. 
 - Updates minimum supported SDK version to Flutter 3.24/Dart 3.5.
-
 
 ## 0.6.1
 - Add new `printError` param to `**MapUtils** mapAsync` and `mapAsyncInIsolate` methods to determine whether to print errors or not.

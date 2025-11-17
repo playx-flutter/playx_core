@@ -1,7 +1,7 @@
 name: playx_core
 description: Core package for playx eco system contains shared classes and utilities.
 version: 1.0.0-beta.5
-homepage: https://github.com/playx-flutter/playx_core
+homepage: https://sourcya.io/
 repository: https://github.com/playx-flutter/playx_core
 issue_tracker: https://github.com/playx-flutter/playx_core/issues
 topics:
@@ -12,7 +12,7 @@ topics:
   - env
 
 environment:
-  sdk: ">=3.5.0 <4.0.0"
+  sdk: ^3.5.0
   flutter: ">=3.24.0"
 
 dependencies:
@@ -22,12 +22,11 @@ dependencies:
   equatable: ^2.0.7
   sprintf: ^7.0.0
   flutter_secure_storage: ^10.0.0-beta.4
-  flutter_dotenv: ^5.2.1
-  get_it: ^8.0.3
-  worker_manager: ^7.2.6
-  talker_logger: ^4.9.1
+  flutter_dotenv: ^6.0.0
+  get_it: ^9.0.5
+  worker_manager: ^7.2.7
+  talker_logger: ^5.0.2
   web: ^1.1.1
-  talker_flutter: ^4.9.1
 
 dev_dependencies:
   flutter_test:
