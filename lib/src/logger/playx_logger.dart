@@ -9,7 +9,7 @@ class DefaultColoredLoggerFormatter implements LoggerFormatter {
   String fmt(LogDetails details, TalkerLoggerSettings settings) {
     final msg = details.message?.toString() ?? '';
     final coloredMsg =
-    msg.split('\n').map((e) => details.pen.write(e)).toList().join('\n');
+        msg.split('\n').map((e) => details.pen.write(e)).toList().join('\n');
     return coloredMsg;
   }
 }
@@ -55,9 +55,13 @@ class PlayxLogger {
     bool useColoredFormatter = false,
   }) {
     final logger = TalkerPlayxLogger(
-        settings: settings ?? PlayxLoggerSettings(
-          formatter: useColoredFormatter? DefaultColoredLoggerFormatter() : ExtendedLoggerFormatter(),
-        ), name: name);
+        settings: settings ??
+            PlayxLoggerSettings(
+              formatter: useColoredFormatter
+                  ? DefaultColoredLoggerFormatter()
+                  : ExtendedLoggerFormatter(),
+            ),
+        name: name);
     name ??= 'PLAYX LOGGER';
     _loggers[name] = logger;
 
@@ -66,8 +70,6 @@ class PlayxLogger {
     }
     return logger;
   }
-
-
 
   /// Retrieves a logger instance by its [name].
   ///
