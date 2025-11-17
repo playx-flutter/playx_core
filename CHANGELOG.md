@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.4
+- Update packages
+- Add new asTOr and asT safe json convert functions.
+
 ## 0.7.2-0.7.3
 - Enhance logging methods in `PlayxCore` to use the new `PlayxLogger` system.
 

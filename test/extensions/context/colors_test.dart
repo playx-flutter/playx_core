@@ -97,7 +97,8 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         theme: ThemeData(
-          bottomAppBarTheme: const BottomAppBarTheme(color: Color(0xFF00FF00)),
+          bottomAppBarTheme:
+              const BottomAppBarThemeData(color: Color(0xFF00FF00)),
         ),
         home: Builder(
           builder: (context) {
