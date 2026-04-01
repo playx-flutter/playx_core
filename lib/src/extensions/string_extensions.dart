@@ -78,4 +78,59 @@ extension StringExtensions on String {
 
   /// Returns first symbol of string or null string if it's empty
   String? get firstOrNull => isEmpty ? null : this[0];
+
+  /// Parses the string to an [int] or returns null if it cannot be parsed.
+  int? toIntOrNull() => int.tryParse(this);
+
+  /// Parses the string to a [double] or returns null if it cannot be parsed.
+  double? toDoubleOrNull() => double.tryParse(this);
+
+  /// Checks if the string represents a valid numeric value (int or double).
+  bool get isNumeric => num.tryParse(this) != null;
+
+  /// Returns true if this string contains [other] while ignoring case.
+  bool containsIgnoreCase(String other) =>
+      toLowerCase().contains(other.toLowerCase());
+
+  /// Returns true if this string is equal to [other] while ignoring case.
+  bool equalsIgnoreCase(String other) => toLowerCase() == other.toLowerCase();
+
+  /// Removes all whitespace characters from the string.
+  String removeWhitespace() => replaceAll(RegExp(r'\s+'), '');
+
+  /// Converts the string to a URL-friendly slug.
+  String toSlug() => toLowerCase()
+      .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
+      .replaceAll(RegExp(r'^-+|-+$'), '');
+
+  /// Removes basic HTML tags from the string.
+  String removeHtmlTags() => replaceAll(RegExp(r'<[^>]*>'), '');
+
+  /// Checks if the string is a valid email address.
+  bool get isValidEmail => RegExp(
+          r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
+      .hasMatch(this);
+
+  /// Checks if the string is a valid URL.
+  bool get isValidUrl =>
+      RegExp(r"^(https?:\/\/)?([\w\-]+\.)+[\w\-]+(\/[\w\-\.\/?\%&=]*)?$")
+          .hasMatch(this);
+
+  /// Truncates the string if its length exceeds [maxLength], appending the [suffix].
+  String limit(int maxLength, {String suffix = '...'}) {
+    if (length <= maxLength) return this;
+    return '${substring(0, maxLength)}$suffix';
+  }
+}
+
+/// Extension functions on a nullable String.
+extension NullableStringExtensions on String? {
+  /// Checks if the string is null or empty.
+  bool get isNullOrEmpty => this == null || this!.isEmpty;
+
+  /// Checks if the string is not null and not empty.
+  bool get isNotNullOrEmpty => this != null && this!.isNotEmpty;
+
+  /// Returns this string if it's not null or empty; otherwise, returns the [fallback] value.
+  String ifNullOrEmpty(String fallback) => isNullOrEmpty ? fallback : this!;
 }

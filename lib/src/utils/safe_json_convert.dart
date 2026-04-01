@@ -2,11 +2,36 @@ import 'package:playx_core/src/utils/safe_convert.dart';
 
 /// Internal helper to safely get a value from a JSON map by key.
 /// Returns null if the JSON is null, not a map, or if the key is missing.
+/// Supports dot-notation for nested keys (e.g., 'data.user.name' or 'data.users.0.name').
 dynamic _getJsonValueOrNull(dynamic json, String key) {
-  if (json == null || json is! Map<String, dynamic> || !json.containsKey(key)) {
+  if (json == null) {
     return null;
   }
-  return json[key];
+
+  if (json is Map && json.containsKey(key)) {
+    return json[key];
+  }
+
+  if (key.contains('.')) {
+    final keys = key.split('.');
+    dynamic current = json;
+
+    for (final k in keys) {
+      if (current is Map) {
+        if (!current.containsKey(k)) return null;
+        current = current[k];
+      } else if (current is List) {
+        final index = int.tryParse(k);
+        if (index == null || index < 0 || index >= current.length) return null;
+        current = current[index];
+      } else {
+        return null;
+      }
+    }
+    return current;
+  }
+
+  return null;
 }
 
 /// ====================
@@ -169,6 +194,53 @@ DateTime asLocalDateTimeOr(dynamic json, String key,
 }
 
 /// ====================
+/// Enum conversions
+/// ====================
+
+/// Returns an enum if the value at [key] can be matched, otherwise null.
+T? asEnumOrNull<T extends Enum>(dynamic json, String key, List<T> values) {
+  final value = _getJsonValueOrNull(json, key);
+  return toEnumOrNull<T>(value, values);
+}
+
+/// Returns an enum for the value at [key].
+/// Throws a [FormatException] if the value cannot be matched.
+T asEnum<T extends Enum>(dynamic json, String key, List<T> values) {
+  final value = _getJsonValueOrNull(json, key);
+  return toEnum<T>(value, values);
+}
+
+/// Returns an enum for the value at [key], or [fallback] if parsing fails.
+T asEnumOr<T extends Enum>(dynamic json, String key, List<T> values,
+    {required T fallback}) {
+  final value = _getJsonValueOrNull(json, key);
+  return toEnumOr<T>(value, values, fallback: fallback);
+}
+
+/// ====================
+/// Uri conversions
+/// ====================
+
+/// Returns an Uri if the value at [key] can be parsed, otherwise null.
+Uri? asUriOrNull(dynamic json, String key) {
+  final value = _getJsonValueOrNull(json, key);
+  return toUriOrNull(value);
+}
+
+/// Returns an Uri for the value at [key].
+/// Throws a [FormatException] if the value cannot be parsed.
+Uri asUri(dynamic json, String key) {
+  final value = _getJsonValueOrNull(json, key);
+  return toUri(value);
+}
+
+/// Returns an Uri for the value at [key], or [fallback] if parsing fails.
+Uri asUriOr(dynamic json, String key, {required Uri fallback}) {
+  final value = _getJsonValueOrNull(json, key);
+  return toUriOr(value, fallback: fallback);
+}
+
+/// ====================
 /// Map conversions
 /// ====================
 
@@ -299,6 +371,7 @@ T? asTOrNull<T>(dynamic json, String key,
     if ([] is T) return toListOrNull(value) as T?;
     if (<String, dynamic>{} is T) return toMapOrNull(value) as T?;
     if (DateTime.now() is T) return toDateTimeOrNull(value) as T?;
+    if (Uri.parse('') is T) return toUriOrNull(value) as T?;
   } catch (_) {
     return null;
   }

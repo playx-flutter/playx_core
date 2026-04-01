@@ -24,7 +24,7 @@ class MapUtils {
       required Mapper<T, S> mapper,
       bool printError = kDebugMode}) async {
     try {
-      return mapper(data);
+      return await mapper(data);
     } catch (e, s) {
       if (printError) {
         PlayxCore.logger.error('MapAsync Error', error: e, stackTrace: s);
