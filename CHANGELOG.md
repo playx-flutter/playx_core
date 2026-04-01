@@ -1,5 +1,6 @@
 # Changelog
 
+## 0.7.1
 ## 1.0.0
 - Added support for nested JSON keys using dot notation (e.g., `'data.user.name'`) in all `safe_json_convert` functions.
 - Introduced `toEnum`/`asEnum` and `toUri`/`asUri` safe conversion functions.
@@ -38,7 +39,6 @@
 - Add support for wasm support for web.
 - Update flutter_secure_storage: to v10.0.0-beta.2 which includes some breaking changes.
 
-## 0.7.1
 
 - Updated dependencies.
 - Added `isWasm` to `PlayxPlatform` to detect if the app is running in a WebAssembly environment.
