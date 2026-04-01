@@ -61,4 +61,36 @@ extension ContextColorsExtensions on BuildContext {
 
   /// shortcut for `Theme.of(context).colorScheme.primary`
   Color get buttonPrimaryColor => colorScheme.primary;
+
+  /// * Material 3 ColorScheme shortcuts
+
+  Color get primary => colorScheme.primary;
+  Color get onPrimary => colorScheme.onPrimary;
+  Color get primaryContainer => colorScheme.primaryContainer;
+  Color get onPrimaryContainer => colorScheme.onPrimaryContainer;
+
+  Color get onSecondary => colorScheme.onSecondary;
+  Color get secondaryContainer => colorScheme.secondaryContainer;
+  Color get onSecondaryContainer => colorScheme.onSecondaryContainer;
+
+  Color get tertiary => colorScheme.tertiary;
+  Color get onTertiary => colorScheme.onTertiary;
+  Color get tertiaryContainer => colorScheme.tertiaryContainer;
+  Color get onTertiaryContainer => colorScheme.onTertiaryContainer;
+
+  Color get surface => colorScheme.surface;
+  Color get onSurface => colorScheme.onSurface;
+
+  Color get error => colorScheme.error;
+  Color get onError => colorScheme.onError;
+  Color get errorContainer => colorScheme.errorContainer;
+  Color get onErrorContainer => colorScheme.onErrorContainer;
+
+  Color get outline => colorScheme.outline;
+  Color get outlineVariant => colorScheme.outlineVariant;
+  Color get shadow => colorScheme.shadow;
+  Color get scrim => colorScheme.scrim;
+  Color get inverseSurface => colorScheme.inverseSurface;
+  Color get onInverseSurface => colorScheme.onInverseSurface;
+  Color get inversePrimary => colorScheme.inversePrimary;
 }

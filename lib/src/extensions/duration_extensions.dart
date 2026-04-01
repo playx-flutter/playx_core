@@ -1,3 +1,5 @@
+import 'dart:async';
+
 String twoDigits(int n) => n.toString().padLeft(2, "0");
 
 /// Extension functions to convert duration to formatted hours, minutes, seconds and milliseconds.
@@ -130,4 +132,9 @@ extension DurationExtensions on Duration {
     }
     return buffer.toString();
   }
+
+  /// Delays the execution of the given [callback] by this duration.
+  /// If [callback] is omitted, simply delays for this duration.
+  Future<T?> delay<T>([FutureOr<T> Function()? callback]) =>
+      Future.delayed(this, callback);
 }

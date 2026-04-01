@@ -162,4 +162,29 @@ extension DateTimeExtensions on DateTime {
         second ?? this.second,
         millisecond ?? this.millisecond,
       );
+
+  /// Returns a new [DateTime] with the time set to the start of the day (00:00:00.000).
+  /// This is functionally equivalent to [withoutTime].
+  DateTime get startOfDay => DateTime(year, month, day);
+
+  /// Returns a new [DateTime] with the time set to the end of the day (23:59:59.999).
+  DateTime get endOfDay => DateTime(year, month, day, 23, 59, 59, 999);
+
+  /// Returns a new [DateTime] with the time set to the start of the month.
+  DateTime get startOfMonth => DateTime(year, month, 1);
+
+  /// Returns a new [DateTime] with the time set to the end of the month.
+  DateTime get endOfMonth => DateTime(year, month + 1, 0, 23, 59, 59, 999);
+
+  /// Returns a new [DateTime] with the time set to the start of the week.
+  DateTime startOfWeek({Weekday firstDay = Weekday.monday}) {
+    final int dayOfWeek = dayOfTheWeekIndex(firstDay: firstDay);
+    return subtract(Duration(days: dayOfWeek)).startOfDay;
+  }
+
+  /// Returns a new [DateTime] with the time set to the end of the week.
+  DateTime endOfWeek({Weekday firstDay = Weekday.monday}) {
+    final int dayOfWeek = dayOfTheWeekIndex(firstDay: firstDay);
+    return add(Duration(days: 6 - dayOfWeek)).endOfDay;
+  }
 }

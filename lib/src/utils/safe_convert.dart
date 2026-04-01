@@ -189,6 +189,14 @@ List<T>? toListOrNull<T>(dynamic value, {T Function(dynamic json)? fromJson}) {
         log('ERROR in converting list', error: e, stackTrace: s);
       }
     }
+  } else if (value is List) {
+    try {
+      return List<T>.from(value);
+    } catch (e, s) {
+      if (kDebugMode) {
+        log('ERROR in casting list', error: e, stackTrace: s);
+      }
+    }
   }
   return null;
 }
@@ -202,6 +210,53 @@ List<T> toListOr<T>(dynamic value,
 List<T> toList<T>(dynamic value, {T Function(dynamic json)? fromJson}) =>
     toListOrNull<T>(value, fromJson: fromJson) ??
     (throw FormatException('Invalid List<$T> value: $value'));
+
+// --------------------- ENUM ---------------------
+
+/// Safely converts [value] to an enum of type [T], or returns null if conversion fails.
+/// Requires the list of all enum [values] (e.g., MyEnum.values).
+T? toEnumOrNull<T extends Enum>(dynamic value, List<T> values) {
+  if (value == null) return null;
+  if (value is T) return value;
+  final stringValue = toStringOrNull(value)?.toLowerCase();
+  if (stringValue == null) return null;
+  try {
+    return values.firstWhere(
+      (e) => e.name.toLowerCase() == stringValue,
+    );
+  } catch (_) {
+    return null;
+  }
+}
+
+/// Converts [value] to an enum or returns [fallback] if conversion fails.
+T toEnumOr<T extends Enum>(dynamic value, List<T> values,
+        {required T fallback}) =>
+    toEnumOrNull(value, values) ?? fallback;
+
+/// Converts [value] to an enum or throws [FormatException] if conversion fails.
+T toEnum<T extends Enum>(dynamic value, List<T> values) =>
+    toEnumOrNull(value, values) ??
+    (throw FormatException('Invalid enum value: $value'));
+
+// --------------------- URI ---------------------
+
+/// Safely converts [value] to [Uri], or returns null if conversion fails.
+Uri? toUriOrNull(dynamic value) {
+  if (value == null) return null;
+  if (value is Uri) return value;
+  final stringValue = toStringOrNull(value);
+  if (stringValue == null) return null;
+  return Uri.tryParse(stringValue);
+}
+
+/// Converts [value] to [Uri] or returns [fallback] if conversion fails.
+Uri toUriOr(dynamic value, {required Uri fallback}) =>
+    toUriOrNull(value) ?? fallback;
+
+/// Converts [value] to [Uri] or throws [FormatException] if conversion fails.
+Uri toUri(dynamic value) =>
+    toUriOrNull(value) ?? (throw FormatException('Invalid Uri value: $value'));
 
 // --------------------- GENERIC ---------------------
 

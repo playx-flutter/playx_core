@@ -75,3 +75,4 @@
 .fvm/
 /.fvmrc
 /ios/._Runner.xcworkspace
+/example/ios/Podfile.lock
