@@ -112,9 +112,9 @@ extension StringExtensions on String {
       .hasMatch(this);
 
   /// Checks if the string is a valid URL.
-  bool get isValidUrl => RegExp(
-          r"^(https?:\/\/)?([\w\-]+\.)+[\w\-]+(\/[\w\-\.\/?\%&=]*)?$")
-      .hasMatch(this);
+  bool get isValidUrl =>
+      RegExp(r"^(https?:\/\/)?([\w\-]+\.)+[\w\-]+(\/[\w\-\.\/?\%&=]*)?$")
+          .hasMatch(this);
 
   /// Truncates the string if its length exceeds [maxLength], appending the [suffix].
   String limit(int maxLength, {String suffix = '...'}) {

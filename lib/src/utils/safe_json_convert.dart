@@ -15,7 +15,7 @@ dynamic _getJsonValueOrNull(dynamic json, String key) {
   if (key.contains('.')) {
     final keys = key.split('.');
     dynamic current = json;
-    
+
     for (final k in keys) {
       if (current is Map) {
         if (!current.containsKey(k)) return null;

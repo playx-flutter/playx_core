@@ -5,7 +5,7 @@ extension PlayxColorExtensions on Color {
   String toHex({bool leadingHashSign = true, bool includeAlpha = false}) {
     final buffer = StringBuffer();
     if (leadingHashSign) buffer.write('#');
-    
+
     final aInt = (a * 255).round();
     final rInt = (r * 255).round();
     final gInt = (g * 255).round();
@@ -48,7 +48,8 @@ extension PlayxColorExtensions on Color {
   Color lighten([double amount = .1]) {
     assert(amount >= 0 && amount <= 1);
     final hsl = HSLColor.fromColor(this);
-    final hslLight = hsl.withLightness((hsl.lightness + amount).clamp(0.0, 1.0));
+    final hslLight =
+        hsl.withLightness((hsl.lightness + amount).clamp(0.0, 1.0));
     return hslLight.toColor();
   }
 

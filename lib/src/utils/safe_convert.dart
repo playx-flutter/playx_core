@@ -230,12 +230,14 @@ T? toEnumOrNull<T extends Enum>(dynamic value, List<T> values) {
 }
 
 /// Converts [value] to an enum or returns [fallback] if conversion fails.
-T toEnumOr<T extends Enum>(dynamic value, List<T> values, {required T fallback}) =>
+T toEnumOr<T extends Enum>(dynamic value, List<T> values,
+        {required T fallback}) =>
     toEnumOrNull(value, values) ?? fallback;
 
 /// Converts [value] to an enum or throws [FormatException] if conversion fails.
 T toEnum<T extends Enum>(dynamic value, List<T> values) =>
-    toEnumOrNull(value, values) ?? (throw FormatException('Invalid enum value: $value'));
+    toEnumOrNull(value, values) ??
+    (throw FormatException('Invalid enum value: $value'));
 
 // --------------------- URI ---------------------
 

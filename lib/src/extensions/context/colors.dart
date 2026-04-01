@@ -63,7 +63,7 @@ extension ContextColorsExtensions on BuildContext {
   Color get buttonPrimaryColor => colorScheme.primary;
 
   /// * Material 3 ColorScheme shortcuts
-  
+
   Color get primary => colorScheme.primary;
   Color get onPrimary => colorScheme.onPrimary;
   Color get primaryContainer => colorScheme.primaryContainer;
