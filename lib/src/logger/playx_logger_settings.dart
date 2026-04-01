@@ -63,7 +63,7 @@ class PlayxLoggerSettings {
   PlayxLoggerSettings({
     this.enabled = kDebugMode,
     this.useColors = true,
-    this.printToConsole = true,
+    this.printToConsole = kDebugMode,
     this.printLoggerName = true,
     this.printDateTime = false,
     this.level = LogLevel.verbose,

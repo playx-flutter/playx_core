@@ -115,6 +115,48 @@ extension PlayxIterableExtensions<T> on Iterable<T> {
     }
     return result;
   }
+
+  /// Splits this iterable into lists of the given [size].
+  List<List<T>> chunked(int size) {
+    if (size <= 0) {
+      throw ArgumentError('Size must be greater than 0');
+    }
+    final result = <List<T>>[];
+    final iterator = this.iterator;
+    while (iterator.moveNext()) {
+      final chunk = <T>[iterator.current];
+      for (int i = 1; i < size && iterator.moveNext(); i++) {
+        chunk.add(iterator.current);
+      }
+      result.add(chunk);
+    }
+    return result;
+  }
+
+  /// Groups elements by the key returned by the [keySelector] function.
+  Map<K, List<T>> groupBy<K>(K Function(T) keySelector) {
+    final result = <K, List<T>>{};
+    for (final element in this) {
+      final key = keySelector(element);
+      result.putIfAbsent(key, () => <T>[]).add(element);
+    }
+    return result;
+  }
+
+  /// Returns a new list sorted by the key returned by the [keySelector] function.
+  List<T> sortedBy<K extends Comparable<K>>(K Function(T) keySelector) {
+    final list = List<T>.of(this);
+    list.sort((a, b) => keySelector(a).compareTo(keySelector(b)));
+    return list;
+  }
+
+  /// Returns a new list sorted in descending order by the key returned by the [keySelector] function.
+  List<T> sortedByDescending<K extends Comparable<K>>(
+      K Function(T) keySelector) {
+    final list = List<T>.of(this);
+    list.sort((a, b) => keySelector(b).compareTo(keySelector(a)));
+    return list;
+  }
 }
 
 extension NestedIterablesExtensions<T> on Iterable<Iterable<T>> {
@@ -139,4 +181,19 @@ extension NestedIterablesExtensions<T> on Iterable<Iterable<T>> {
       flatten().asyncMap(
         mapper: mapper,
       );
+}
+
+/// Extensions for [Iterable]s of numbers.
+extension PlayxIterableNumExtensions<T extends num> on Iterable<T> {
+  /// Returns the sum of all elements in the collection.
+  num get sum {
+    if (isEmpty) return 0;
+    return fold(0, (previousValue, element) => previousValue + element);
+  }
+
+  /// Returns the average of all elements in the collection.
+  double get average {
+    if (isEmpty) return 0;
+    return sum / length;
+  }
 }

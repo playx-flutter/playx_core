@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:talker_logger/talker_logger.dart';
 import 'talker_playx_logger.dart';
 import 'playx_logger_settings.dart';
@@ -8,6 +9,8 @@ class DefaultColoredLoggerFormatter implements LoggerFormatter {
   @override
   String fmt(LogDetails details, TalkerLoggerSettings settings) {
     final msg = details.message?.toString() ?? '';
+    if (!settings.enableColors || kIsWeb) return msg;
+
     final coloredMsg =
         msg.split('\n').map((e) => details.pen.write(e)).toList().join('\n');
     return coloredMsg;

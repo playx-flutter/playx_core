@@ -1,8 +1,16 @@
 # Changelog
 
-##  1.0.0-beta.6
-- Update packages
-
+## 1.0.0
+- Added support for nested JSON keys using dot notation (e.g., `'data.user.name'`) in all `safe_json_convert` functions.
+- Introduced `toEnum`/`asEnum` and `toUri`/`asUri` safe conversion functions.
+- Improved generic list parsing in `toListOrNull` by adding a fallback to `List<T>.from(value)` for safer runtime casting.
+- Optimized `TalkerPlayxLogger` to strictly respect the `enabled` configuration, utilize `debugPrint`, and automatically disable colored output in Web environments to avoid unformatted ANSI codes.
+- Refactored `PlayxColorExtensions` to eliminate deprecated `dart:ui` getters, transitioning to Flutter 3.24 wide-gamut compatibility (`a`, `r`, `g`, `b`). Added `fromHex`, `lighten`, `darken`, and `isDark` helper methods.
+- Expanded core extension libraries (`String`, `Iterable`, `DateTime`, `Duration`, `bool`, `BuildContext`) to include new highly-requested utilities:
+  - **String**: Added helpers like `toIntOrNull()`, `isNumeric`, `isValidEmail`, `toSlug()`, and `NullableStringExtensions` on `String?` (e.g., `isNullOrEmpty`).
+  - **Iterable**: Added functional utilities `chunked`, `groupBy`, `sortedBy`, and numeric aggregates (`sum`, `average`).
+  - **DateTime**: Added boundary generators like `startOfDay`, `endOfMonth`, and `startOfWeek`.
+  - **Context**: Mapped the complete Material 3 `ColorScheme` properties (e.g., `onPrimary`, `surfaceContainer`) directly to `BuildContext` for agile theming.
 
 ## 0.7.4
 - Update packages
