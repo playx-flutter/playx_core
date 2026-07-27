@@ -1,6 +1,10 @@
 # Changelog
 
-## 0.7.1
+## 1.1.0
+- Add optional `onError` callback (`MapOnError<T, S>`) to `MapUtils.mapAsync`, `MapUtils.mapAsyncInIsolate`, and the `MapAsync<T>` extension methods (`mapAsync`, `mapAsyncInIsolate`). When provided, errors thrown while running the mapper (or while dispatching the isolate task) are caught, logged (subject to `printError`), and the value returned by `onError` is returned instead of rethrowing. If `onError` is `null` (the default), the previous behavior is preserved and errors are rethrown after logging. This is a **non-breaking, additive** change.
+- Clean up the redundant `try/catch(e){rethrow}` wrapper in the private `_mapAsync` isolate entry point.
+- Added tests for `mapper_utilities.dart`.
+
 ## 1.0.0
 - Added support for nested JSON keys using dot notation (e.g., `'data.user.name'`) in all `safe_json_convert` functions.
 - Introduced `toEnum`/`asEnum` and `toUri`/`asUri` safe conversion functions.
