@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.0.1
+- Added **Padding extensions** (`padding_extensions.dart`): `PlayxNumPaddingExtensions` on `num` (`.p`, `.px`, `.py`, `.pAll`, `.pLR`, `.pTB`, `.pZero`, `pSymmetric`, `pOnly`) and `PlayxWidgetPaddingExtensions` on `Widget` (`pAll`, `pSymmetric`, `pOnly`, `pZero`) to easily create `EdgeInsets` and wrap widgets in `Padding`. Helpers return unscaled `EdgeInsets`; apps that need responsive scaling should scale the numeric input (e.g. `16.r.p`).
+
 ## 0.7.1
 ## 1.0.0
 - Added support for nested JSON keys using dot notation (e.g., `'data.user.name'`) in all `safe_json_convert` functions.
