@@ -3,7 +3,7 @@ import 'dart:typed_data';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../crypto/secure_cipher.dart';
+import '../../../crypto/secure_cipher.dart';
 import '../secure_log.dart';
 import '../settings/secure_storage_type.dart';
 import 'secure_storage_backend.dart';

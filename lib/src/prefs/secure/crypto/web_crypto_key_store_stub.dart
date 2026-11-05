@@ -1,4 +1,4 @@
-import 'secure_cipher.dart';
+import '../../../crypto/secure_cipher.dart';
 
 /// Reads the non-extractable WebCrypto key. Only supported on web.
 Future<SecureCipher?> readWebCryptoKey() =>

@@ -229,6 +229,8 @@ final user = await PlayxSecurePrefs.maybeGetObject(
 
 ### Environment configuration
 
+See the [example app](example/) for a complete setup with environments and secure env.
+
 `PlayxEnv` reads configuration from `.env` files (declared as assets), per-environment files and `--dart-define`:
 
 ```yaml
@@ -264,7 +266,7 @@ Values are layered, later sources overriding earlier ones:
 5. `PLAYX_DEFINES` (see below)
 6. `dartDefines`
 
-Files can reference earlier values (`API_URL=https://$HOST/api`). Missing files are logged and skipped, unless `isOptional: false`. A missing `.env.<environment>` simply leaves the `.env` values in place.
+Files can reference earlier values (`API_URL=https://$HOST/api`). A reference is resolved when its line is read: if `.env.prod` changes `HOST`, redefine `API_URL` there too. Missing files are logged and skipped, unless `isOptional: false`. A missing `.env.<environment>` simply leaves the `.env` values in place.
 
 #### Build-time values (`--dart-define`)
 
@@ -294,6 +296,66 @@ const PlayxEnvSettings(dartDefines: {'DEBUG': String.fromEnvironment('DEBUG')});
 
 If you only need a flag in code, `const debug = bool.fromEnvironment('DEBUG');` is a compile-time constant: code behind `if (debug)` is removed from release builds, which runtime config can't do.
 
+#### Sensitive values (secure env)
+
+Keep normal config in `.env`, and put values that shouldn't be readable in the app in a gitignored `.env.secrets` (plus `.env.secrets.<env>` per environment). A command turns them into an encrypted Dart file:
+
+```
+# .env.secrets                 # .env.secrets.prod
+STRIPE_KEY=pk_test_1           STRIPE_KEY=pk_live_9
+MAPS_KEY=AIza...
+```
+
+```sh
+dart run playx:secure_env --env prod
+# → lib/generated/playx_secure_env.g.dart
+```
+
+> The command is `dart run playx:secure_env` in apps using `playx`, and `dart run playx_core:secure_env` in apps depending on `playx_core` only. Both take the same options; the examples below use `playx:secure_env`.
+
+```dart
+import 'generated/playx_secure_env.g.dart';
+
+await PlayxCore.bootCore(
+  envSettings: const PlayxEnvSettings(secureEnv: playxSecureEnv),
+);
+
+PlayxEnv.getString('API_URL');    // from .env
+PlayxEnv.getString('STRIPE_KEY'); // decrypted from the secure env
+PlayxEnv.isSecure('STRIPE_KEY');  // true; secure values are excluded from PlayxEnv.all
+```
+
+- Names and values are encrypted together (AES-256-GCM) and stored as numbers, never as strings, so unzipping the app, `strings`, devtools or key scanners find nothing.
+- Secure values override `.env` files; `mergeWith`, `PLAYX_DEFINES` and `dartDefines` can still override them (e.g. for local testing).
+- The key is created once in `.playx_secure_env.key` and embedded in the generated file, split into two parts. Run with `--rotate-key` to replace it.
+- If secure values can't be decrypted (wrong key, tampered data), `load()` throws a `PlayxEnvException`.
+
+Add to `.gitignore`:
+
+```
+.env.secrets*
+.playx_secure_env.key
+lib/generated/playx_secure_env.g.dart
+secure_defines.json
+```
+
+**CI/CD** (Codemagic, GitHub Actions, Vercel, …): set `PLAYX_ENV` and one `PLAYX_SECRET_<NAME>` variable per secret in the platform's settings, and run this before `flutter build`:
+
+```sh
+dart run playx:secure_env --from-env-prefix PLAYX_SECRET_
+```
+
+`PLAYX_SECRET_STRIPE_KEY` becomes `STRIPE_KEY`, and adding a secret doesn't require changing the build. You can also use `--from-env STRIPE_KEY,MAPS_KEY` or `--define KEY=VALUE`. Ready-made configs: [Codemagic](doc/ci/codemagic.yaml), [GitHub Actions](doc/ci/github-actions.yml), [Vercel](doc/ci/vercel.json) with its [build script](doc/ci/vercel-build.sh).
+
+Other options:
+
+- **Encrypted define**: `dart run playx:secure_env define --from-env-prefix PLAYX_SECRET_ --out secure_defines.json`, then `flutter build ... --dart-define-from-file=secure_defines.json`. The define holds only ciphertext (`PLAYX_SECURE_DEFINES`), decrypted with the same key, and overrides the generated values.
+- **Key from a define**: `--key-from-define` generates a file without the key, so it can be committed, and the build passes `--dart-define=PLAYX_ENV_KEY=<key>` (create one with `dart run playx:secure_env generate-key`). Note that defines are compiled into the app as readable strings, so this keeps the key out of git, not out of the app.
+
+Run `dart run playx:secure_env --help` for all options.
+
+> **How secure is it?** The key ships with the app, so a determined reverse engineer can still recover the values. Secure env protects against casual inspection and automated scanners. Keys that would cause real damage if leaked belong on your server (or a serverless function that calls the third-party service for the app).
+
 Getters are synchronous and come in `maybeGet*` (returns `null`) and `get*` (returns a fallback) forms:
 
 | Type | Example value | Getter |
@@ -309,7 +371,7 @@ The same getters are available on `PlayxEnv.values`, an `EnvValues`. You can als
 
 For tests, use `PlayxEnv.loadFromString('API_URL=http://localhost')` or `PlayxEnv.setMockValues({...})`, and `PlayxEnv.dispose()` to reset.
 
-> **Security:** `.env` files ship as plain text inside your app, and `--dart-define` values are compiled into it. Anyone with the app can read them. Use them for configuration (URLs, feature flags), never for secrets: keep those on your server.
+> **Security:** `.env` files ship as plain text inside your app, and `--dart-define` values are compiled into it. Anyone with the app can read them. Use them for configuration (URLs, feature flags), and [secure env](#sensitive-values-secure-env) for sensitive values.
 
 ## Documentation
 

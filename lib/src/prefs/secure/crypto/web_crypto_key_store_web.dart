@@ -5,7 +5,7 @@ import 'dart:typed_data';
 
 import 'package:web/web.dart' as web;
 
-import 'secure_cipher.dart';
+import '../../../crypto/secure_cipher.dart';
 
 const _databaseName = 'playx_secure_storage';
 const _storeName = 'keys';

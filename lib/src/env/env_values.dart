@@ -20,16 +20,29 @@ import 'parsers/env_value_parser.dart';
 @immutable
 class EnvValues {
   final Map<String, String> _values;
+  final Set<String> _secureKeys;
+  final Map<String, String> _public;
 
-  /// Wraps a copy of [values].
-  EnvValues([Map<String, String> values = const {}])
-    : _values = Map.unmodifiable(values);
+  /// Wraps a copy of [values]. Values of [secureKeys] are readable with the
+  /// getters but excluded from [all].
+  EnvValues([
+    Map<String, String> values = const {},
+    Set<String> secureKeys = const {},
+  ]) : _values = Map.unmodifiable(values),
+       _secureKeys = Set.unmodifiable(secureKeys),
+       _public = Map.unmodifiable({
+         for (final MapEntry(:key, :value) in values.entries)
+           if (!secureKeys.contains(key)) key: value,
+       });
 
-  /// Every value.
-  Map<String, String> get all => _values;
+  /// Every value except secure ones, safe to log or display.
+  Map<String, String> get all => _public;
 
   /// Whether [key] has a value.
   bool containsKey(String key) => _values.containsKey(key);
+
+  /// Whether [key] holds a secure value (see `PlayxEnvSettings.secureEnv`).
+  bool isSecure(String key) => _secureKeys.contains(key);
 
   /// Keys of [keys] without a non-empty value.
   List<String> missingKeys(Iterable<String> keys) => [

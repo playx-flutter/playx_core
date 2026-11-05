@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../utils/safe_json_convert.dart';
-import '../crypto/secure_cipher.dart';
+import '../../../crypto/secure_cipher.dart';
 import '../crypto/web_crypto_key_store.dart';
 import '../secure_log.dart';
 import '../settings/encrypted_prefs_options.dart';

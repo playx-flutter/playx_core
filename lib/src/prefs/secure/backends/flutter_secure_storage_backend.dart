@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../../utils/safe_json_convert.dart';
-import '../crypto/secure_cipher.dart';
+import '../../../crypto/secure_cipher.dart';
 import '../secure_log.dart';
 import '../settings/secure_storage_type.dart';
 import 'secure_storage_backend.dart';

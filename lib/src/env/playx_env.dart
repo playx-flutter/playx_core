@@ -102,11 +102,14 @@ abstract class PlayxEnv {
 
   static final _empty = EnvValues();
 
-  /// Every loaded value.
+  /// Every loaded value except secure ones, safe to log or display.
   static Map<String, String> get all => values.all;
 
   /// Whether [key] has a value.
   static bool containsKey(String key) => values.containsKey(key);
+
+  /// Whether [key] holds a secure value (see [PlayxEnvSettings.secureEnv]).
+  static bool isSecure(String key) => values.isSecure(key);
 
   // Getters, see [EnvValues].
 

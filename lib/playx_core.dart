@@ -11,6 +11,7 @@ export 'src/env/env_values.dart';
 export 'src/env/playx_env.dart';
 export 'src/env/playx_env_exception.dart';
 export 'src/env/playx_env_settings.dart';
+export 'src/env/secure/playx_secure_env_data.dart';
 export 'src/extensions/bool_extensions.dart';
 export 'src/extensions/color_extensions.dart';
 export 'src/extensions/context/colors.dart';

@@ -8,6 +8,7 @@ import '../env_log.dart';
 import '../env_values.dart';
 import '../playx_env_exception.dart';
 import '../playx_env_settings.dart';
+import '../secure/secure_env_loader.dart';
 
 /// The outcome of loading env values.
 class EnvLoadResult {
@@ -36,11 +37,13 @@ abstract final class EnvLoader {
   /// each define in code. See [parsePlayxDefines].
   static const _playxDefines = String.fromEnvironment('PLAYX_DEFINES');
 
-  /// Loads the files described by [settings], then applies
-  /// [PlayxEnvSettings.mergeWith] and [PlayxEnvSettings.dartDefines].
+  /// Loads the files described by [settings], then the secure values, then
+  /// [PlayxEnvSettings.mergeWith], `PLAYX_DEFINES` and
+  /// [PlayxEnvSettings.dartDefines].
   ///
   /// Throws a [PlayxEnvException] if a file is missing and
-  /// [PlayxEnvSettings.isOptional] is `false`.
+  /// [PlayxEnvSettings.isOptional] is `false`, or if secure values can't be
+  /// decrypted.
   static Future<EnvLoadResult> load(PlayxEnvSettings settings) async {
     final environment = resolveEnvironment(settings);
     final files = [
@@ -72,6 +75,12 @@ abstract final class EnvLoader {
       envLogWarning('Env files not found, skipped: ${missing.join(', ')}');
     }
 
+    final secure = await SecureEnvLoader.load(
+      settings,
+      environment: environment,
+    );
+    values.addAll(secure);
+
     _applyOverrides(
       values,
       mergeWith: settings.mergeWith,
@@ -80,7 +89,7 @@ abstract final class EnvLoader {
       parser: settings.parser,
     );
     return EnvLoadResult(
-      EnvValues(values),
+      EnvValues(values, secure.keys.toSet()),
       environment: environment,
       loadedFiles: List.unmodifiable(loaded),
     );
