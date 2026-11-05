@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage_platform_interface/flutter_secure_storage_platform_interface.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:playx_core/playx_core.dart';
@@ -179,6 +180,7 @@ void main() {
         const PlayxEncryptedPrefsOptions(),
     bool throwOnError = true,
     bool clearOnReinstall = false,
+    bool encryptKeys = false,
   }) async {
     await PlayxSecurePrefs.dispose();
     await PlayxSecurePrefs.create(
@@ -188,6 +190,7 @@ void main() {
         encryptedPrefsOptions: encryptedPrefsOptions,
         throwOnError: throwOnError,
         clearOnReinstall: clearOnReinstall,
+        encryptKeys: encryptKeys,
       ),
     );
   }
@@ -526,6 +529,253 @@ void main() {
       expect(PlayxSecurePrefs.storageType, PlayxSecureStorageType.memory);
       await PlayxSecurePrefs.setString('token', 'abc');
       expect(await PlayxSecurePrefs.getString('token'), 'abc');
+    });
+  });
+
+  group('encryptKeys', () {
+    Future<void> startHidden([
+      PlayxSecureStorageType type = PlayxSecureStorageType.encryptedPrefs,
+    ]) => start(type, encryptKeys: true);
+
+    Future<List<String>> secureKeys() async => (await prefs.getKeys())
+        .where((k) => k.startsWith('playx_secure_'))
+        .toList();
+
+    test('hides key names', () async {
+      await startHidden();
+      await PlayxSecurePrefs.setString('access_token', 'abc');
+
+      final keys = await secureKeys();
+      expect(keys, hasLength(1));
+      expect(keys.single, isNot(contains('access_token')));
+      expect(await prefs.getString(keys.single), startsWith('P:'));
+      expect(await PlayxSecurePrefs.getString('access_token'), 'abc');
+
+      await startHidden();
+      expect(await PlayxSecurePrefs.getString('access_token'), 'abc');
+      expect(await secureKeys(), keys);
+    });
+
+    test('overwrites, removes and clears', () async {
+      await startHidden();
+      await PlayxSecurePrefs.setString('a', '1');
+      await PlayxSecurePrefs.setString('a', '2');
+      expect(await secureKeys(), hasLength(1));
+      expect(await PlayxSecurePrefs.getString('a'), '2');
+
+      await PlayxSecurePrefs.remove('a');
+      expect(await secureKeys(), isEmpty);
+      expect(await PlayxSecurePrefs.maybeGetString('a'), isNull);
+
+      await PlayxSecurePrefs.setString('b', '1');
+      await PlayxSecurePrefs.clear();
+      expect(await secureKeys(), isEmpty);
+    });
+
+    test('the newest value wins after a fallback session', () async {
+      await startHidden();
+      await PlayxSecurePrefs.setString('token', 'A');
+
+      simple.hiddenKeys.add(encryptionKeyName);
+      await startHidden();
+      expect(await PlayxSecurePrefs.maybeGetString('token'), isNull);
+      await PlayxSecurePrefs.setString('token', 'B');
+
+      simple.hiddenKeys.clear();
+      await startHidden();
+      expect(await PlayxSecurePrefs.getString('token'), 'B');
+      final keys = await secureKeys();
+      expect(keys, hasLength(1));
+      expect(await prefs.getString(keys.single), startsWith('P:'));
+    });
+
+    test('a removal during a fallback session wins', () async {
+      await startHidden();
+      await PlayxSecurePrefs.setString('token', 'A');
+
+      simple.hiddenKeys.add(encryptionKeyName);
+      await startHidden();
+      await PlayxSecurePrefs.remove('token');
+
+      simple.hiddenKeys.clear();
+      await startHidden();
+      expect(await PlayxSecurePrefs.maybeGetString('token'), isNull);
+      expect(await secureKeys(), isEmpty);
+    });
+
+    test('removals leave nothing behind without hidden entries', () async {
+      simple.failInitialize = true;
+      fss.fail = true;
+      await startHidden();
+      await PlayxSecurePrefs.setString('a', '1');
+      await PlayxSecurePrefs.remove('a');
+      expect(await secureKeys(), isEmpty);
+    });
+
+    test('turning it on converts existing values', () async {
+      await start(PlayxSecureStorageType.encryptedPrefs);
+      await PlayxSecurePrefs.setString('access_token', 'abc');
+      expect(await secureKeys(), ['playx_secure_access_token']);
+
+      await startHidden();
+      final keys = await secureKeys();
+      expect(keys, hasLength(1));
+      expect(keys.single, isNot(contains('access_token')));
+      expect(await PlayxSecurePrefs.getString('access_token'), 'abc');
+    });
+
+    test('turning it off converts values back', () async {
+      await startHidden();
+      await PlayxSecurePrefs.setString('access_token', 'abc');
+
+      await start(PlayxSecureStorageType.encryptedPrefs);
+      expect(await secureKeys(), ['playx_secure_access_token']);
+      expect(await PlayxSecurePrefs.getString('access_token'), 'abc');
+
+      // And on again.
+      await PlayxSecurePrefs.setString('access_token', 'newer');
+      await startHidden();
+      expect(await PlayxSecurePrefs.getString('access_token'), 'newer');
+      expect(await secureKeys(), hasLength(1));
+    });
+
+    test('auto hides names in its journal and still moves data', () async {
+      simple.failInitialize = true;
+      fss.fail = true;
+      await startHidden(PlayxSecureStorageType.auto);
+      expect(
+        PlayxSecurePrefs.storageType,
+        PlayxSecureStorageType.encryptedPrefs,
+      );
+      await PlayxSecurePrefs.setString('access_token', 'B');
+
+      final journal = await prefs.getString(journalKey);
+      expect(journal, isNotNull);
+      expect(journal, isNot(contains('access_token')));
+      for (final key in await prefs.getKeys()) {
+        expect(key, isNot(contains('access_token')));
+      }
+
+      simple.failInitialize = false;
+      await startHidden(PlayxSecureStorageType.auto);
+      expect(
+        PlayxSecurePrefs.storageType,
+        PlayxSecureStorageType.simpleSecureStorage,
+      );
+      expect(await PlayxSecurePrefs.getString('access_token'), 'B');
+      expect(await secureKeys(), isEmpty);
+      expect(await prefs.getString(journalKey), isNull);
+    });
+  });
+
+  group('encryptKeys with flutter_secure_storage', () {
+    const hashKey = '_playx_secure_key_names_key_';
+
+    Future<void> startFss({bool encryptKeys = true}) => start(
+      PlayxSecureStorageType.flutterSecureStorage,
+      encryptKeys: encryptKeys,
+    );
+
+    Iterable<String> storedNames() => fss.data.keys.where((k) => k != hashKey);
+
+    test('hides key names on Android', () async {
+      await startFss();
+      await PlayxSecurePrefs.setString('access_token', 'abc');
+
+      expect(fss.data[hashKey], isNotNull);
+      expect(storedNames(), hasLength(1));
+      expect(storedNames().single, isNot(contains('access_token')));
+      expect(await PlayxSecurePrefs.getString('access_token'), 'abc');
+
+      await startFss();
+      expect(await PlayxSecurePrefs.getString('access_token'), 'abc');
+      await PlayxSecurePrefs.remove('access_token');
+      expect(storedNames(), isEmpty);
+    });
+
+    test('does not touch storage until first used', () async {
+      fss.data['access_token'] = 'abc';
+      await startFss();
+      expect(fss.data, {'access_token': 'abc'});
+
+      expect(await PlayxSecurePrefs.getString('access_token'), 'abc');
+      expect(fss.data.containsKey('access_token'), isFalse);
+    });
+
+    test('keeps names on other platforms', () async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      addTearDown(() => debugDefaultTargetPlatformOverride = null);
+
+      await startFss();
+      await PlayxSecurePrefs.setString('access_token', 'abc');
+      expect(fss.data, {'access_token': 'abc'});
+    });
+
+    test('turning it off restores plain names', () async {
+      await startFss();
+      await PlayxSecurePrefs.setString('access_token', 'abc');
+
+      await startFss(encryptKeys: false);
+      expect(await PlayxSecurePrefs.getString('access_token'), 'abc');
+      expect(fss.data, {'access_token': 'abc'});
+    });
+
+    test('recovers if the hashing key is lost', () async {
+      await startFss();
+      await PlayxSecurePrefs.setString('access_token', 'abc');
+      final before = storedNames().single;
+
+      fss.data.remove(hashKey);
+      await startFss();
+      expect(await PlayxSecurePrefs.getString('access_token'), 'abc');
+      expect(storedNames(), hasLength(1));
+      expect(storedNames().single, isNot(before));
+    });
+
+    test('clear() resets the hashing key', () async {
+      await startFss();
+      await PlayxSecurePrefs.setString('a', '1');
+      await PlayxSecurePrefs.clear();
+      expect(fss.data, isEmpty);
+
+      await PlayxSecurePrefs.setString('b', '2');
+      expect(await PlayxSecurePrefs.getString('b'), '2');
+    });
+
+    test('keeps the encrypted prefs key under its own name', () async {
+      simple.failInitialize = true;
+      await start(PlayxSecureStorageType.encryptedPrefs, encryptKeys: true);
+      await PlayxSecurePrefs.setString('token', 'abc');
+      expect(fss.data[encryptionKeyName], isNotNull);
+
+      await start(PlayxSecureStorageType.encryptedPrefs, encryptKeys: true);
+      expect(await PlayxSecurePrefs.getString('token'), 'abc');
+    });
+
+    test('auto moves hidden flutter_secure_storage values back', () async {
+      simple.failInitialize = true;
+      await start(PlayxSecureStorageType.auto, encryptKeys: true);
+      expect(
+        PlayxSecurePrefs.storageType,
+        PlayxSecureStorageType.flutterSecureStorage,
+      );
+      await PlayxSecurePrefs.setString('access_token', 'B');
+      expect(fss.data.keys, isNot(contains('access_token')));
+
+      simple.failInitialize = false;
+      await start(PlayxSecureStorageType.auto, encryptKeys: true);
+      expect(await PlayxSecurePrefs.getString('access_token'), 'B');
+      expect(storedNames(), isEmpty);
+    });
+
+    test('migrateFromFlutterSecureStorage reads hidden names', () async {
+      await startFss();
+      await PlayxSecurePrefs.setString('user', 'jane');
+
+      await start(PlayxSecureStorageType.simpleSecureStorage);
+      expect(await PlayxSecurePrefs.migrateFromFlutterSecureStorage(), 1);
+      expect(await PlayxSecurePrefs.getString('user'), 'jane');
+      expect(storedNames(), isEmpty);
     });
   });
 

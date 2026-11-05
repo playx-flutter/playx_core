@@ -168,6 +168,25 @@ void main() {
     );
   });
 
+  test('encryptKeys hides key names', () async {
+    await PlayxSecurePrefs.dispose();
+    await PlayxSecurePrefs.create(
+      securePrefsSettings: const PlayxSecurePrefsSettings(
+        storageType: PlayxSecureStorageType.auto,
+        encryptKeys: true,
+        clearOnReinstall: false,
+      ),
+    );
+    await PlayxSecurePrefs.setString('access_token', 'abc');
+
+    final keys = (await prefs.getKeys())
+        .where((k) => k.startsWith('playx_secure_'))
+        .toList();
+    expect(keys, hasLength(1));
+    expect(keys.single, isNot(contains('access_token')));
+    expect(await PlayxSecurePrefs.getString('access_token'), 'abc');
+  });
+
   test('migrates flutter_secure_storage data from v1 once', () async {
     fss.data.addAll({'token': 'abc', 'user': 'jane'});
     await start(PlayxSecureStorageType.flutterSecureStorage);

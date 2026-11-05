@@ -10,23 +10,58 @@ import 'secure_cipher.dart';
 const _databaseName = 'playx_secure_storage';
 const _storeName = 'keys';
 const _keyId = 'primary';
+const _hashKeyId = 'names';
 
 /// Reads the non-extractable AES-GCM key from IndexedDB.
 ///
 /// Returns `null` if no key has been created yet. Throws if IndexedDB is
 /// unavailable (e.g. blocked by the browser).
 Future<SecureCipher?> readWebCryptoKey() async {
+  final key = await _readKey(_keyId);
+  if (key == null) return null;
+  // The hashing key is generated with the encryption key; create it if a
+  // database predates it.
+  final hashKey = await _readKey(_hashKeyId) ?? await _createHashKey();
+  return _WebCryptoSecureCipher(key, hashKey);
+}
+
+Future<web.CryptoKey?> _readKey(String id) async {
   final database = await _openDatabase();
   try {
     final transaction = database.transaction(_storeName.toJS, 'readonly');
     final result = await _complete(
-      transaction.objectStore(_storeName).get(_keyId.toJS),
+      transaction.objectStore(_storeName).get(id.toJS),
     );
     if (result == null || result.isUndefinedOrNull) return null;
-    return _WebCryptoSecureCipher(result as web.CryptoKey);
+    return result as web.CryptoKey;
   } finally {
     database.close();
   }
+}
+
+Future<void> _storeKey(String id, web.CryptoKey key) async {
+  final database = await _openDatabase();
+  try {
+    final transaction = database.transaction(_storeName.toJS, 'readwrite');
+    await _complete(transaction.objectStore(_storeName).put(key, id.toJS));
+  } finally {
+    database.close();
+  }
+}
+
+/// Generates a non-extractable HMAC-SHA256 key used to hide key names.
+Future<web.CryptoKey> _createHashKey() async {
+  final algorithm = JSObject()
+    ..setProperty('name'.toJS, 'HMAC'.toJS)
+    ..setProperty('hash'.toJS, 'SHA-256'.toJS)
+    ..setProperty('length'.toJS, 256.toJS);
+  final key =
+      await web.window.crypto.subtle
+              .generateKey(algorithm, false, ['sign'.toJS].toJS)
+              .toDart
+          as web.CryptoKey;
+  await _storeKey(_hashKeyId, key);
+  return key;
 }
 
 /// Generates a **non-extractable** AES-GCM key and stores it in IndexedDB.
@@ -48,14 +83,9 @@ Future<SecureCipher> createWebCryptoKey() async {
               .toDart
           as web.CryptoKey;
 
-  final database = await _openDatabase();
-  try {
-    final transaction = database.transaction(_storeName.toJS, 'readwrite');
-    await _complete(transaction.objectStore(_storeName).put(key, _keyId.toJS));
-  } finally {
-    database.close();
-  }
-  return _WebCryptoSecureCipher(key);
+  await _storeKey(_keyId, key);
+  final hashKey = await _createHashKey();
+  return _WebCryptoSecureCipher(key, hashKey);
 }
 
 Future<web.IDBDatabase> _openDatabase() {
@@ -95,8 +125,17 @@ Future<JSAny?> _complete(web.IDBRequest request) {
 
 class _WebCryptoSecureCipher implements SecureCipher {
   final web.CryptoKey _key;
+  final web.CryptoKey _hashKey;
 
-  _WebCryptoSecureCipher(this._key);
+  _WebCryptoSecureCipher(this._key, this._hashKey);
+
+  @override
+  Future<Uint8List> keyedHash(Uint8List data) async {
+    final result = await web.window.crypto.subtle
+        .sign('HMAC'.toJS, _hashKey, data.toJS)
+        .toDart;
+    return (result as JSArrayBuffer).toDart.asUint8List();
+  }
 
   JSObject _algorithm(Uint8List nonce) => JSObject()
     ..setProperty('name'.toJS, 'AES-GCM'.toJS)

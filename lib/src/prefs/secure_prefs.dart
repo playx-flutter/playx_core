@@ -157,25 +157,24 @@ abstract class PlayxSecurePrefs {
     required bool deleteFromSource,
   }) async {
     final storage = _storage;
-    final values = await source.readAll()
-      // Internal keys, e.g. an encrypted prefs key kept in this store.
-      ..removeWhere(
-        (key, _) =>
-            key == EncryptedPrefsBackend.encryptionKeyName ||
-            key == secureHealthCheckKey,
-      );
+    // Decodes entries whose names were hidden, and skips internal keys such
+    // as an encrypted prefs key kept in this store.
+    final entries = await FlutterSecureStorageBackend(
+      source,
+      reservedKeys: {EncryptedPrefsBackend.encryptionKeyName},
+    ).readEntries();
     var copied = 0;
-    for (final MapEntry(:key, :value) in values.entries) {
-      if (await storage.read(key) != null) continue;
-      await storage.write(key, value);
+    for (final entry in entries) {
+      if (await storage.read(entry.name) != null) continue;
+      await storage.write(entry.name, entry.value);
       copied++;
     }
     if (deleteFromSource) {
-      for (final key in values.keys) {
-        await source.delete(key: key);
+      for (final entry in entries) {
+        await source.delete(key: entry.storageKey);
       }
     }
-    if (values.isNotEmpty) {
+    if (entries.isNotEmpty) {
       secureLog('Migrated $copied value(s) from flutter_secure_storage.');
     }
     return copied;

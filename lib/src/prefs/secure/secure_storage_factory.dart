@@ -46,7 +46,10 @@ Future<PlayxSecureStorageBackend> createSecureStorageBackend(
   switch (settings.storageType) {
     case PlayxSecureStorageType.flutterSecureStorage:
       // No health check, to keep the behavior of previous versions.
-      return FlutterSecureStorageBackend(flutterSecureStorage);
+      return FlutterSecureStorageBackend(
+        flutterSecureStorage,
+        hideNames: probe.hideFlutterSecureStorageNames,
+      );
 
     case PlayxSecureStorageType.simpleSecureStorage:
       await SimpleSecureStorageBackend.initialize(
@@ -77,6 +80,7 @@ Future<PlayxSecureStorageBackend> createSecureStorageBackend(
         preferred: order.first,
         backendProvider: probe.call,
         prefs: probe.prefs,
+        encryptJournal: settings.encryptKeys,
       );
   }
 }
@@ -135,6 +139,12 @@ class _SecureStorageProbe {
   /// Keys stored by playx in the secure stores, preserved by `clear()`.
   Set<String> get _reservedKeys => {EncryptedPrefsBackend.encryptionKeyName};
 
+  /// `flutter_secure_storage` only exposes key names on Android.
+  bool get hideFlutterSecureStorageNames =>
+      settings.encryptKeys &&
+      !kIsWeb &&
+      defaultTargetPlatform == TargetPlatform.android;
+
   Future<PlayxSecureStorageBackend?> call(PlayxSecureStorageType type) =>
       _results.putIfAbsent(type, () => _create(type));
 
@@ -147,6 +157,7 @@ class _SecureStorageProbe {
           final backend = FlutterSecureStorageBackend(
             flutterSecureStorage,
             reservedKeys: _reservedKeys,
+            hideNames: hideFlutterSecureStorageNames,
           );
           await backend.healthCheck();
           return backend;
@@ -165,6 +176,7 @@ class _SecureStorageProbe {
           final backend = await EncryptedPrefsBackend.create(
             settings.encryptedPrefsOptions,
             keyStoreProvider: call,
+            encryptKeys: settings.encryptKeys,
             prefs:
                 prefs ??
                 (throw StateError('SharedPreferencesAsync is unavailable')),

@@ -146,6 +146,26 @@ class PlayxSecurePrefsSettings {
   /// Defaults to `true`.
   final bool throwOnError;
 
+  /// Whether to hide key names where the storage would otherwise expose them:
+  ///
+  /// - [PlayxSecureStorageType.encryptedPrefs] (on every platform, so all of
+  ///   web), whose names would be visible in the preferences file;
+  /// - [PlayxSecureStorageType.flutterSecureStorage] on Android, which keeps
+  ///   names in plain text in a private preferences file.
+  ///
+  /// Each value is stored under a keyed hash (HMAC-SHA256) of its name, and
+  /// the real name is kept inside the encrypted value. The hashing key is kept
+  /// in secure storage, so names can't be guessed from the files alone.
+  ///
+  /// `simple_secure_storage` already encrypts names on Android, and the
+  /// Keychain keeps them out of app files on iOS and macOS.
+  ///
+  /// Can be turned on or off at any time: stored values are converted. Costs
+  /// an extra hash per operation.
+  ///
+  /// Defaults to `false`.
+  final bool encryptKeys;
+
   /// `flutter_secure_storage` options.
   final PlayxFlutterSecureStorageOptions flutterSecureStorageOptions;
 
@@ -171,6 +191,7 @@ class PlayxSecurePrefsSettings {
       PlayxSecureStorageType.encryptedPrefs,
     ],
     this.throwOnError = true,
+    this.encryptKeys = false,
     this.flutterSecureStorageOptions = const PlayxFlutterSecureStorageOptions(),
     this.simpleSecureStorageOptions = const PlayxSimpleSecureStorageOptions(),
     this.encryptedPrefsOptions = const PlayxEncryptedPrefsOptions(),

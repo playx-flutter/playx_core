@@ -121,6 +121,29 @@ final type = PlayxSecurePrefs.storageType;
 
 Other settings: `throwOnError` (log errors instead of throwing), `clearOnReinstall`, `flutterSecureStorageOptions`, `simpleSecureStorageOptions` and `encryptedPrefsOptions`.
 
+##### Hiding key names
+
+Some stores keep key names (e.g. `access_token`) readable in files, even though values are encrypted. Enable `encryptKeys` to store each value under a keyed hash of its name instead:
+
+```dart
+const PlayxSecurePrefsSettings(
+  storageType: PlayxSecureStorageType.auto,
+  encryptKeys: true,
+);
+```
+
+| Storage | Names with `encryptKeys: true` |
+| --- | --- |
+| `encryptedPrefs` (all platforms, so all of web) | Hidden; only `keyPrefix` stays visible |
+| `flutterSecureStorage` on Android | Hidden (otherwise plain text in a private preferences file) |
+| `simpleSecureStorage` on Android | Already encrypted by the plugin |
+| iOS and macOS Keychain | Kept by the OS, out of app files |
+| Windows and Linux credential stores | Not hidden |
+
+- The hash key is kept in secure storage (the keystore, or a non-extractable WebCrypto key on web), so names can't be guessed from the files alone.
+- The real name is kept inside the encrypted value, so everything keeps working, including migrations.
+- It can be turned on or off at any time: stored values are converted.
+
 ##### Switching an existing app from `flutter_secure_storage`
 
 Values saved with the default backend stay in `flutter_secure_storage`. Copy them over after changing `storageType`:

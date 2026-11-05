@@ -23,11 +23,15 @@ typedef SecureKeyStoreProvider =
 ///
 /// Every payload records which key encrypted it, so values written with the
 /// fallback key stay readable in later sessions where the primary key is back.
+///
+/// With [PlayxSecurePrefsSettings.encryptKeys], key names are replaced by
+/// a keyed hash and stored inside the encrypted payload instead.
 class EncryptedPrefsBackend implements PlayxSecureStorageBackend {
   final SharedPreferencesAsync _prefs;
   final SecureCipher? _primary;
   final SecureCipher _fallback;
   final String _keyPrefix;
+  final bool _encryptKeys;
 
   /// Name of the store holding the primary key, or `null` if it couldn't be loaded.
   final String? keyStore;
@@ -50,14 +54,25 @@ class EncryptedPrefsBackend implements PlayxSecureStorageBackend {
   /// which the key is considered lost and a new one is created.
   static const missingKeyThreshold = 3;
 
+  // Payload key ids. Lowercase: the payload is the value. Uppercase: the
+  // payload is a [_NamedEntry] (encryptKeys).
   static const _primaryKeyId = 'p';
   static const _fallbackKeyId = 'f';
+  static const _namedPrimaryKeyId = 'P';
+  static const _namedFallbackKeyId = 'F';
+
+  final Map<(SecureCipher, String), String> _hashedNames = {};
+
+  /// Whether entries encrypted with the unavailable primary key exist. Only
+  /// then must removals be recorded instead of applied.
+  bool _hasHiddenPrimaryEntries = false;
 
   EncryptedPrefsBackend._(
     this._prefs,
     this._primary,
     this._fallback,
     this._keyPrefix,
+    this._encryptKeys,
     this.keyStore,
   );
 
@@ -66,6 +81,7 @@ class EncryptedPrefsBackend implements PlayxSecureStorageBackend {
     PlayxEncryptedPrefsOptions options, {
     required SharedPreferencesAsync prefs,
     required SecureKeyStoreProvider keyStoreProvider,
+    bool encryptKeys = false,
   }) async {
     final fallback = await _loadFallbackKey(prefs);
     // New keys are only created in configured stores, but an existing key is
@@ -103,13 +119,20 @@ class EncryptedPrefsBackend implements PlayxSecureStorageBackend {
     if (primary == null) {
       secureLog('Encrypted prefs: using the fallback encryption key.');
     }
-    return EncryptedPrefsBackend._(
+    final backend = EncryptedPrefsBackend._(
       prefs,
       primary,
       fallback,
       options.keyPrefix,
+      encryptKeys,
       keyStore,
     );
+    try {
+      await backend._convertKeyFormat();
+    } catch (e, s) {
+      secureLogError('Failed to convert stored key names', e, s);
+    }
+    return backend;
   }
 
   static Future<SecureCipher> _loadFallbackKey(
@@ -140,15 +163,13 @@ class EncryptedPrefsBackend implements PlayxSecureStorageBackend {
   /// Writes, reads back and removes an encrypted value. Throws if anything fails.
   Future<void> healthCheck() => runSecureHealthCheck(
     write: (_, v) async =>
-        _prefs.setString(_healthCheckName, await _encrypt(v)),
+        _prefs.setString(_healthCheckName, await _encrypt(v, named: false)),
     read: (_) async {
       final payload = await _prefs.getString(_healthCheckName);
-      return payload == null ? null : _decrypt(payload);
+      return payload == null ? null : (await _decrypt(payload)).$2;
     },
     delete: (_) => _prefs.remove(_healthCheckName),
   );
-
-  String _storageKey(String key) => '$_keyPrefix$key';
 
   static bool _isOwnKey(String prefix, String storageKey) =>
       storageKey.startsWith(prefix) &&
@@ -157,30 +178,52 @@ class EncryptedPrefsBackend implements PlayxSecureStorageBackend {
       storageKey != _missingKeyCountName &&
       storageKey != _healthCheckName;
 
+  static Future<Set<String>> _ownKeys(
+    SharedPreferencesAsync prefs,
+    String prefix,
+  ) async => (await prefs.getKeys()).where((k) => _isOwnKey(prefix, k)).toSet();
+
   @override
   PlayxSecureStorageType get type => PlayxSecureStorageType.encryptedPrefs;
 
   @override
   Future<String?> read(String key) async {
-    final payload = await _prefs.getString(_storageKey(key));
-    return payload == null ? null : _tryDecrypt(key, payload);
+    if (!_encryptKeys) {
+      final payload = await _prefs.getString('$_keyPrefix$key');
+      return payload == null ? null : _tryDecryptValue(key, payload);
+    }
+    return (await _newestEntry(key))?.value;
   }
 
-  Future<String?> _tryDecrypt(String key, String payload) async {
-    try {
-      return await _decrypt(payload);
-    } catch (e, s) {
-      secureLogError('Failed to decrypt value for key "$key"', e, s);
-      return null;
+  @override
+  Future<void> write(String key, String value) async {
+    if (!_encryptKeys) {
+      return _prefs.setString(
+        '$_keyPrefix$key',
+        await _encrypt(value, named: false),
+      );
+    }
+    await _writeNamed(
+      _NamedEntry(key, value, DateTime.now().microsecondsSinceEpoch),
+    );
+  }
+
+  @override
+  Future<void> delete(String key) async {
+    if (!_encryptKeys) return _prefs.remove('$_keyPrefix$key');
+    if (_primary != null || !_hasHiddenPrimaryEntries) {
+      for (final storageKey in await _storageKeysFor(key)) {
+        await _prefs.remove(storageKey);
+      }
+      await _prefs.remove('$_keyPrefix$key');
+    } else {
+      // An entry hashed with the primary key may exist but can't be located
+      // this session: record the removal so it wins once the key is back.
+      await _writeNamed(
+        _NamedEntry(key, null, DateTime.now().microsecondsSinceEpoch),
+      );
     }
   }
-
-  @override
-  Future<void> write(String key, String value) async =>
-      _prefs.setString(_storageKey(key), await _encrypt(value));
-
-  @override
-  Future<void> delete(String key) => _prefs.remove(_storageKey(key));
 
   @override
   Future<void> clear() async {
@@ -191,27 +234,186 @@ class EncryptedPrefsBackend implements PlayxSecureStorageBackend {
 
   @override
   Future<Map<String, String>> readAll() async {
-    final keys = await _ownKeys(_prefs, _keyPrefix);
-    if (keys.isEmpty) return {};
-    final payloads = await _prefs.getAll(allowList: keys);
+    final (named, plain, _) = await _readStoredEntries();
     final values = <String, String>{};
-    for (final MapEntry(:key, :value) in payloads.entries) {
-      if (value is! String) continue;
-      final name = key.substring(_keyPrefix.length);
-      final decrypted = await _tryDecrypt(name, value);
-      if (decrypted != null) values[name] = decrypted;
+    for (final MapEntry(:key, :value) in named.entries) {
+      final newest = _newest(value);
+      if (newest.value != null) values[key] = newest.value!;
+    }
+    // A plain entry coexisting with named ones is always the newest (see [_writeNamed]).
+    for (final MapEntry(:key, :value) in plain.entries) {
+      values[key] = value.value!;
     }
     return values;
   }
 
-  static Future<Set<String>> _ownKeys(
-    SharedPreferencesAsync prefs,
-    String prefix,
-  ) async => (await prefs.getKeys()).where((k) => _isOwnKey(prefix, k)).toSet();
+  /// Storage keys where [name] may be kept: hashed with the primary key (if
+  /// available) and with the fallback key.
+  Future<List<String>> _storageKeysFor(String name) async => [
+    if (_primary case final primary?)
+      '$_keyPrefix$_primaryKeyId${await _hashName(primary, name)}',
+    '$_keyPrefix$_fallbackKeyId${await _hashName(_fallback, name)}',
+  ];
+
+  Future<String> _hashName(SecureCipher cipher, String name) async {
+    final cached = _hashedNames[(cipher, name)];
+    if (cached != null) return cached;
+    final hash = await cipher.keyedHash(Uint8List.fromList(utf8.encode(name)));
+    // 128 bits is plenty: the real name is checked after decryption.
+    return _hashedNames[(cipher, name)] = base64Url
+        .encode(hash.sublist(0, 16))
+        .replaceAll('=', '');
+  }
+
+  /// Writes [entry] under the hash of its name and removes the entry's other
+  /// locations, including any plain (non-hashed) entry. So a plain entry that
+  /// coexists with named ones was written later, with `encryptKeys` off.
+  Future<void> _writeNamed(_NamedEntry entry) async {
+    final storageKeys = await _storageKeysFor(entry.name);
+    // The primary-hashed key comes first when the primary key is available.
+    final target = storageKeys.first;
+    await _prefs.setString(target, await _encrypt(entry.encode(), named: true));
+    for (final other in storageKeys.skip(1)) {
+      await _prefs.remove(other);
+    }
+    await _prefs.remove('$_keyPrefix${entry.name}');
+  }
+
+  Future<_NamedEntry?> _newestEntry(String name) async {
+    // Written with encryptKeys off and not converted yet: always the newest.
+    final plain = await _prefs.getString('$_keyPrefix$name');
+    if (plain != null) {
+      final value = await _tryDecryptValue(name, plain);
+      if (value != null) return _NamedEntry(name, value, 0);
+    }
+    final entries = <_NamedEntry>[];
+    for (final storageKey in await _storageKeysFor(name)) {
+      final payload = await _prefs.getString(storageKey);
+      if (payload == null) continue;
+      final entry = await _tryDecodeNamed(payload);
+      if (entry != null && entry.name == name) entries.add(entry);
+    }
+    return entries.isEmpty ? null : _newest(entries);
+  }
+
+  static _NamedEntry _newest(List<_NamedEntry> entries) =>
+      entries.reduce((a, b) => b.time > a.time ? b : a);
+
+  /// Decrypts every stored entry: named entries grouped by name, plain
+  /// (non-hashed) entries by name, and whether some named entries couldn't be
+  /// decrypted because the primary key is unavailable.
+  Future<(Map<String, List<_NamedEntry>>, Map<String, _NamedEntry>, bool)>
+  _readStoredEntries() async {
+    final named = <String, List<_NamedEntry>>{};
+    final plain = <String, _NamedEntry>{};
+    var hiddenPrimary = false;
+    final keys = await _ownKeys(_prefs, _keyPrefix);
+    if (keys.isEmpty) return (named, plain, hiddenPrimary);
+    final payloads = await _prefs.getAll(allowList: keys);
+    for (final MapEntry(:key, :value) in payloads.entries) {
+      if (value is! String) continue;
+      if (_primary == null && value.startsWith('$_namedPrimaryKeyId:')) {
+        hiddenPrimary = true;
+        continue;
+      }
+      try {
+        final (isNamed, plainText) = await _decrypt(value);
+        if (isNamed) {
+          final entry = _NamedEntry.decode(plainText, storageKey: key);
+          (named[entry.name] ??= []).add(entry);
+        } else {
+          final name = key.substring(_keyPrefix.length);
+          plain[name] = _NamedEntry(name, plainText, 0, storageKey: key);
+        }
+      } catch (e, s) {
+        secureLogError('Failed to decrypt a stored value', e, s);
+      }
+    }
+    return (named, plain, hiddenPrimary);
+  }
+
+  /// Converts stored entries to the format selected by `encryptKeys`, and
+  /// cleans up superseded entries. Entries that can't be decrypted this
+  /// session are left for a later one.
+  Future<void> _convertKeyFormat() async {
+    final (named, plain, hiddenPrimary) = await _readStoredEntries();
+    _hasHiddenPrimaryEntries = hiddenPrimary;
+    var converted = 0;
+    if (_encryptKeys) {
+      // Plain entries are always the newest (see [_writeNamed]).
+      final now = DateTime.now().microsecondsSinceEpoch;
+      for (final MapEntry(:key, :value) in plain.entries) {
+        await _writeNamed(_NamedEntry(key, value.value, now));
+        named.remove(key);
+        converted++;
+      }
+      for (final MapEntry(:key, :value) in named.entries) {
+        final newest = _newest(value);
+        if (newest.value == null) {
+          // A recorded removal is only needed while hidden entries may exist.
+          if (_primary != null || !hiddenPrimary) {
+            for (final entry in value) {
+              await _prefs.remove(entry.storageKey!);
+            }
+          }
+        } else if (_primary != null &&
+            (value.length > 1 ||
+                newest.storageKey != (await _storageKeysFor(key)).first)) {
+          // Keep a single entry, hashed with the primary key.
+          await _writeNamed(newest);
+        }
+      }
+    } else {
+      for (final MapEntry(:key, :value) in named.entries) {
+        final newest = _newest(value);
+        if (!plain.containsKey(key) && newest.value != null) {
+          await _prefs.setString(
+            '$_keyPrefix$key',
+            await _encrypt(newest.value!, named: false),
+          );
+          converted++;
+        }
+        for (final entry in value) {
+          await _prefs.remove(entry.storageKey!);
+        }
+      }
+    }
+    if (converted > 0) {
+      secureLog('Encrypted prefs: converted $converted stored key name(s).');
+    }
+  }
+
+  Future<String?> _tryDecryptValue(String key, String payload) async {
+    try {
+      final (isNamed, plainText) = await _decrypt(payload);
+      if (isNamed) throw const FormatException('Unexpected named entry');
+      return plainText;
+    } catch (e, s) {
+      secureLogError('Failed to decrypt value for key "$key"', e, s);
+      return null;
+    }
+  }
+
+  Future<_NamedEntry?> _tryDecodeNamed(String payload) async {
+    try {
+      final (isNamed, plainText) = await _decrypt(payload);
+      if (!isNamed) throw const FormatException('Expected a named entry');
+      return _NamedEntry.decode(plainText);
+    } catch (e, s) {
+      secureLogError('Failed to decrypt a stored value', e, s);
+      return null;
+    }
+  }
 
   /// Returns `keyId:base64(nonce):base64(ciphertext + auth tag)`.
-  Future<String> _encrypt(String plainText) async {
-    final keyId = _primary == null ? _fallbackKeyId : _primaryKeyId;
+  Future<String> _encrypt(String plainText, {required bool named}) async {
+    final usePrimary = _primary != null;
+    final keyId = switch ((usePrimary, named)) {
+      (true, false) => _primaryKeyId,
+      (false, false) => _fallbackKeyId,
+      (true, true) => _namedPrimaryKeyId,
+      (false, true) => _namedFallbackKeyId,
+    };
     final cipher = _primary ?? _fallback;
     final nonce = secureRandomBytes(secureNonceLength);
     final cipherText = await cipher.encrypt(
@@ -221,22 +423,53 @@ class EncryptedPrefsBackend implements PlayxSecureStorageBackend {
     return '$keyId:${base64Encode(nonce)}:${base64Encode(cipherText)}';
   }
 
+  /// Returns whether the payload is a named entry, and its plain text.
+  ///
   /// Throws if the payload is malformed, was tampered with, or its key is
   /// unavailable this session.
-  Future<String> _decrypt(String payload) async {
+  Future<(bool, String)> _decrypt(String payload) async {
     final parts = payload.split(':');
     if (parts.length != 3) throw const FormatException('Invalid payload');
-    final cipher = switch (parts[0]) {
-      _primaryKeyId =>
+    final keyId = parts[0];
+    final isNamed = keyId == _namedPrimaryKeyId || keyId == _namedFallbackKeyId;
+    final cipher = switch (keyId) {
+      _primaryKeyId || _namedPrimaryKeyId =>
         _primary ?? (throw StateError('Primary encryption key unavailable.')),
-      _fallbackKeyId => _fallback,
+      _fallbackKeyId || _namedFallbackKeyId => _fallback,
       _ => throw const FormatException('Unknown key id'),
     };
     final plainText = await cipher.decrypt(
       base64Decode(parts[1]),
       base64Decode(parts[2]),
     );
-    return utf8.decode(plainText);
+    return (isNamed, utf8.decode(plainText));
+  }
+}
+
+/// A value stored with its real key name, used when key names are hidden.
+///
+/// [value] is `null` for a removal recorded while the primary key was
+/// unavailable. [time] (microseconds) decides which entry is the newest.
+class _NamedEntry {
+  final String name;
+  final String? value;
+  final int time;
+
+  /// Where it is stored, when read from preferences.
+  final String? storageKey;
+
+  _NamedEntry(this.name, this.value, this.time, {this.storageKey});
+
+  String encode() => jsonEncode({'n': name, 'v': value, 't': time});
+
+  factory _NamedEntry.decode(String json, {String? storageKey}) {
+    final map = jsonDecode(json) as Map<String, dynamic>;
+    return _NamedEntry(
+      map['n'] as String,
+      map['v'] as String?,
+      map['t'] as int,
+      storageKey: storageKey,
+    );
   }
 }
 
@@ -458,7 +691,10 @@ class _PrimaryKeyLoader {
     return {
       for (final MapEntry(:key, :value) in payloads.entries)
         if (value is String &&
-            value.startsWith('${EncryptedPrefsBackend._primaryKeyId}:'))
+            (value.startsWith('${EncryptedPrefsBackend._primaryKeyId}:') ||
+                value.startsWith(
+                  '${EncryptedPrefsBackend._namedPrimaryKeyId}:',
+                )))
           key,
     };
   }

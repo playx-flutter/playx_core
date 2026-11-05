@@ -1,8 +1,10 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../models/secure_prefs_settings.dart';
+import 'cipher/secure_cipher.dart';
 import 'secure_log.dart';
 import 'secure_storage_backend.dart';
 
@@ -14,8 +16,10 @@ typedef SecureBackendProvider =
 /// fallback backend back to the preferred one without resurrecting stale,
 /// removed or cleared values.
 ///
-/// Stored as JSON in plain preferences. It only contains key names and
-/// backend names, never values.
+/// Stored as JSON in preferences. It only contains key names and backend
+/// names, never values. When key names are hidden
+/// ([PlayxSecurePrefsSettings.encryptKeys]), it is encrypted with a
+/// per-device key kept in preferences, which obfuscates the names.
 class SecureStorageJournal {
   /// Fallback backends that may hold values to move to the preferred backend,
   /// oldest first.
@@ -69,11 +73,20 @@ class AutoSecureStorageBackend implements PlayxSecureStorageBackend {
   /// for this session so a valid journal is never overwritten.
   SecureStorageJournal? _journal;
 
+  /// Whether the journal is saved encrypted, to hide the key names it holds.
+  final bool _encryptJournal;
+
   Future<void> _queue = Future.value();
 
   static const journalKey = '_playx_secure_storage_journal_';
+  static const _journalKeyName = '_playx_secure_storage_journal_key_';
 
-  AutoSecureStorageBackend._(this.active, this.preferred, this._prefs);
+  AutoSecureStorageBackend._(
+    this.active,
+    this.preferred,
+    this._prefs,
+    this._encryptJournal,
+  );
 
   /// Creates the backend and moves pending fallback data into [active].
   static Future<AutoSecureStorageBackend> create({
@@ -81,8 +94,14 @@ class AutoSecureStorageBackend implements PlayxSecureStorageBackend {
     required PlayxSecureStorageType preferred,
     required SecureBackendProvider backendProvider,
     SharedPreferencesAsync? prefs,
+    bool encryptJournal = false,
   }) async {
-    final backend = AutoSecureStorageBackend._(active, preferred, prefs);
+    final backend = AutoSecureStorageBackend._(
+      active,
+      preferred,
+      prefs,
+      encryptJournal,
+    );
     await backend._recover(backendProvider);
     return backend;
   }
@@ -99,12 +118,7 @@ class AutoSecureStorageBackend implements PlayxSecureStorageBackend {
     if (prefs == null) return;
     final SecureStorageJournal journal;
     try {
-      final json = await prefs.getString(journalKey);
-      journal = json == null
-          ? SecureStorageJournal()
-          : SecureStorageJournal.fromJson(
-              jsonDecode(json) as Map<String, dynamic>,
-            );
+      journal = await _loadJournal(prefs);
     } catch (e, s) {
       secureLogError('Secure storage journal unavailable', e, s);
       return;
@@ -172,6 +186,61 @@ class AutoSecureStorageBackend implements PlayxSecureStorageBackend {
     }
   }
 
+  Future<SecureStorageJournal> _loadJournal(
+    SharedPreferencesAsync prefs,
+  ) async {
+    final stored = await prefs.getString(journalKey);
+    if (stored == null) return SecureStorageJournal();
+    final String json;
+    if (stored.startsWith('{')) {
+      json = stored;
+    } else {
+      final cipher = await _journalCipher(prefs, create: false);
+      final parts = stored.split(':');
+      if (cipher == null || parts.length != 2) {
+        throw StateError('Encrypted journal cannot be read.');
+      }
+      json = utf8.decode(
+        await cipher.decrypt(base64Decode(parts[0]), base64Decode(parts[1])),
+      );
+    }
+    return SecureStorageJournal.fromJson(
+      jsonDecode(json) as Map<String, dynamic>,
+    );
+  }
+
+  SecureCipher? _cachedJournalCipher;
+
+  Future<SecureCipher?> _journalCipher(
+    SharedPreferencesAsync prefs, {
+    required bool create,
+  }) async {
+    if (_cachedJournalCipher != null) return _cachedJournalCipher;
+    final stored = await prefs.getString(_journalKeyName);
+    if (stored != null) {
+      return _cachedJournalCipher = RawKeySecureCipher(base64Decode(stored));
+    }
+    if (!create) return null;
+    final key = secureRandomBytes(secureKeyLength);
+    await prefs.setString(_journalKeyName, base64Encode(key));
+    return _cachedJournalCipher = RawKeySecureCipher(key);
+  }
+
+  Future<String> _encodeJournal(
+    SharedPreferencesAsync prefs,
+    SecureStorageJournal journal,
+  ) async {
+    final json = jsonEncode(journal.toJson());
+    if (!_encryptJournal) return json;
+    final cipher = (await _journalCipher(prefs, create: true))!;
+    final nonce = secureRandomBytes(secureNonceLength);
+    final cipherText = await cipher.encrypt(
+      nonce,
+      Uint8List.fromList(utf8.encode(json)),
+    );
+    return '${base64Encode(nonce)}:${base64Encode(cipherText)}';
+  }
+
   Future<void> _saveJournal() async {
     final journal = _journal;
     final prefs = _prefs;
@@ -180,7 +249,7 @@ class AutoSecureStorageBackend implements PlayxSecureStorageBackend {
       if (journal.isEmpty) {
         await prefs.remove(journalKey);
       } else {
-        await prefs.setString(journalKey, jsonEncode(journal.toJson()));
+        await prefs.setString(journalKey, await _encodeJournal(prefs, journal));
       }
     } catch (e, s) {
       secureLogError('Failed to save secure storage journal', e, s);
