@@ -15,6 +15,7 @@ export 'src/extensions/date_time_extensions.dart';
 export 'src/extensions/duration_extensions.dart';
 export 'src/extensions/iterable_extensions.dart';
 export 'src/extensions/locale_extensions.dart';
+export 'src/extensions/padding_extensions.dart';
 export 'src/extensions/string_extensions.dart';
 export 'src/models/envs_settings.dart';
 export 'src/models/prefs_settings.dart';
