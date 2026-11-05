@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.0
+- **Breaking (environment):** raise minimum SDK to Dart `>=3.8.0 <4.0.0` and Flutter `>=3.32.0`.
+- Update dependencies: `flutter_secure_storage` ^11.0.0, `flutter_dotenv` ^6.0.1, `flutter_lints` ^6.0.0, `lints` ^6.0.0, and widen ranges for `shared_preferences` (`>=2.3.0 <3.0.0`), `get_it` (`>=8.0.0 <10.0.0`), `equatable` (`>=2.0.7 <4.0.0`), `talker_logger`, `worker_manager` and `web` to support a larger base of environments.
+- `PlayxSecurePrefsSettings`: the default `AndroidOptions` no longer sets `encryptedSharedPreferences` (removed in `flutter_secure_storage` 11; existing Android data is migrated automatically on first access).
+
 ## 1.1.0
 - Add optional `onError` callback (`MapOnError<T, S>`) to `MapUtils.mapAsync`, `MapUtils.mapAsyncInIsolate`, and the `MapAsync<T>` extension methods (`mapAsync`, `mapAsyncInIsolate`). When provided, errors thrown while running the mapper (or while dispatching the isolate task) are caught, logged (subject to `printError`), and the value returned by `onError` is returned instead of rethrowing. If `onError` is `null` (the default), the previous behavior is preserved and errors are rethrown after logging. This is a **non-breaking, additive** change.
 - Clean up the redundant `try/catch(e){rethrow}` wrapper in the private `_mapAsync` isolate entry point.

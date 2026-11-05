@@ -18,9 +18,7 @@ class PlayxSecurePrefsSettings {
   const PlayxSecurePrefsSettings({
     this.iosOptions =
         const IOSOptions(accessibility: KeychainAccessibility.first_unlock),
-    this.androidOptions = const AndroidOptions(
-      encryptedSharedPreferences: true,
-    ),
+    this.androidOptions = const AndroidOptions(),
     this.linuxOptions = LinuxOptions.defaultOptions,
     this.windowsOptions = WindowsOptions.defaultOptions,
     this.webOptions = WebOptions.defaultOptions,
