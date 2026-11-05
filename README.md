@@ -200,6 +200,33 @@ await PlayxPrefsWithCache.setString('cachedName','Cached Jane');
 String cachedName = await PlayxPrefsWithCache.getString('cachedName');  
 ```  
 
+#### Maps, lists and objects
+
+`PlayxPrefs`, `PlayxAsyncPrefs`, `PlayxPrefsWithCache` and `PlayxSecurePrefs` can also store maps, lists and objects. Values are saved as JSON strings (encrypted by `PlayxSecurePrefs`).
+
+```dart
+// Maps
+await PlayxPrefs.setMap('settings', {'theme': 'dark', 'fontSize': 14});
+final settings = PlayxPrefs.getMap('settings');
+
+// Lists, of JSON values or with item converters
+await PlayxPrefs.setList('ids', [1, 2, 3]);
+final ids = PlayxPrefs.getList<int>('ids');
+
+await PlayxAsyncPrefs.setList('users', users, toJson: (u) => u.toJson());
+final users = await PlayxAsyncPrefs.getList('users', fromJson: User.fromJson);
+
+// Objects
+await PlayxSecurePrefs.setObject('user', user, toJson: (u) => u.toJson());
+final user = await PlayxSecurePrefs.maybeGetObject(
+  'user',
+  fromJson: User.fromJson,
+);
+```
+
+- `maybeGet*` returns `null` and `get*` returns its fallback when the key is missing, the stored value isn't valid JSON, has another shape, or `fromJson` throws.
+- `setMap` and `setList` without `toJson` accept JSON values and objects with a `toJson()` method. Anything else throws a `JsonUnsupportedObjectError`.
+
 ## Documentation
 
 For detailed documentation on using PlayX Core, visit  

@@ -75,7 +75,7 @@ Future<web.CryptoKey> readStoredKey() async {
     final store = database
         .transaction('keys'.toJS, 'readonly')
         .objectStore('keys');
-    return _complete<web.CryptoKey>(store.get('primary'.toJS));
+    return await _complete<web.CryptoKey>(store.get('primary'.toJS));
   } finally {
     database.close();
   }
