@@ -78,66 +78,17 @@ void main() {
           expect(0.pZero, EdgeInsets.zero);
         });
       });
-
-      group('pSymmetric()', () {
-        test('returns EdgeInsets.symmetric with given values', () {
-          expect(
-            0.pSymmetric(horizontal: 12, vertical: 6),
-            EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          );
-        });
-
-        test('defaults to EdgeInsets.zero', () {
-          expect(0.pSymmetric(), EdgeInsets.zero);
-        });
-
-        test('supports only horizontal', () {
-          expect(
-            0.pSymmetric(horizontal: 8),
-            EdgeInsets.symmetric(horizontal: 8),
-          );
-        });
-
-        test('supports only vertical', () {
-          expect(
-            0.pSymmetric(vertical: 8),
-            EdgeInsets.symmetric(vertical: 8),
-          );
-        });
-      });
-
-      group('pOnly()', () {
-        test('returns EdgeInsets.only with given values', () {
-          expect(
-            0.pOnly(left: 10, top: 4, right: 2, bottom: 1),
-            EdgeInsets.only(left: 10, top: 4, right: 2, bottom: 1),
-          );
-        });
-
-        test('defaults to EdgeInsets.zero', () {
-          expect(0.pOnly(), EdgeInsets.zero);
-        });
-
-        test('supports only left', () {
-          expect(0.pOnly(left: 10), EdgeInsets.only(left: 10));
-        });
-
-        test('supports only top', () {
-          expect(0.pOnly(top: 4), EdgeInsets.only(top: 4));
-        });
-      });
     });
 
     group('PlayxWidgetPaddingExtensions', () {
       group('pAll()', () {
-        testWidgets('wraps widget in Padding with EdgeInsets.all',
-            (tester) async {
+        testWidgets('wraps widget in Padding with EdgeInsets.all', (
+          tester,
+        ) async {
           const child = SizedBox();
           final widget = child.pAll(8);
 
-          await tester.pumpWidget(
-            MaterialApp(home: Scaffold(body: widget)),
-          );
+          await tester.pumpWidget(MaterialApp(home: Scaffold(body: widget)));
 
           final padding = tester.widget<Padding>(find.byType(Padding));
           expect(padding.padding, EdgeInsets.all(8));
@@ -146,14 +97,13 @@ void main() {
       });
 
       group('pSymmetric()', () {
-        testWidgets('wraps widget with given symmetric padding',
-            (tester) async {
+        testWidgets('wraps widget with given symmetric padding', (
+          tester,
+        ) async {
           const child = SizedBox();
           final widget = child.pSymmetric(horizontal: 12, vertical: 6);
 
-          await tester.pumpWidget(
-            MaterialApp(home: Scaffold(body: widget)),
-          );
+          await tester.pumpWidget(MaterialApp(home: Scaffold(body: widget)));
 
           final padding = tester.widget<Padding>(find.byType(Padding));
           expect(
@@ -166,9 +116,7 @@ void main() {
           const child = SizedBox();
           final widget = child.pSymmetric();
 
-          await tester.pumpWidget(
-            MaterialApp(home: Scaffold(body: widget)),
-          );
+          await tester.pumpWidget(MaterialApp(home: Scaffold(body: widget)));
 
           final padding = tester.widget<Padding>(find.byType(Padding));
           expect(padding.padding, EdgeInsets.zero);
@@ -180,9 +128,7 @@ void main() {
           const child = SizedBox();
           final widget = child.pOnly(left: 10, top: 4, right: 2, bottom: 1);
 
-          await tester.pumpWidget(
-            MaterialApp(home: Scaffold(body: widget)),
-          );
+          await tester.pumpWidget(MaterialApp(home: Scaffold(body: widget)));
 
           final padding = tester.widget<Padding>(find.byType(Padding));
           expect(
@@ -195,9 +141,7 @@ void main() {
           const child = SizedBox();
           final widget = child.pOnly();
 
-          await tester.pumpWidget(
-            MaterialApp(home: Scaffold(body: widget)),
-          );
+          await tester.pumpWidget(MaterialApp(home: Scaffold(body: widget)));
 
           final padding = tester.widget<Padding>(find.byType(Padding));
           expect(padding.padding, EdgeInsets.zero);
@@ -209,15 +153,42 @@ void main() {
           const child = SizedBox();
           final widget = child.pZero();
 
-          await tester.pumpWidget(
-            MaterialApp(home: Scaffold(body: widget)),
-          );
+          await tester.pumpWidget(MaterialApp(home: Scaffold(body: widget)));
 
           final padding = tester.widget<Padding>(find.byType(Padding));
           expect(padding.padding, EdgeInsets.zero);
           expect(padding.child, isA<SizedBox>());
         });
       });
+    });
+  });
+
+  group('single sides and directional padding', () {
+    test('single-side getters', () {
+      expect(12.pt, const EdgeInsets.only(top: 12));
+      expect(12.pb, const EdgeInsets.only(bottom: 12));
+      expect(12.pl, const EdgeInsets.only(left: 12));
+      expect(12.pr, const EdgeInsets.only(right: 12));
+      expect(12.ps, const EdgeInsetsDirectional.only(start: 12));
+      expect(12.pe, const EdgeInsetsDirectional.only(end: 12));
+    });
+
+    test('directional padding resolves with the text direction', () {
+      expect(12.ps.resolve(TextDirection.ltr), const EdgeInsets.only(left: 12));
+      expect(
+        12.ps.resolve(TextDirection.rtl),
+        const EdgeInsets.only(right: 12),
+      );
+    });
+
+    test('withPadding and pDirectional wrap in Padding', () {
+      const child = SizedBox();
+      expect(child.withPadding(16.px).padding, 16.px);
+      expect(
+        child.pDirectional(start: 4, end: 8).padding,
+        const EdgeInsetsDirectional.only(start: 4, end: 8),
+      );
+      expect(child.pAll(4), isA<Padding>());
     });
   });
 }

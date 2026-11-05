@@ -31,7 +31,12 @@
 - `PlayxSecurePrefs.maybeGetInt`, `maybeGetDouble` and `maybeGetBool` now use the `safe_convert` helpers: `"1.5"` reads as `1` for ints, and unrecognized bool values return `null` (so `getBool` returns its fallback) instead of `false`.
 - Add optional `onError` callback (`MapOnError<T, S>`) to `MapUtils.mapAsync`, `MapUtils.mapAsyncInIsolate`, and the `MapAsync<T>` extension methods (`mapAsync`, `mapAsyncInIsolate`). When provided, errors thrown while running the mapper (or while dispatching the isolate task) are caught, logged (subject to `printError`), and the value returned by `onError` is returned instead of rethrowing. If `onError` is `null` (the default), the previous behavior is preserved and errors are rethrown after logging. This is a **non-breaking, additive** change.
 - Clean up the redundant `try/catch(e){rethrow}` wrapper in the private `_mapAsync` isolate entry point.
-- Added **Padding extensions** (`padding_extensions.dart`): `PlayxNumPaddingExtensions` on `num` (`.p`, `.px`, `.py`, `.pAll`, `.pLR`, `.pTB`, `.pZero`, `pSymmetric`, `pOnly`) and `PlayxWidgetPaddingExtensions` on `Widget` (`pAll`, `pSymmetric`, `pOnly`, `pZero`) to easily create `EdgeInsets` and wrap widgets in `Padding`. Helpers return unscaled `EdgeInsets`; apps that need responsive scaling should scale the numeric input (e.g. `16.r.p`).
+- Added **Padding extensions** (`padding_extensions.dart`): `PlayxNumPaddingExtensions` on `num` (`.p`, `.px`, `.py`, `.pAll`, `.pLR`, `.pTB`, `.pZero`) and `PlayxWidgetPaddingExtensions` on `Widget` (`pAll`, `pSymmetric`, `pOnly`, `pZero`) to easily create `EdgeInsets` and wrap widgets in `Padding`. Helpers return unscaled `EdgeInsets`; apps that need responsive scaling should scale the numeric input (e.g. `16.r.p`).
+- Padding extensions: added single-side `pt`, `pb`, `pl`, `pr`, RTL-aware `ps`/`pe` (`EdgeInsetsDirectional`), and `withPadding(EdgeInsetsGeometry)` / `pDirectional(...)` on widgets. Widget helpers now return `Padding`.
+- Added border extensions (`border_extensions.dart`): `radius`, `ellipticalRadius`, `borderRadius` with `Top`/`Bottom`/`Left`/`Right` and RTL-aware `Start`/`End` variants, `roundedShape`, `border` and `borderSide` on `num`; `border`/`borderSide` on `Color`; `clipRounded`, `clipBorderRadius` and `bordered` on widgets.
+- Added `String.capitalizedInitialChar` (Unicode-safe initial) and `String.toPrettyJson()`.
+- Added `BuildContext.crossAxisCount(...)` for responsive grid columns.
+- `toLocalDateTime*` and `asLocalDateTime*` accept a `utcOffset` to read timestamps without zone information in a given zone (e.g. a server sending local Saudi time).
 
 ## 1.0.0
 - Added support for nested JSON keys using dot notation (e.g., `'data.user.name'`) in all `safe_json_convert` functions.

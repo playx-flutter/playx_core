@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:playx_core/src/utils/safe_convert.dart';
+import 'package:playx_core/src/utils/safe_json_convert.dart';
 
 void main() {
   group('Int conversion', () {
@@ -202,6 +203,54 @@ void main() {
       expect(() => toT<int>('bad', fromJson: (v) => throw FormatException()),
           throwsFormatException);
       expect(toT<int>('5', fromJson: (v) => int.parse(v)), 5);
+    });
+  });
+
+  group('local DateTime with utcOffset', () {
+    const saudi = Duration(hours: 3);
+
+    test('reads values without a zone in the given offset', () {
+      final result = toLocalDateTimeOrNull('2024-05-01 10:00:00', utcOffset: saudi)!;
+      expect(result.isUtc, isFalse);
+      expect(result.toUtc(), DateTime.utc(2024, 5, 1, 7));
+    });
+
+    test('keeps values with a zone and epoch integers as they are', () {
+      expect(
+        toLocalDateTimeOrNull('2024-05-01T10:00:00Z', utcOffset: saudi)!.toUtc(),
+        DateTime.utc(2024, 5, 1, 10),
+      );
+      expect(
+        toLocalDateTimeOrNull('2024-05-01T10:00:00+01:00', utcOffset: saudi)!
+            .toUtc(),
+        DateTime.utc(2024, 5, 1, 9),
+      );
+      final epoch = DateTime.utc(2024, 5, 1).millisecondsSinceEpoch;
+      expect(
+        toLocalDateTimeOrNull(epoch, utcOffset: saudi)!.toUtc(),
+        DateTime.utc(2024, 5, 1),
+      );
+    });
+
+    test('works with the Or, throwing and JSON variants', () {
+      final expected = DateTime.utc(2024, 5, 1, 7);
+      expect(toLocalDateTime('2024-05-01 10:00', utcOffset: saudi).toUtc(), expected);
+      expect(
+        toLocalDateTimeOr('bad', fallback: DateTime(2000), utcOffset: saudi),
+        DateTime(2000),
+      );
+      expect(
+        asLocalDateTimeOrNull({'at': '2024-05-01 10:00'}, 'at', utcOffset: saudi)!
+            .toUtc(),
+        expected,
+      );
+    });
+
+    test('without an offset, values without a zone are local', () {
+      expect(
+        toLocalDateTimeOrNull('2024-05-01 10:00:00'),
+        DateTime(2024, 5, 1, 10),
+      );
     });
   });
 }

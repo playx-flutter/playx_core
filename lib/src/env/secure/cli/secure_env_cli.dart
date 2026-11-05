@@ -431,6 +431,8 @@ class _SecureEnvCli {
                   'version control.',
       )
       ..writeln('// ignore_for_file: type=lint')
+      // Keep the byte lists compact when the project is formatted.
+      ..writeln('// dart format off')
       ..writeln()
       ..writeln("import '$importUri';")
       ..writeln()

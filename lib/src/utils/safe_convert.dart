@@ -143,17 +143,41 @@ DateTime toDateTime(dynamic value) =>
 // --------------------- LOCAL DATETIME ---------------------
 
 /// Safely converts [value] to [DateTime] in local time zone, or returns null if conversion fails.
-DateTime? toLocalDateTimeOrNull(dynamic value) {
-  return toDateTimeOrNull(value)?.toLocal();
+///
+/// [utcOffset] is the zone of values without zone information, e.g. a server
+/// sending `2024-05-01 10:00:00` in Saudi time: `Duration(hours: 3)`. Values
+/// with a zone (`Z`, `+03:00`) and epoch integers are absolute and unaffected.
+/// Without it, values without zone information are read as local time.
+DateTime? toLocalDateTimeOrNull(dynamic value, {Duration? utcOffset}) {
+  final parsed = toDateTimeOrNull(value);
+  if (parsed == null) return null;
+  if (utcOffset != null && !parsed.isUtc && value is! int) {
+    return DateTime.utc(
+      parsed.year,
+      parsed.month,
+      parsed.day,
+      parsed.hour,
+      parsed.minute,
+      parsed.second,
+      parsed.millisecond,
+      parsed.microsecond,
+    ).subtract(utcOffset).toLocal();
+  }
+  return parsed.toLocal();
 }
 
 /// Converts [value] to [DateTime] in local time zone or returns [fallback] if conversion fails.
-DateTime toLocalDateTimeOr(dynamic value, {required DateTime fallback}) =>
-    toLocalDateTimeOrNull(value) ?? fallback;
+///
+/// See [toLocalDateTimeOrNull] for [utcOffset].
+DateTime toLocalDateTimeOr(dynamic value,
+        {required DateTime fallback, Duration? utcOffset}) =>
+    toLocalDateTimeOrNull(value, utcOffset: utcOffset) ?? fallback;
 
 /// Converts [value] to [DateTime] in local time zone or throws [FormatException] if conversion fails.
-DateTime toLocalDateTime(dynamic value) =>
-    toLocalDateTimeOrNull(value) ??
+///
+/// See [toLocalDateTimeOrNull] for [utcOffset].
+DateTime toLocalDateTime(dynamic value, {Duration? utcOffset}) =>
+    toLocalDateTimeOrNull(value, utcOffset: utcOffset) ??
     (throw FormatException('Invalid DateTime value: $value'));
 
 // --------------------- MAP ---------------------

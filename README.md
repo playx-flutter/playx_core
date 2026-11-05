@@ -373,6 +373,27 @@ For tests, use `PlayxEnv.loadFromString('API_URL=http://localhost')` or `PlayxEn
 
 > **Security:** `.env` files ship as plain text inside your app, and `--dart-define` values are compiled into it. Anyone with the app can read them. Use them for configuration (URLs, feature flags), and [secure env](#sensitive-values-secure-env) for sensitive values.
 
+### Layout extensions
+
+Unscaled helpers for padding, radius and borders. With a scaling package such as `flutter_screenutil`, scale the number first (`16.r.p`).
+
+```dart
+// Padding: all, horizontal/vertical, single sides, RTL-aware start/end
+Container(padding: 16.p);
+Container(padding: 8.px + 4.py);
+Text('Hi').withPadding(12.ps);           // EdgeInsetsDirectional.only(start: 12)
+Text('Hi').pDirectional(start: 8, end: 16);
+
+// Radius, borders and shapes
+BoxDecoration(borderRadius: 12.borderRadius, border: 1.border(Colors.grey));
+Card(shape: 8.roundedShape);
+Image.network(url).clipRounded(12);
+Text('Hi').bordered(color: Colors.grey, radius: 8);
+
+// Responsive grids
+GridView.count(crossAxisCount: context.crossAxisCount());
+```
+
 ## Documentation
 
 For detailed documentation on using PlayX Core, visit  

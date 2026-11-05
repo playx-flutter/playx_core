@@ -174,23 +174,30 @@ DateTime asDateTimeOr(dynamic json, String key, {required DateTime fallback}) {
 }
 
 /// Returns a local [DateTime] with current timezone if the value at [key] can be parsed, otherwise null.
-DateTime? asLocalDateTimeOrNull(dynamic json, String key) {
+///
+/// See [toLocalDateTimeOrNull] for [utcOffset].
+DateTime? asLocalDateTimeOrNull(dynamic json, String key,
+    {Duration? utcOffset}) {
   final value = _getJsonValueOrNull(json, key);
-  return toLocalDateTimeOrNull(value);
+  return toLocalDateTimeOrNull(value, utcOffset: utcOffset);
 }
 
 /// Returns a local [DateTime] for the value at [key].
 /// Throws a [FormatException] if the value cannot be parsed.
-DateTime asLocalDateTime(dynamic json, String key) {
+///
+/// See [toLocalDateTimeOrNull] for [utcOffset].
+DateTime asLocalDateTime(dynamic json, String key, {Duration? utcOffset}) {
   final value = _getJsonValueOrNull(json, key);
-  return toLocalDateTime(value);
+  return toLocalDateTime(value, utcOffset: utcOffset);
 }
 
 /// Returns a local [DateTime] for the value at [key], or [fallback] if parsing fails.
+///
+/// See [toLocalDateTimeOrNull] for [utcOffset].
 DateTime asLocalDateTimeOr(dynamic json, String key,
-    {required DateTime fallback}) {
+    {required DateTime fallback, Duration? utcOffset}) {
   final value = _getJsonValueOrNull(json, key);
-  return toLocalDateTimeOr(value, fallback: fallback);
+  return toLocalDateTimeOr(value, fallback: fallback, utcOffset: utcOffset);
 }
 
 /// ====================
