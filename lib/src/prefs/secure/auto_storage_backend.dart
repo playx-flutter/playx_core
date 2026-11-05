@@ -1,0 +1,239 @@
+import 'dart:convert';
+
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../models/secure_prefs_settings.dart';
+import 'secure_log.dart';
+import 'secure_storage_backend.dart';
+
+/// Returns a healthy backend of [type], or `null` if it is unavailable.
+typedef SecureBackendProvider =
+    Future<PlayxSecureStorageBackend?> Function(PlayxSecureStorageType type);
+
+/// Bookkeeping that lets [AutoSecureStorageBackend] move data written to a
+/// fallback backend back to the preferred one without resurrecting stale,
+/// removed or cleared values.
+///
+/// Stored as JSON in plain preferences. It only contains key names and
+/// backend names, never values.
+class SecureStorageJournal {
+  /// Fallback backends that may hold values to move to the preferred backend,
+  /// oldest first.
+  final List<String> pendingStores;
+
+  /// Backends that missed a `clear()` and must be cleared once reachable.
+  final Set<String> pendingClear;
+
+  /// Backend holding the latest value of each key touched while the journal
+  /// is active, or `null` if the latest operation removed it.
+  final Map<String, String?> lastWriter;
+
+  SecureStorageJournal({
+    List<String>? pendingStores,
+    Set<String>? pendingClear,
+    Map<String, String?>? lastWriter,
+  }) : pendingStores = pendingStores ?? [],
+       pendingClear = pendingClear ?? {},
+       lastWriter = lastWriter ?? {};
+
+  bool get isEmpty =>
+      pendingStores.isEmpty && pendingClear.isEmpty && lastWriter.isEmpty;
+
+  factory SecureStorageJournal.fromJson(Map<String, dynamic> json) =>
+      SecureStorageJournal(
+        pendingStores: List<String>.from(json['pendingStores'] as List),
+        pendingClear: Set<String>.from(json['pendingClear'] as List),
+        lastWriter: Map<String, String?>.from(json['lastWriter'] as Map),
+      );
+
+  Map<String, dynamic> toJson() => {
+    'pendingStores': pendingStores,
+    'pendingClear': pendingClear.toList(),
+    'lastWriter': lastWriter,
+  };
+}
+
+/// Wraps the backend selected by [PlayxSecureStorageType.auto] and keeps the
+/// [SecureStorageJournal] up to date.
+class AutoSecureStorageBackend implements PlayxSecureStorageBackend {
+  /// The backend in use this session.
+  final PlayxSecureStorageBackend active;
+
+  /// The preferred backend (first of the auto order).
+  final PlayxSecureStorageType preferred;
+
+  /// `null` when preferences are unavailable: the journal is then disabled.
+  final SharedPreferencesAsync? _prefs;
+
+  /// `null` when the journal couldn't be loaded; moving data is then skipped
+  /// for this session so a valid journal is never overwritten.
+  SecureStorageJournal? _journal;
+
+  Future<void> _queue = Future.value();
+
+  static const journalKey = '_playx_secure_storage_journal_';
+
+  AutoSecureStorageBackend._(this.active, this.preferred, this._prefs);
+
+  /// Creates the backend and moves pending fallback data into [active].
+  static Future<AutoSecureStorageBackend> create({
+    required PlayxSecureStorageBackend active,
+    required PlayxSecureStorageType preferred,
+    required SecureBackendProvider backendProvider,
+    SharedPreferencesAsync? prefs,
+  }) async {
+    final backend = AutoSecureStorageBackend._(active, preferred, prefs);
+    await backend._recover(backendProvider);
+    return backend;
+  }
+
+  String get _activeName => active.type.name;
+
+  bool get _isFallback => active.type != preferred;
+
+  bool get _isTracking =>
+      _journal != null && (_isFallback || !_journal!.isEmpty);
+
+  Future<void> _recover(SecureBackendProvider backendProvider) async {
+    final prefs = _prefs;
+    if (prefs == null) return;
+    final SecureStorageJournal journal;
+    try {
+      final json = await prefs.getString(journalKey);
+      journal = json == null
+          ? SecureStorageJournal()
+          : SecureStorageJournal.fromJson(
+              jsonDecode(json) as Map<String, dynamic>,
+            );
+    } catch (e, s) {
+      secureLogError('Secure storage journal unavailable', e, s);
+      return;
+    }
+    _journal = journal;
+
+    // Memory holds nothing to recover into.
+    if (active.type != PlayxSecureStorageType.memory) {
+      try {
+        await _applyPendingChanges(journal, backendProvider);
+      } catch (e, s) {
+        secureLogError('Failed to move data from fallback storage', e, s);
+      }
+    }
+
+    if (_isFallback &&
+        active.type != PlayxSecureStorageType.memory &&
+        !journal.pendingStores.contains(_activeName)) {
+      journal.pendingStores.add(_activeName);
+    }
+    if (journal.pendingStores.isEmpty && journal.pendingClear.isEmpty) {
+      // All removals have been applied to the preferred backend.
+      journal.lastWriter.clear();
+    }
+    await _saveJournal();
+  }
+
+  Future<void> _applyPendingChanges(
+    SecureStorageJournal journal,
+    SecureBackendProvider backendProvider,
+  ) async {
+    // 1. A clear() happened while this backend was unreachable.
+    if (journal.pendingClear.remove(_activeName)) {
+      await active.clear();
+      await _saveJournal();
+    }
+
+    // 2. Removals (and values lost with a memory session) it missed.
+    final memoryName = PlayxSecureStorageType.memory.name;
+    for (final MapEntry(:key, :value) in journal.lastWriter.entries.toList()) {
+      if (value == null || value == memoryName) await active.delete(key);
+    }
+
+    // 3. Move values from reachable fallback backends, oldest first.
+    for (final storeName in journal.pendingStores.toList()) {
+      if (storeName == _activeName) continue;
+      final type = PlayxSecureStorageType.values.asNameMap()[storeName];
+      final source = type == null ? null : await backendProvider(type);
+      if (source == null) continue;
+
+      var moved = 0;
+      if (!journal.pendingClear.remove(storeName)) {
+        for (final MapEntry(:key, :value) in (await source.readAll()).entries) {
+          // Skip values overwritten or removed later in another backend.
+          if (journal.lastWriter[key] != storeName) continue;
+          await active.write(key, value);
+          journal.lastWriter[key] = _activeName;
+          moved++;
+        }
+      }
+      await source.clear();
+      journal.pendingStores.remove(storeName);
+      await _saveJournal();
+      secureLog('Moved $moved value(s) from $storeName to $_activeName.');
+    }
+  }
+
+  Future<void> _saveJournal() async {
+    final journal = _journal;
+    final prefs = _prefs;
+    if (journal == null || prefs == null) return;
+    try {
+      if (journal.isEmpty) {
+        await prefs.remove(journalKey);
+      } else {
+        await prefs.setString(journalKey, jsonEncode(journal.toJson()));
+      }
+    } catch (e, s) {
+      secureLogError('Failed to save secure storage journal', e, s);
+    }
+  }
+
+  /// Runs [operation] after the previous one so journal updates don't interleave.
+  Future<T> _serialized<T>(Future<T> Function() operation) {
+    final result = _queue.then((_) => operation());
+    _queue = result.then<void>((_) {}, onError: (_) {});
+    return result;
+  }
+
+  @override
+  PlayxSecureStorageType get type => active.type;
+
+  @override
+  Future<String?> read(String key) => active.read(key);
+
+  @override
+  Future<Map<String, String>> readAll() => active.readAll();
+
+  @override
+  Future<void> write(String key, String value) => _serialized(() async {
+    if (_isTracking) {
+      _journal!.lastWriter[key] = _activeName;
+      await _saveJournal();
+    }
+    await active.write(key, value);
+  });
+
+  @override
+  Future<void> delete(String key) => _serialized(() async {
+    if (_isTracking) {
+      _journal!.lastWriter[key] = null;
+      await _saveJournal();
+    }
+    await active.delete(key);
+  });
+
+  @override
+  Future<void> clear() => _serialized(() async {
+    final journal = _journal;
+    if (_isTracking && journal != null) {
+      journal.pendingClear
+        ..clear()
+        ..add(preferred.name)
+        ..addAll(journal.pendingStores)
+        ..remove(_activeName)
+        ..remove(PlayxSecureStorageType.memory.name);
+      journal.lastWriter.clear();
+      await _saveJournal();
+    }
+    await active.clear();
+  });
+}

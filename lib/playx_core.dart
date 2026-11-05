@@ -2,6 +2,8 @@ export 'package:equatable/equatable.dart';
 export 'package:flutter_secure_storage/flutter_secure_storage.dart';
 export 'package:get_it/get_it.dart';
 export 'package:shared_preferences/shared_preferences.dart';
+export 'package:simple_secure_storage/simple_secure_storage.dart'
+    show DarwinAccessibility;
 export 'package:worker_manager/worker_manager.dart';
 
 export 'src/extensions/bool_extensions.dart';

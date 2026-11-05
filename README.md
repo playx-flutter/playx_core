@@ -10,7 +10,7 @@ Core package for the PlayX ecosystem containing shared classes and utilities.
 
 - **Dependency Injection:** Manage your dependencies using `GetIt`.
 - **PlayxPrefs:** Key-value storage powered by `SharedPreferences`.
-- **PlayxSecurePrefs:** Encrypted key-value storage powered by `FlutterSecureStorage`.
+- **PlayxSecurePrefs:** Encrypted key-value storage powered by `FlutterSecureStorage`, `SimpleSecureStorage`, or AES-encrypted preferences.
 - **PlayxAsyncPrefs:** Asynchronous key-value storage for non-blocking operations.
 - **PlayxPrefsWithCache:** Key-value storage with caching capabilities for improved performance.
 - **PlayxEnv:** Configure your application with global variables using a `.env` file.
@@ -22,7 +22,7 @@ Add `playx_core` to your `pubspec.yaml` dependencies:
 
 ```yaml  
 dependencies:  
-  playx_core: ^0.7.4 
+  playx_core: ^2.0.0 
 ```  
 
 ## Usage
@@ -89,6 +89,69 @@ await PlayxSecurePrefs.setString('secureName','Jane Doe');
 // Retrieve data securely  
 String secureName = await PlayxSecurePrefs.getString('secureName');  
 ```  
+
+##### Choosing a secure storage backend
+
+`PlayxSecurePrefs` keeps the same API whatever backend you choose. Pick it with `storageType`:
+
+| `PlayxSecureStorageType` | Backend |
+| --- | --- |
+| `flutterSecureStorage` (default) | [`flutter_secure_storage`](https://pub.dev/packages/flutter_secure_storage). |
+| `simpleSecureStorage` | [`simple_secure_storage`](https://pub.dev/packages/simple_secure_storage). |
+| `encryptedPrefs` | `SharedPreferencesAsync` with AES-GCM. The key is generated on-device and kept in the first healthy store of `keyStores` (`simple_secure_storage`, then `flutter_secure_storage`). Falls back to `memory` if preferences are unavailable. |
+| `auto` | The first backend of `autoOrder` that passes a write/read health check, then `memory`. |
+| `memory` | In-memory only. Nothing survives a restart. |
+
+```dart
+await PlayxCore.bootCore(
+  securePrefsSettings: const PlayxSecurePrefsSettings(
+    storageType: PlayxSecureStorageType.auto,
+    // Default order. Put backends known to crash on your devices last, or remove them.
+    autoOrder: [
+      PlayxSecureStorageType.simpleSecureStorage,
+      PlayxSecureStorageType.flutterSecureStorage,
+      PlayxSecureStorageType.encryptedPrefs,
+    ],
+  ),
+);
+
+// The backend actually in use, e.g. after an `auto` fallback.
+final type = PlayxSecurePrefs.storageType;
+```
+
+Other settings: `throwOnError` (log errors instead of throwing), `clearOnReinstall`, `flutterSecureStorageOptions`, `simpleSecureStorageOptions` and `encryptedPrefsOptions`.
+
+##### Switching an existing app from `flutter_secure_storage`
+
+Values saved with the default backend stay in `flutter_secure_storage`. Copy them over after changing `storageType`:
+
+```dart
+await PlayxCore.bootCore(
+  securePrefsSettings: const PlayxSecurePrefsSettings(
+    storageType: PlayxSecureStorageType.auto,
+  ),
+);
+// Safe to call on every start: it does nothing once the source is empty.
+await PlayxSecurePrefs.migrateFromFlutterSecureStorage();
+```
+
+Values already present in the new backend are kept. Note that this reads `flutter_secure_storage`, so it runs into any native crash that plugin has on a given device.
+
+##### Web
+
+On web, every type except `memory` uses encrypted prefs with a **non-extractable WebCrypto key** kept in IndexedDB. Nothing secret ships with your app: there is no password, salt or key to configure. Scripts can use the key while the page runs, but the browser never lets them read or export its bytes, so stored data can't be decrypted somewhere else.
+
+Values saved by previous versions (which used `flutter_secure_storage` on web) are migrated automatically on the first start.
+
+Web storage still can't protect against code running in your page (e.g. XSS) or full access to the browser profile. For auth tokens, prefer `HttpOnly` cookies set by your server.
+
+##### How failures are handled
+
+- **`auto` moves data back.** Values written, removed or cleared while on a fallback backend are applied to the first backend of `autoOrder` on a later start where it works again. Stale values are never moved over newer ones, and a `clear()` (e.g. logout) done during a fallback session is applied too.
+- **The encryption key is kept safe.** The store holding it is remembered. If that store is unavailable, or the key reads back missing, the fallback key is used for the session and the stored key is left untouched. Only if the key stays missing for 3 starts in a row (e.g. the Android Keystore was reset) is it replaced, and the values it encrypted are removed since they can't be decrypted anymore.
+- **Values stay readable.** Each value records which key encrypted it, so values written with the fallback key remain readable once the primary key is back.
+- **The fallback key only obfuscates data.** It is random per device and kept in preferences.
+- **Native crashes can't be caught.** Only Dart exceptions trigger a fallback, which is why `autoOrder` is configurable.
 
 #### PlayxAsyncPrefs
 

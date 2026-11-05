@@ -1,11 +1,21 @@
 # Changelog
 
-## 1.2.0
-- **Breaking (environment):** raise minimum SDK to Dart `>=3.8.0 <4.0.0` and Flutter `>=3.32.0`.
-- Update dependencies: `flutter_secure_storage` ^11.0.0, `flutter_dotenv` ^6.0.1, `flutter_lints` ^6.0.0, `lints` ^6.0.0, and widen ranges for `shared_preferences` (`>=2.3.0 <3.0.0`), `get_it` (`>=8.0.0 <10.0.0`), `equatable` (`>=2.0.7 <4.0.0`), `talker_logger`, `worker_manager` and `web` to support a larger base of environments.
-- `PlayxSecurePrefsSettings`: the default `AndroidOptions` no longer sets `encryptedSharedPreferences` (removed in `flutter_secure_storage` 11; existing Android data is migrated automatically on first access).
-
-## 1.1.0
+## 2.0.0
+- **Breaking (environment):** raise minimum SDK to Dart `>=3.12.0 <4.0.0` and Flutter `>=3.44.0`, required by `simple_secure_storage` 0.4.3.
+- Update dependencies: `flutter_secure_storage` ^11.2.0, `simple_secure_storage` ^0.4.3, `flutter_dotenv` ^6.0.1, `flutter_lints` ^6.0.0, `lints` ^6.0.0, and widen ranges for `shared_preferences` (`>=2.3.0 <3.0.0`), `get_it` (`>=8.0.0 <10.0.0`), `equatable` (`>=2.0.7 <4.0.0`), `talker_logger`, `worker_manager` and `web`.
+- **Breaking:** `PlayxSecurePrefsSettings` groups the `flutter_secure_storage` options (`iosOptions`, `androidOptions`, `linuxOptions`, `windowsOptions`, `macOsOptions`) into `flutterSecureStorageOptions: PlayxFlutterSecureStorageOptions(...)`. `webOptions` is removed.
+- **Breaking (web):** `PlayxSecurePrefs` now uses AES-GCM encrypted preferences with a non-extractable WebCrypto key kept in IndexedDB for every storage type except `memory`. No password, salt or key ships with the app. Data saved by previous versions with `flutter_secure_storage` is migrated automatically on the first start.
+- The default `AndroidOptions` no longer sets `encryptedSharedPreferences` (removed in `flutter_secure_storage` 11; existing Android data is migrated automatically on first access).
+- Added a choice of secure storage backends for `PlayxSecurePrefs` via `PlayxSecurePrefsSettings.storageType` (`PlayxSecureStorageType`). The default stays `flutterSecureStorage`:
+  - `simpleSecureStorage`: uses [`simple_secure_storage`](https://pub.dev/packages/simple_secure_storage), configured with `PlayxSimpleSecureStorageOptions`.
+  - `encryptedPrefs`: stores AES-GCM encrypted values in `SharedPreferencesAsync`, configured with `PlayxEncryptedPrefsOptions`. The key is kept in the first healthy store of `keyStores` (`simple_secure_storage`, then `flutter_secure_storage`) and is not replaced while values encrypted with it may still be readable. A per-device fallback key is used when no key store is available. Falls back to `memory` if preferences are unavailable. `clear()` only removes keys with the configured prefix.
+  - `auto`: uses the first backend of `autoOrder` (default: `simple_secure_storage`, `flutter_secure_storage`, `encryptedPrefs`) that passes a health check, then `memory`. Values written, removed or cleared on a fallback backend are applied to the preferred backend once it works again.
+  - `memory`: in-memory only.
+- Added `PlayxSecurePrefs.migrateFromFlutterSecureStorage()` to move existing data when switching an app away from the default backend.
+- Added `PlayxSecurePrefsSettings.throwOnError` (default `true`). When `false`, storage errors are logged instead of thrown, and `memory` is used if the backend can't be created.
+- Added `PlayxSecurePrefs.storageType`, `PlayxSecurePrefs.isInitialized` and `PlayxSecurePrefs.dispose()`. `PlayxCore.dispose()` now also disposes `PlayxSecurePrefs`.
+- `clearOnReinstall` no longer requires `PlayxPrefs` to be created. It keeps using the same flag, so existing installs are not cleared.
+- `PlayxSecurePrefs.maybeGetInt`, `maybeGetDouble` and `maybeGetBool` now use the `safe_convert` helpers: `"1.5"` reads as `1` for ints, and unrecognized bool values return `null` (so `getBool` returns its fallback) instead of `false`.
 - Add optional `onError` callback (`MapOnError<T, S>`) to `MapUtils.mapAsync`, `MapUtils.mapAsyncInIsolate`, and the `MapAsync<T>` extension methods (`mapAsync`, `mapAsyncInIsolate`). When provided, errors thrown while running the mapper (or while dispatching the isolate task) are caught, logged (subject to `printError`), and the value returned by `onError` is returned instead of rethrowing. If `onError` is `null` (the default), the previous behavior is preserved and errors are rethrown after logging. This is a **non-breaking, additive** change.
 - Clean up the redundant `try/catch(e){rethrow}` wrapper in the private `_mapAsync` isolate entry point.
 - Added **Padding extensions** (`padding_extensions.dart`): `PlayxNumPaddingExtensions` on `num` (`.p`, `.px`, `.py`, `.pAll`, `.pLR`, `.pTB`, `.pZero`, `pSymmetric`, `pOnly`) and `PlayxWidgetPaddingExtensions` on `Widget` (`pAll`, `pSymmetric`, `pOnly`, `pZero`) to easily create `EdgeInsets` and wrap widgets in `Padding`. Helpers return unscaled `EdgeInsets`; apps that need responsive scaling should scale the numeric input (e.g. `16.r.p`).

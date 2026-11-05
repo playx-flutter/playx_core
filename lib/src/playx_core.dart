@@ -153,6 +153,7 @@ abstract class PlayxCore {
     await PlayxPrefs.dispose();
     await PlayxAsyncPrefs.dispose();
     await PlayxPrefsWithCache.dispose();
+    await PlayxSecurePrefs.dispose();
     workerManager.dispose();
   }
 }
