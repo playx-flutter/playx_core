@@ -289,14 +289,14 @@ List<int>? asListIntOrNull(dynamic json, String key,
 /// Throws a [FormatException] if the value is not a list of ints.
 List<int> asListInt(dynamic json, String key,
     {int Function(dynamic json)? fromJson}) {
-  return asListOrNull(json, key, fromJson: fromJson) ??
+  return asListIntOrNull(json, key, fromJson: fromJson) ??
       (throw FormatException('Invalid List<int> value for key: $key'));
 }
 
 /// Returns a List[int] for the value at [key], or [fallback] if conversion fails.
 List<int> asListIntOr(dynamic json, String key,
     {List<int> fallback = const [], int Function(dynamic json)? fromJson}) {
-  return asListOrNull(json, key, fromJson: fromJson) ?? fallback;
+  return asListIntOrNull(json, key, fromJson: fromJson) ?? fallback;
 }
 
 /// ====================

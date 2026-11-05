@@ -170,4 +170,45 @@ void main() {
       expect(kDebugMode, isA<bool>());
     });
   });
+
+  group('logging and the work manager', () {
+    setUpAll(() => PlayxLogger.initLogger(name: 'PLAYX CORE'));
+
+    test('mapAsync logs errors when printError is set', () async {
+      final result = await MapUtils.mapAsync<int, String>(
+        data: 1,
+        mapper: (_) => throw StateError('boom'),
+        printError: true,
+        onError: (data, error, stack) => 'handled:$data',
+      );
+      expect(result, 'handled:1');
+    });
+
+    test('mapAsyncInIsolate logs errors when printError is set', () async {
+      final result = await MapUtils.mapAsyncInIsolate<int, String>(
+        data: 2,
+        mapper: _failing,
+        useWorkManager: false,
+        printError: true,
+        onError: (data, error, stack) => 'handled:$data',
+      );
+      expect(result, 'handled:2');
+    });
+
+    test('mapAsyncInIsolate can use the work manager', () async {
+      await workerManager.init(isolatesCount: 1);
+      addTearDown(() => workerManager.dispose());
+
+      final result = await MapUtils.mapAsyncInIsolate<int, int>(
+        data: 21,
+        mapper: _double,
+        printError: false,
+      );
+      expect(result, 42);
+    });
+  });
 }
+
+int _double(int value) => value * 2;
+
+String _failing(int value) => throw StateError('boom $value');

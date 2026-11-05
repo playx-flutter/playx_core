@@ -163,4 +163,9 @@ void main() {
 
     debugDefaultTargetPlatformOverride = null;
   });
+
+  test('isWeb and isWasm are false on the VM', () {
+    expect(PlayxPlatform.isWeb, isFalse);
+    expect(PlayxPlatform.isWasm, isFalse);
+  });
 }

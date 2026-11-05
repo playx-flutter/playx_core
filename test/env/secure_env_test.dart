@@ -263,4 +263,75 @@ void main() {
           : false,
     );
   });
+
+  group('malformed keys', () {
+    test('an invalid embedded key throws a PlayxEnvException', () async {
+      final settings = PlayxEnvSettings(
+        secureEnv: PlayxSecureEnvData(
+          key: const PlayxEnvKey.base64('%%% not base64'),
+          data: await encryptSecureEnv({'A': '1'}, key),
+        ),
+      );
+      await expectLater(
+        SecureEnvLoader.load(settings, secureDefines: ''),
+        throwsA(
+          isA<PlayxEnvException>().having(
+            (e) => e.message,
+            'message',
+            contains('malformed'),
+          ),
+        ),
+      );
+    });
+
+    test('a key of the wrong length throws a PlayxEnvException', () async {
+      final settings = PlayxEnvSettings(
+        secureEnv: PlayxSecureEnvData(
+          key: PlayxEnvKey.base64(base64Encode(Uint8List(16))),
+          data: await encryptSecureEnv({'A': '1'}, key),
+        ),
+      );
+      // The embedded key is accepted as raw bytes by the cipher, which then
+      // rejects the length: still reported as a failure to decrypt.
+      await expectLater(
+        SecureEnvLoader.load(settings, secureDefines: ''),
+        throwsA(isA<PlayxEnvException>()),
+      );
+    });
+
+    test(
+      'an invalid PLAYX_ENV_KEY define throws a PlayxEnvException',
+      () async {
+        final settings = PlayxEnvSettings(
+          secureEnv: await secureEnv({'A': '1'}, embedKey: false),
+        );
+        await expectLater(
+          SecureEnvLoader.load(settings, keyDefine: '%%%', secureDefines: ''),
+          throwsA(isA<PlayxEnvException>()),
+        );
+        await expectLater(
+          SecureEnvLoader.load(
+            settings,
+            keyDefine: base64Encode(Uint8List(8)),
+            secureDefines: '',
+          ),
+          throwsA(isA<PlayxEnvException>()),
+        );
+      },
+    );
+
+    test('a corrupted define throws without leaking details', () async {
+      final settings = PlayxEnvSettings(secureEnv: await secureEnv({'A': '1'}));
+      await expectLater(
+        SecureEnvLoader.load(settings, secureDefines: 'v1:not-base64!'),
+        throwsA(
+          isA<PlayxEnvException>().having(
+            (e) => e.toString(),
+            'toString',
+            isNot(contains('not-base64')),
+          ),
+        ),
+      );
+    });
+  });
 }

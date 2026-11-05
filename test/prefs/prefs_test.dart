@@ -274,4 +274,24 @@ void main() {
       );
     });
   });
+
+  group('PlayxPrefs lifecycle', () {
+    test('remove deletes a single key and keeps the others', () async {
+      await PlayxPrefs.setString('keep', 'k');
+      await PlayxPrefs.setString('drop', 'd');
+
+      await PlayxPrefs.remove('drop');
+
+      expect(PlayxPrefs.maybeGetString('drop'), isNull);
+      expect(PlayxPrefs.getString('keep'), 'k');
+    });
+
+    test('dispose makes the prefs unavailable until create is called', () async {
+      await PlayxPrefs.dispose();
+      expect(() => PlayxPrefs.sharedPrefs, throwsException);
+
+      await PlayxPrefs.create();
+      expect(PlayxPrefs.sharedPrefs, isA<SharedPreferences>());
+    });
+  });
 }

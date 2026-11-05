@@ -307,4 +307,46 @@ void main() {
       expect(dateTime.isLeapYear, false);
     });
   });
+
+  group('copyWith and boundaries', () {
+    final date = DateTime(2024, 5, 15, 13, 45, 30, 500);
+
+    test('copyWith replaces only the given parts', () {
+      expect(
+        date.copyWith(year: 2025, month: 1, day: 2),
+        DateTime(2025, 1, 2, 13, 45, 30, 500),
+      );
+      expect(
+        date.copyWith(hour: 1, minute: 2, second: 3, millisecond: 4),
+        DateTime(2024, 5, 15, 1, 2, 3, 4),
+      );
+      expect(date.copyWith(), date);
+    });
+
+    test('start and end of the day', () {
+      expect(date.startOfDay, DateTime(2024, 5, 15));
+      expect(date.endOfDay, DateTime(2024, 5, 15, 23, 59, 59, 999));
+      expect(date.withoutTime(), date.startOfDay);
+    });
+
+    test('start and end of the month', () {
+      expect(date.startOfMonth, DateTime(2024, 5, 1));
+      expect(date.endOfMonth, DateTime(2024, 5, 31, 23, 59, 59, 999));
+      expect(
+        DateTime(2024, 2, 10).endOfMonth,
+        DateTime(2024, 2, 29, 23, 59, 59, 999),
+      );
+    });
+
+    test('start and end of the week depend on the first day', () {
+      // 2024-05-15 is a Wednesday.
+      expect(date.startOfWeek(), DateTime(2024, 5, 13));
+      expect(date.endOfWeek(), DateTime(2024, 5, 19, 23, 59, 59, 999));
+      expect(date.startOfWeek(firstDay: Weekday.sunday), DateTime(2024, 5, 12));
+      expect(
+        date.endOfWeek(firstDay: Weekday.sunday),
+        DateTime(2024, 5, 18, 23, 59, 59, 999),
+      );
+    });
+  });
 }

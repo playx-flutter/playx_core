@@ -76,3 +76,6 @@
 /.fvmrc
 /ios/._Runner.xcworkspace
 /example/ios/Podfile.lock
+
+# Test coverage output
+coverage/

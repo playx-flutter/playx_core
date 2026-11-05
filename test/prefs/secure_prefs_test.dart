@@ -5,6 +5,8 @@ import 'package:playx_core/playx_core.dart';
 import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
 import 'package:shared_preferences_platform_interface/types.dart';
+import 'package:simple_secure_storage/simple_secure_storage.dart'
+    show DarwinInitializationOptions;
 import 'package:simple_secure_storage_platform_interface/simple_secure_storage_platform_interface.dart';
 
 const encryptionKeyName = '_playx_secure_prefs_encryption_key_';
@@ -26,8 +28,12 @@ class FakeSimpleSecureStorage extends SimpleSecureStoragePlatform {
   /// These keys look missing even though they are stored.
   final Set<String> hiddenKeys = {};
 
+  /// The options of the last `initialize` call.
+  InitializationOptions? lastOptions;
+
   @override
   Future<void> initialize(InitializationOptions options) async {
+    lastOptions = options;
     if (failInitialize) throw Exception('Keystore unavailable');
   }
 
@@ -1033,6 +1039,254 @@ void main() {
 
       await start(PlayxSecureStorageType.encryptedPrefs);
       expect(await PlayxSecurePrefs.getString('enc'), '1');
+    });
+  });
+
+  group('settings validation', () {
+    test('keyStores only accepts key stores', () async {
+      await expectLater(
+        start(
+          PlayxSecureStorageType.encryptedPrefs,
+          encryptedPrefsOptions: const PlayxEncryptedPrefsOptions(
+            keyStores: [PlayxSecureStorageType.memory],
+          ),
+        ),
+        throwsArgumentError,
+      );
+    });
+
+    test('an empty auto order is rejected', () async {
+      await expectLater(
+        start(PlayxSecureStorageType.auto, autoOrder: const []),
+        throwsArgumentError,
+      );
+    });
+
+    test('keyPrefix cannot be empty', () {
+      expect(
+        () => PlayxEncryptedPrefsOptions(keyPrefix: ''),
+        throwsA(isA<AssertionError>()),
+      );
+    });
+
+    test('securePrefs throws before create()', () {
+      expect(() => PlayxSecurePrefs.securePrefs, throwsException);
+    });
+  });
+
+  group('memory backend', () {
+    test('removes and clears values', () async {
+      await start(PlayxSecureStorageType.memory);
+      await PlayxSecurePrefs.setString('a', '1');
+      await PlayxSecurePrefs.setString('b', '2');
+
+      await PlayxSecurePrefs.remove('a');
+      expect(await PlayxSecurePrefs.maybeGetString('a'), isNull);
+      expect(await PlayxSecurePrefs.getString('b'), '2');
+
+      await PlayxSecurePrefs.clear();
+      expect(await PlayxSecurePrefs.maybeGetString('b'), isNull);
+    });
+  });
+
+  group('simple_secure_storage options', () {
+    test('are passed to the plugin', () async {
+      await PlayxSecurePrefs.dispose();
+      await PlayxSecurePrefs.create(
+        securePrefsSettings: const PlayxSecurePrefsSettings(
+          storageType: PlayxSecureStorageType.simpleSecureStorage,
+          clearOnReinstall: false,
+          simpleSecureStorageOptions: PlayxSimpleSecureStorageOptions(
+            appName: 'My App',
+            namespace: 'com.example.app',
+            prefix: 'app_',
+          ),
+        ),
+      );
+      final options = simple.lastOptions!;
+      expect(options.appName, 'My App');
+      expect(options.namespace, 'com.example.app');
+      expect(options.prefix, 'app_');
+      expect(options, isNot(isA<DarwinInitializationOptions>()));
+    });
+
+    test('use the Keychain accessibility on iOS and macOS', () async {
+      for (final platform in [TargetPlatform.iOS, TargetPlatform.macOS]) {
+        debugDefaultTargetPlatformOverride = platform;
+        addTearDown(() => debugDefaultTargetPlatformOverride = null);
+
+        await PlayxSecurePrefs.dispose();
+        await PlayxSecurePrefs.create(
+          securePrefsSettings: const PlayxSecurePrefsSettings(
+            storageType: PlayxSecureStorageType.simpleSecureStorage,
+            clearOnReinstall: false,
+            simpleSecureStorageOptions: PlayxSimpleSecureStorageOptions(
+              darwinAccessibility: DarwinAccessibility.whenUnlocked,
+            ),
+          ),
+        );
+        final options = simple.lastOptions;
+        expect(options, isA<DarwinInitializationOptions>());
+        expect(
+          (options! as DarwinInitializationOptions).accessibility,
+          DarwinAccessibility.whenUnlocked,
+        );
+      }
+    });
+
+    test('default to accessible after the first unlock', () async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      addTearDown(() => debugDefaultTargetPlatformOverride = null);
+      await start(PlayxSecureStorageType.simpleSecureStorage);
+      expect(
+        (simple.lastOptions! as DarwinInitializationOptions).accessibility,
+        DarwinAccessibility.afterFirstUnlock,
+      );
+    });
+  });
+
+  group('logging', () {
+    test('failures are logged and do not break the fallback', () async {
+      PlayxLogger.initLogger(name: 'PLAYX CORE');
+      simple.failInitialize = true;
+      fss.fail = true;
+      breakPrefs();
+
+      await start(PlayxSecureStorageType.auto);
+      expect(PlayxSecurePrefs.storageType, PlayxSecureStorageType.memory);
+    });
+  });
+
+  group('encrypted prefs edge cases', () {
+    test('an unknown key store marker uses the fallback key', () async {
+      await prefs.setString(keyStoreMarker, 'bogus');
+      await start(PlayxSecureStorageType.encryptedPrefs);
+      await PlayxSecurePrefs.setString('token', 'abc');
+
+      expect(await prefs.getString('playx_secure_token'), startsWith('f:'));
+      expect(await PlayxSecurePrefs.getString('token'), 'abc');
+      expect(simple.data[encryptionKeyName], isNull);
+    });
+
+    test('an invalid key in the first store is skipped, not replaced', () async {
+      simple.data[encryptionKeyName] = 'garbage';
+      await start(PlayxSecureStorageType.encryptedPrefs);
+      await PlayxSecurePrefs.setString('token', 'abc');
+
+      expect(simple.data[encryptionKeyName], 'garbage');
+      expect(fss.data[encryptionKeyName], isNotNull);
+      expect(await prefs.getString(keyStoreMarker), 'flutterSecureStorage');
+      expect(await prefs.getString('playx_secure_token'), startsWith('p:'));
+      expect(await PlayxSecurePrefs.getString('token'), 'abc');
+    });
+
+    test('an invalid key in the marked store is left untouched', () async {
+      await start(PlayxSecureStorageType.encryptedPrefs);
+      await PlayxSecurePrefs.setString('a', '1');
+
+      simple.data[encryptionKeyName] = 'garbage';
+      await start(PlayxSecureStorageType.encryptedPrefs);
+
+      expect(simple.data[encryptionKeyName], 'garbage');
+      expect(await prefs.getInt(missingKeyCount), 1);
+      expect(await PlayxSecurePrefs.maybeGetString('a'), isNull);
+      // New values use the fallback key until the primary key is back.
+      await PlayxSecurePrefs.setString('b', '2');
+      expect(await prefs.getString('playx_secure_b'), startsWith('f:'));
+    });
+
+    test('unreadable entries are skipped when converting key names', () async {
+      await prefs.setString('playx_secure_bad', 'garbage');
+      await start(PlayxSecureStorageType.encryptedPrefs, encryptKeys: true);
+
+      await PlayxSecurePrefs.setString('a', '1');
+      expect(await PlayxSecurePrefs.getString('a'), '1');
+      expect(await PlayxSecurePrefs.maybeGetString('bad'), isNull);
+    });
+
+    test('a plain value written after enabling encryptKeys still wins', () async {
+      await start(PlayxSecureStorageType.encryptedPrefs);
+      await PlayxSecurePrefs.setString('a', 'plain');
+      final plainPayload = (await prefs.getString('playx_secure_a'))!;
+
+      await start(PlayxSecureStorageType.encryptedPrefs, encryptKeys: true);
+      expect(await PlayxSecurePrefs.getString('a'), 'plain');
+      await PlayxSecurePrefs.setString('a', 'hidden');
+
+      // A plain entry reappears, e.g. written by an older app version.
+      await prefs.setString('playx_secure_a', plainPayload);
+      expect(await PlayxSecurePrefs.getString('a'), 'plain');
+    });
+  });
+
+  group('flutter_secure_storage name hashing edge cases', () {
+    const hashKey = '_playx_secure_key_names_key_';
+
+    Future<void> startFss() => start(
+      PlayxSecureStorageType.flutterSecureStorage,
+      encryptKeys: true,
+    );
+
+    test('an invalid hashing key is replaced and entries are re-hashed', () async {
+      await startFss();
+      await PlayxSecurePrefs.setString('a', '1');
+
+      fss.data[hashKey] = '%%% not a key';
+      await startFss();
+      expect(await PlayxSecurePrefs.getString('a'), '1');
+      expect(fss.data[hashKey], isNot('%%% not a key'));
+      expect(fss.data[hashKey], isNotNull);
+    });
+
+    test('invalid hashed entries are ignored', () async {
+      fss.data['_playx_k_broken'] = 'not json';
+      await startFss();
+
+      expect(await PlayxSecurePrefs.maybeGetString('anything'), isNull);
+      await PlayxSecurePrefs.setString('a', '1');
+      expect(await PlayxSecurePrefs.getString('a'), '1');
+      expect(fss.data['_playx_k_broken'], 'not json');
+    });
+
+    test('plain and hashed entries of the same name keep the hashed value', () async {
+      await startFss();
+      await PlayxSecurePrefs.setString('a', 'hashed');
+      fss.data['a'] = 'plain';
+
+      expect(await PlayxSecurePrefs.getString('a'), 'hashed');
+    });
+  });
+
+  group('auto journal edge cases', () {
+    test('an unreadable journal is ignored and nothing is moved', () async {
+      await prefs.setString(journalKey, 'not-a-journal:payload');
+      await start(PlayxSecureStorageType.auto, encryptKeys: true);
+
+      expect(
+        PlayxSecurePrefs.storageType,
+        PlayxSecureStorageType.simpleSecureStorage,
+      );
+      await PlayxSecurePrefs.setString('a', '1');
+      expect(await PlayxSecurePrefs.getString('a'), '1');
+      // The unreadable journal is left alone rather than overwritten.
+      expect(await prefs.getString(journalKey), 'not-a-journal:payload');
+    });
+
+    test('turning off key hiding for flutter_secure_storage restores names', () async {
+      await start(
+        PlayxSecureStorageType.flutterSecureStorage,
+        encryptKeys: true,
+      );
+      await PlayxSecurePrefs.setString('a', '1');
+      await PlayxSecurePrefs.setString('b', '2');
+      // A plain entry of the same name written directly is kept, not replaced.
+      fss.data['a'] = 'plain';
+
+      await start(PlayxSecureStorageType.flutterSecureStorage);
+      expect(await PlayxSecurePrefs.getString('a'), 'plain');
+      expect(await PlayxSecurePrefs.getString('b'), '2');
+      expect(fss.data.keys.where((k) => k.startsWith('_playx_k_')), isEmpty);
+      expect(fss.data.containsKey('_playx_secure_key_names_key_'), isFalse);
     });
   });
 }

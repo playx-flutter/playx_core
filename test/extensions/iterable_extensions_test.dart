@@ -371,4 +371,87 @@ void main() {
       expect(result, [2, 4, 6, 8, 10, 12, 14, 16, 18]);
     });
   });
+
+  group('lastOr and chunked', () {
+    test('lastOrNull and lastOr', () {
+      expect([1, 2, 3].lastOrNull(), 3);
+      expect(<int>[].lastOrNull(), isNull);
+      expect([1, 2, 3].lastOr(9), 3);
+      expect(<int>[].lastOr(9), 9);
+    });
+
+    test('mapWithIndex passes the index', () {
+      expect(['a', 'b'].mapWithIndex((i, e) => '$i$e'), ['0a', '1b']);
+    });
+
+    test('chunked splits into lists of the given size', () {
+      expect([1, 2, 3, 4, 5].chunked(2), [
+        [1, 2],
+        [3, 4],
+        [5],
+      ]);
+      expect([1, 2].chunked(5), [
+        [1, 2],
+      ]);
+      expect(<int>[].chunked(3), isEmpty);
+      expect(() => [1].chunked(0), throwsArgumentError);
+      expect(() => [1].chunked(-1), throwsArgumentError);
+    });
+  });
+
+  group('groupBy and sorting', () {
+    test('groupBy groups elements by key', () {
+      expect([1, 2, 3, 4, 5].groupBy((e) => e.isEven), {
+        false: [1, 3, 5],
+        true: [2, 4],
+      });
+      expect(<int>[].groupBy((e) => e), isEmpty);
+    });
+
+    test('sortedBy and sortedByDescending do not change the source', () {
+      final words = ['pear', 'fig', 'banana'];
+      expect(words.sortedBy((w) => w.length), ['fig', 'pear', 'banana']);
+      expect(words.sortedByDescending((w) => w.length), [
+        'banana',
+        'pear',
+        'fig',
+      ]);
+      expect(words, ['pear', 'fig', 'banana']);
+    });
+  });
+
+  group('nested iterables', () {
+    final nested = [
+      [1, 2],
+      [3],
+      <int>[],
+    ];
+
+    test('flatten', () {
+      expect(nested.flatten(), [1, 2, 3]);
+    });
+
+    test('flatMap maps the flattened elements', () {
+      expect(nested.flatMap(mapper: (e) => e * 10).toList(), [10, 20, 30]);
+    });
+
+    test('flatMapAsync and asyncFlatMap map asynchronously', () async {
+      expect(await nested.flatMapAsync(mapper: (e) async => e + 1), [2, 3, 4]);
+      // ignore: deprecated_member_use_from_same_package
+      expect(await nested.asyncFlatMap((e) async => e + 1), [2, 3, 4]);
+    });
+  });
+
+  group('number iterables', () {
+    test('sum', () {
+      expect([1, 2, 3].sum, 6);
+      expect([1.5, 2.5].sum, 4);
+      expect(<int>[].sum, 0);
+    });
+
+    test('average', () {
+      expect([1, 2, 3, 4].average, 2.5);
+      expect(<int>[].average, 0);
+    });
+  });
 }

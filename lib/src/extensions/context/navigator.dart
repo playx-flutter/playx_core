@@ -17,6 +17,6 @@ extension ContextNavigatorExtensions on BuildContext {
   /// shortcut for `FocusScopeNode.of(context)`
   FocusScopeNode get focusScope => FocusScope.of(this);
 
-  /// shortcut for `Form.of(context)`
-  FormState? get form => Form.of(this);
+  /// shortcut for `Form.maybeOf(context)`, `null` when there is no [Form] above.
+  FormState? get form => Form.maybeOf(this);
 }

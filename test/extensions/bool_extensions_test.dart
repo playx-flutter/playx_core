@@ -39,4 +39,24 @@ void main() {
       });
     });
   });
+
+  group('NullableBoolExtensions', () {
+    test('isTrue is true only for an explicit true', () {
+      bool? value;
+      expect(value.isTrue, isFalse);
+      value = false;
+      expect(value.isTrue, isFalse);
+      value = true;
+      expect(value.isTrue, isTrue);
+    });
+
+    test('isFalse is true only for an explicit false', () {
+      bool? value;
+      expect(value.isFalse, isFalse);
+      value = true;
+      expect(value.isFalse, isFalse);
+      value = false;
+      expect(value.isFalse, isTrue);
+    });
+  });
 }

@@ -65,4 +65,43 @@ void main() {
           '06 d : 08 h : 09 m : 08 s');
     });
   });
+
+  group('remaining values and formatting', () {
+    const duration = Duration(hours: 27, minutes: 5, seconds: 9);
+
+    test('remaining values with and without a leading zero', () {
+      expect(duration.toRemainingHours(), '03');
+      expect(duration.toRemainingMinutes(), '05');
+      expect(duration.toRemainingMinutes(leadingZero: false), '5');
+      expect(duration.toRemainingSeconds(), '09');
+      expect(duration.toRemainingSeconds(leadingZero: false), '9');
+    });
+
+    test('toFormattedDuration joins the requested parts', () {
+      expect(
+        duration.toFormattedDuration(
+          days: 'd',
+          hours: 'h',
+          minutes: 'm',
+          seconds: 's',
+          spacer: ', ',
+        ),
+        '01 d, 03 h, 05 m, 09 s',
+      );
+      expect(
+        duration.toFormattedDuration(
+          hours: 'h',
+          minutes: 'm',
+          leadingZero: false,
+          leaveSpaceBetweenTimeAndText: false,
+        ),
+        '3h5m',
+      );
+    });
+
+    test('delay waits then returns the callback result', () async {
+      expect(await Duration.zero.delay(() => 5), 5);
+      expect(await Duration.zero.delay<int>(), isNull);
+    });
+  });
 }

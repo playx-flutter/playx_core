@@ -92,6 +92,7 @@ void main() {
         expect(source, isNot(contains(secret)));
       }
       expect(parseGenerated(source).environment, 'prod');
+      expect(source, contains('// dart format off'));
       expect(await decryptOutput(), {
         'STRIPE_KEY': 'pk_live',
         'MAPS_KEY': 'AIza 1',
@@ -300,6 +301,111 @@ void main() {
     test('--allow-empty generates a key-only file', () async {
       expect(await run(['--allow-empty']), 0);
       expect(await decryptOutput(), isEmpty);
+    });
+  });
+
+  group('options', () {
+    test('--key-file chooses where the key is kept', () async {
+      write('.env.secrets', 'A=1');
+      expect(await run(['--key-file', 'keys/custom.key']), 0);
+      expect(exists('keys/custom.key'), isTrue);
+      expect(exists('.playx_secure_env.key'), isFalse);
+
+      final key = decodeSecureEnvKey(read('keys/custom.key'));
+      final generated = parseGenerated(
+        read('lib/generated/playx_secure_env.g.dart'),
+      );
+      expect(generated.key, key);
+    });
+
+    test('--import chooses the import of the generated file', () async {
+      write('.env.secrets', 'A=1');
+      expect(await run(['--import', 'package:my_app/env.dart']), 0);
+      expect(
+        read('lib/generated/playx_secure_env.g.dart'),
+        contains("import 'package:my_app/env.dart';"),
+      );
+    });
+
+    test('--verbose lists key names but never values', () async {
+      write('.env.secrets', 'STRIPE_KEY=pk_secret_value\nMAPS_KEY=m');
+      expect(await run(['--verbose']), 0);
+      final text = out.toString();
+      expect(text, contains('Sources: .env.secrets'));
+      expect(text, contains('Keys: MAPS_KEY, STRIPE_KEY'));
+      expect(text, isNot(contains('pk_secret_value')));
+    });
+
+    test('--verbose mentions skipped environment files', () async {
+      write('.env.secrets', 'A=1');
+      expect(await run(['--verbose', '--env', 'prod']), 0);
+      expect(out.toString(), contains('Skipped .env.secrets.prod'));
+    });
+
+    test('a prefix without matches warns', () async {
+      expect(
+        await run(
+          ['--no-file', '--define', 'A=1', '--from-env-prefix', 'NOPE_'],
+        ),
+        0,
+      );
+      expect(err.toString(), contains('no environment variables start with NOPE_'));
+    });
+
+    test('define --out rejects a file that is not JSON', () async {
+      write('.env.secrets', 'A=1');
+      write('defines.json', 'not json');
+      expect(await run(['define', '--out', 'defines.json']), 1);
+      expect(err.toString(), contains('defines.json is not a JSON object'));
+    });
+
+    test('the help command prints the usage', () async {
+      expect(await run(['help']), 0);
+      expect(out.toString(), contains('Usage: dart run'));
+    });
+  });
+
+  group('gitignore warnings', () {
+    bool hasGit() {
+      try {
+        return Process.runSync('git', ['--version']).exitCode == 0;
+      } on ProcessException {
+        return false;
+      }
+    }
+
+    test('warns about files that are not ignored', () async {
+      if (!hasGit()) markTestSkipped('git is not available');
+      Process.runSync('git', ['init', '-q'], workingDirectory: dir.path);
+      write('.env.secrets', 'A=1');
+
+      expect(await run([]), 0);
+      final warnings = err.toString();
+      expect(warnings, contains('.env.secrets holds secret values'));
+      expect(warnings, contains('.playx_secure_env.key contains the key'));
+      expect(
+        warnings,
+        contains('lib/generated/playx_secure_env.g.dart contains the key'),
+      );
+    });
+
+    test('is quiet when the files are ignored', () async {
+      if (!hasGit()) markTestSkipped('git is not available');
+      Process.runSync('git', ['init', '-q'], workingDirectory: dir.path);
+      write(
+        '.gitignore',
+        '.env.secrets*\n.playx_secure_env.key\nlib/generated/\n',
+      );
+      write('.env.secrets', 'A=1');
+
+      expect(await run([]), 0);
+      expect(err.toString(), isNot(contains('.gitignore')));
+    });
+
+    test('is quiet outside a git repository', () async {
+      write('.env.secrets', 'A=1');
+      expect(await run([]), 0);
+      expect(err.toString(), isNot(contains('.gitignore')));
     });
   });
 }

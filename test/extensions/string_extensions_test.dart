@@ -78,4 +78,113 @@ void main() {
       expect(string.replaceBefore(" ", "test"), "test world");
     });
   });
+
+  group('parsing and checks', () {
+    test('firstOrNull and lastOrNull', () {
+      expect('abc'.firstOrNull, 'a');
+      expect('abc'.lastOrNull, 'c');
+      expect(''.firstOrNull, isNull);
+      expect(''.lastOrNull, isNull);
+      expect(''.lastOrEmpty, '');
+      expect('abc'.lastOrEmpty, 'c');
+    });
+
+    test('toIntOrNull and toDoubleOrNull', () {
+      expect('42'.toIntOrNull(), 42);
+      expect('4.2'.toIntOrNull(), isNull);
+      expect('4.2'.toDoubleOrNull(), 4.2);
+      expect('abc'.toDoubleOrNull(), isNull);
+    });
+
+    test('isNumeric', () {
+      expect('42'.isNumeric, isTrue);
+      expect('-4.2'.isNumeric, isTrue);
+      expect('4a'.isNumeric, isFalse);
+      expect(''.isNumeric, isFalse);
+    });
+
+    test('containsIgnoreCase and equalsIgnoreCase', () {
+      expect('Hello World'.containsIgnoreCase('WORLD'), isTrue);
+      expect('Hello'.containsIgnoreCase('xyz'), isFalse);
+      expect('Hello'.equalsIgnoreCase('hELLO'), isTrue);
+      expect('Hello'.equalsIgnoreCase('Hell'), isFalse);
+    });
+
+    test('removeWhitespace and removeHtmlTags', () {
+      expect(' a \t b\nc '.removeWhitespace(), 'abc');
+      expect('<p>Hello <b>you</b></p>'.removeHtmlTags(), 'Hello you');
+    });
+
+    test('toSlug', () {
+      expect('Hello, World! 2024'.toSlug(), 'hello-world-2024');
+      expect('--A  B--'.toSlug(), 'a-b');
+    });
+
+    test('isValidEmail and isValidUrl', () {
+      expect('jane.doe@example.com'.isValidEmail, isTrue);
+      expect('not-an-email'.isValidEmail, isFalse);
+      expect('https://example.com/path?q=1'.isValidUrl, isTrue);
+      expect('example.com'.isValidUrl, isTrue);
+      expect('not a url'.isValidUrl, isFalse);
+    });
+
+    test('limit truncates with a suffix', () {
+      expect('Hello World'.limit(5), 'Hello...');
+      expect('Hello World'.limit(5, suffix: '…'), 'Hello…');
+      expect('Hello'.limit(5), 'Hello');
+      expect('Hi'.limit(5), 'Hi');
+    });
+  });
+
+  group('NullableStringExtensions', () {
+    test('isNullOrEmpty and isNotNullOrEmpty', () {
+      String? value;
+      expect(value.isNullOrEmpty, isTrue);
+      expect(value.isNotNullOrEmpty, isFalse);
+      value = '';
+      expect(value.isNullOrEmpty, isTrue);
+      value = 'x';
+      expect(value.isNullOrEmpty, isFalse);
+      expect(value.isNotNullOrEmpty, isTrue);
+    });
+
+    test('ifNullOrEmpty returns the fallback when empty', () {
+      String? value;
+      expect(value.ifNullOrEmpty('fallback'), 'fallback');
+      expect(''.ifNullOrEmpty('fallback'), 'fallback');
+      expect('x'.ifNullOrEmpty('fallback'), 'x');
+    });
+  });
+
+  group('capitalizedInitialChar', () {
+    test('returns the first character uppercased', () {
+      expect('jane doe'.capitalizedInitialChar, 'J');
+      expect('  élodie'.capitalizedInitialChar, 'É');
+      expect('محمد'.capitalizedInitialChar, 'م');
+    });
+
+    test('keeps emojis and combined characters whole', () {
+      expect('👩‍💻 dev'.capitalizedInitialChar, '👩‍💻');
+      expect('étienne'.capitalizedInitialChar, 'É');
+    });
+
+    test('is empty for empty or blank strings', () {
+      expect(''.capitalizedInitialChar, '');
+      expect('   '.capitalizedInitialChar, '');
+    });
+  });
+
+  group('toPrettyJson', () {
+    test('indents valid JSON', () {
+      expect(
+        '{"a":1,"b":[true]}'.toPrettyJson(),
+        '{\n  "a": 1,\n  "b": [\n    true\n  ]\n}',
+      );
+      expect('{"a":1}'.toPrettyJson(indent: '    '), '{\n    "a": 1\n}');
+    });
+
+    test('returns invalid JSON unchanged', () {
+      expect('not json'.toPrettyJson(), 'not json');
+    });
+  });
 }
