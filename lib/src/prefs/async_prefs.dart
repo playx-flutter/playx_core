@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'utils/prefs_json_codec.dart';
+import '../utils/json_value_codec.dart';
 
 /// An abstract class that provides an asynchronous interface for accessing
 /// and manipulating SharedPreferences data.
@@ -216,7 +216,7 @@ abstract class PlayxAsyncPrefs {
   ///
   /// Returns `null` if the key does not exist or doesn't hold a JSON object.
   static Future<Map<String, dynamic>?> maybeGetMap(String key) async =>
-      decodePrefsMap(await maybeGetString(key));
+      decodeJsonMapOrNull(await maybeGetString(key));
 
   /// Retrieves the JSON map stored under [key], or [fallback] if the key does
   /// not exist or doesn't hold a JSON object.
@@ -229,9 +229,9 @@ abstract class PlayxAsyncPrefs {
   /// Stores [value] under [key] as a JSON string.
   ///
   /// Values must be JSON values or objects with a `toJson()` method.
-  /// Throws a [JsonUnsupportedObjectError] otherwise.
+  /// Throws a `JsonUnsupportedObjectError` otherwise.
   static Future<void> setMap(String key, Map<String, dynamic> value) =>
-      setString(key, encodePrefsJson(value));
+      setString(key, encodeJsonValue(value));
 
   /***************************List***************************/
 
@@ -244,7 +244,7 @@ abstract class PlayxAsyncPrefs {
     String key, {
     T Function(dynamic json)? fromJson,
   }) async =>
-      decodePrefsList<T>(await maybeGetString(key), fromJson: fromJson);
+      decodeJsonListOrNull<T>(await maybeGetString(key), fromJson: fromJson);
 
   /// Retrieves the list stored under [key], or [fallback] if it can't be read.
   ///
@@ -260,13 +260,13 @@ abstract class PlayxAsyncPrefs {
   /// [toJson] if provided.
   ///
   /// Without [toJson], items must be JSON values or objects with a `toJson()`
-  /// method. Throws a [JsonUnsupportedObjectError] otherwise.
+  /// method. Throws a `JsonUnsupportedObjectError` otherwise.
   static Future<void> setList<T>(
     String key,
     List<T> value, {
     Object? Function(T item)? toJson,
   }) =>
-      setString(key, encodePrefsList(value, toJson));
+      setString(key, encodeJsonList(value, toJson));
 
   /***************************Object***************************/
 
@@ -278,7 +278,7 @@ abstract class PlayxAsyncPrefs {
     String key, {
     required T Function(dynamic json) fromJson,
   }) async =>
-      decodePrefsObject<T>(await maybeGetString(key), fromJson: fromJson);
+      decodeJsonObjectOrNull<T>(await maybeGetString(key), fromJson: fromJson);
 
   /// Retrieves the object stored under [key], or [fallback] if it can't be read.
   ///
@@ -292,13 +292,13 @@ abstract class PlayxAsyncPrefs {
 
   /// Stores [value] under [key] as the JSON returned by [toJson].
   ///
-  /// Throws a [JsonUnsupportedObjectError] if the result can't be encoded.
+  /// Throws a `JsonUnsupportedObjectError` if the result can't be encoded.
   static Future<void> setObject<T>(
     String key,
     T value, {
     required Object? Function(T value) toJson,
   }) =>
-      setString(key, encodePrefsJson(toJson(value)));
+      setString(key, encodeJsonValue(toJson(value)));
 
   /// Finds and returns the value associated with the given [key] as an `Object`.
   ///

@@ -1,4 +1,5 @@
 export 'package:equatable/equatable.dart';
+export 'package:flutter_dotenv/flutter_dotenv.dart' show Parser;
 export 'package:flutter_secure_storage/flutter_secure_storage.dart';
 export 'package:get_it/get_it.dart';
 export 'package:shared_preferences/shared_preferences.dart';
@@ -6,6 +7,10 @@ export 'package:simple_secure_storage/simple_secure_storage.dart'
     show DarwinAccessibility;
 export 'package:worker_manager/worker_manager.dart';
 
+export 'src/env/env_values.dart';
+export 'src/env/playx_env.dart';
+export 'src/env/playx_env_exception.dart';
+export 'src/env/playx_env_settings.dart';
 export 'src/extensions/bool_extensions.dart';
 export 'src/extensions/color_extensions.dart';
 export 'src/extensions/context/colors.dart';
@@ -19,12 +24,10 @@ export 'src/extensions/iterable_extensions.dart';
 export 'src/extensions/locale_extensions.dart';
 export 'src/extensions/padding_extensions.dart';
 export 'src/extensions/string_extensions.dart';
-export 'src/models/envs_settings.dart';
 export 'src/models/prefs_settings.dart';
 export 'src/models/work_manager_settings.dart';
 export 'src/playx_core.dart';
 export 'src/prefs/async_prefs.dart';
-export 'src/prefs/envs.dart';
 export 'src/prefs/prefs.dart';
 export 'src/prefs/prefs_with_cache.dart';
 export 'src/prefs/secure/secure_prefs.dart';

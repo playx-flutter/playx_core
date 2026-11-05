@@ -16,6 +16,15 @@
 - Added `PlayxSecurePrefsSettings.throwOnError` (default `true`). When `false`, storage errors are logged instead of thrown, and `memory` is used if the backend can't be created.
 - Added `PlayxSecurePrefs.storageType`, `PlayxSecurePrefs.isInitialized` and `PlayxSecurePrefs.dispose()`. `PlayxCore.dispose()` now also disposes `PlayxSecurePrefs`.
 - `clearOnReinstall` no longer requires `PlayxPrefs` to be created. It keeps using the same flag, so existing installs are not cleared.
+- **Breaking:** `PlayxEnv` getters are now synchronous (values are in memory after `load()`), `PlayxEnv.load` takes a `PlayxEnvSettings`, and `PlayxEnv.instance` (flutter_dotenv's `dotenv`) is removed in favor of `PlayxEnv.all`. `PlayxEnv` moved to `lib/src/env/`.
+- `PlayxEnv` enhancements:
+  - Layered configuration: `.env`, then `.env.<environment>` (from `environment`, `--dart-define=PLAYX_ENV=<name>` or the Flutter flavor), then `additionalFiles`, `mergeWith`, `PLAYX_DEFINES` and `dartDefines`. Later files can reference earlier values.
+  - `--dart-define` values without declaring them in code: `--dart-define=PLAYX_DEFINES="DEBUG=true;API_URL=..."` (or `base64:` encoded `.env` content) is read automatically. Disable with `usePlayxDefines: false`.
+  - `dartDefines` for individual `--dart-define` / `--dart-define-from-file` values.
+  - `requiredKeys`, failing at startup with a `PlayxEnvException` listing missing keys. Missing files are logged, or throw when `isOptional` is `false`.
+  - New getters: `getNum`, `getUri`, `getEnum`, `getDuration`, `getList` (comma-separated or JSON), `getMap` and `getObject`, each with a `maybeGet*` variant. Parsing uses the `safe_convert` helpers, so invalid bools return `null` instead of `false`.
+  - `EnvValues`: an immutable set of values with all the typed getters, exposed as `PlayxEnv.values` and usable on its own (e.g. for remote config).
+  - `isLoaded`, `environment`, `loadedFiles`, `all` and `containsKey`, plus `loadFromString`, `setMockValues` and `dispose()` for tests. `PlayxCore.dispose()` now also disposes `PlayxEnv`.
 - Added JSON helpers to `PlayxPrefs`, `PlayxAsyncPrefs`, `PlayxPrefsWithCache` and `PlayxSecurePrefs` to store maps, lists and objects: `setMap`/`maybeGetMap`/`getMap`, `setList`/`maybeGetList`/`getList` (with optional `toJson`/`fromJson` item converters) and `setObject`/`maybeGetObject`/`getObject`. Invalid or mismatched stored values return `null` or the fallback.
 - Fixed `PlayxAsyncPrefs.maybeGetString`, `maybeGetInt`, `maybeGetDouble` and `maybeGetBool` not catching asynchronous errors (they now return `null` as documented).
 - `PlayxSecurePrefs.maybeGetInt`, `maybeGetDouble` and `maybeGetBool` now use the `safe_convert` helpers: `"1.5"` reads as `1` for ints, and unrecognized bool values return `null` (so `getBool` returns its fallback) instead of `false`.

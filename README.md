@@ -13,7 +13,7 @@ Core package for the PlayX ecosystem containing shared classes and utilities.
 - **PlayxSecurePrefs:** Encrypted key-value storage powered by `FlutterSecureStorage`, `SimpleSecureStorage`, or AES-encrypted preferences.
 - **PlayxAsyncPrefs:** Asynchronous key-value storage for non-blocking operations.
 - **PlayxPrefsWithCache:** Key-value storage with caching capabilities for improved performance.
-- **PlayxEnv:** Configure your application with global variables using a `.env` file.
+- **PlayxEnv:** Typed app configuration from `.env` files, per-environment files and flavors, and `--dart-define`.
 - **bootCore Function:** Set up and initialize essential components for the PlayX ecosystem.
 
 ## Installation
@@ -226,6 +226,90 @@ final user = await PlayxSecurePrefs.maybeGetObject(
 
 - `maybeGet*` returns `null` and `get*` returns its fallback when the key is missing, the stored value isn't valid JSON, has another shape, or `fromJson` throws.
 - `setMap` and `setList` without `toJson` accept JSON values and objects with a `toJson()` method. Anything else throws a `JsonUnsupportedObjectError`.
+
+### Environment configuration
+
+`PlayxEnv` reads configuration from `.env` files (declared as assets), per-environment files and `--dart-define`:
+
+```yaml
+# pubspec.yaml
+flutter:
+  assets:
+    - .env
+    - .env.dev
+    - .env.prod
+```
+
+```dart
+await PlayxCore.bootCore(
+  envSettings: const PlayxEnvSettings(
+    // Fail at startup, listing every missing key.
+    requiredKeys: ['API_URL'],
+    // Build-time values, overriding the files.
+    dartDefines: {'SENTRY_DSN': String.fromEnvironment('SENTRY_DSN')},
+  ),
+);
+
+final apiUrl = PlayxEnv.getUri('API_URL', fallback: Uri.parse('https://api.example.com'));
+final timeout = PlayxEnv.getDuration('TIMEOUT', fallback: const Duration(seconds: 30));
+final debug = PlayxEnv.getBool('DEBUG');
+```
+
+Values are layered, later sources overriding earlier ones:
+
+1. `.env`
+2. `.env.<environment>`. The environment comes from `environment:`, else `--dart-define=PLAYX_ENV=<name>`, else the Flutter flavor (`--flavor <name>`).
+3. `additionalFiles` (e.g. `.env.local`)
+4. `mergeWith`
+5. `PLAYX_DEFINES` (see below)
+6. `dartDefines`
+
+Files can reference earlier values (`API_URL=https://$HOST/api`). Missing files are logged and skipped, unless `isOptional: false`. A missing `.env.<environment>` simply leaves the `.env` values in place.
+
+#### Build-time values (`--dart-define`)
+
+Dart can only read a define whose name is a constant in code. Reading one by a name known only at runtime works in debug, but returns `""` in release builds and throws on web. So there are two ways to pass build-time values:
+
+**`PLAYX_DEFINES`**: one define that playx reads for you, carrying any number of values. Nothing to declare in code:
+
+```sh
+flutter run --dart-define=PLAYX_DEFINES="DEBUG=true;API_URL=https://dev.example.com"
+```
+
+```dart
+PlayxEnv.getBool('DEBUG'); // true
+```
+
+Entries use `.env` syntax, separated by `;` or new lines. For values containing `;`, pass base64-encoded `.env` content: `--dart-define=PLAYX_DEFINES=base64:$(base64 < .env.ci)`. It also works with `--dart-define-from-file=defines.json` and `{"PLAYX_DEFINES": "DEBUG=true"}`. Disable it with `usePlayxDefines: false`.
+
+**`dartDefines`**: individual defines, declared once in the settings. Unset (empty) ones are ignored:
+
+```sh
+flutter run --dart-define=DEBUG=true
+```
+
+```dart
+const PlayxEnvSettings(dartDefines: {'DEBUG': String.fromEnvironment('DEBUG')});
+```
+
+If you only need a flag in code, `const debug = bool.fromEnvironment('DEBUG');` is a compile-time constant: code behind `if (debug)` is removed from release builds, which runtime config can't do.
+
+Getters are synchronous and come in `maybeGet*` (returns `null`) and `get*` (returns a fallback) forms:
+
+| Type | Example value | Getter |
+| --- | --- | --- |
+| `String`, `int`, `double`, `num`, `bool` | `3`, `true`/`1` | `getString`, `getInt`, `getDouble`, `getNum`, `getBool` |
+| `Uri` | `https://api.example.com` | `getUri` |
+| Enum | `dark` (case-insensitive) | `getEnum(key, Mode.values, fallback: ...)` |
+| `Duration` | `250ms`, `30s`, `5m`, `1.5h`, `1d` (no unit = ms) | `getDuration` |
+| List | `a, b, c` or `[1, 2, 3]` | `getList<int>(key)`, `getList(key, fromJson: ...)` |
+| JSON object | `{"enabled": true}` | `getMap`, `getObject(key, fromJson: ...)` |
+
+The same getters are available on `PlayxEnv.values`, an `EnvValues`. You can also wrap any map in one, e.g. remote config: `EnvValues(remoteConfig).getBool('NEW_CHECKOUT')`.
+
+For tests, use `PlayxEnv.loadFromString('API_URL=http://localhost')` or `PlayxEnv.setMockValues({...})`, and `PlayxEnv.dispose()` to reset.
+
+> **Security:** `.env` files ship as plain text inside your app, and `--dart-define` values are compiled into it. Anyone with the app can read them. Use them for configuration (URLs, feature flags), never for secrets: keep those on your server.
 
 ## Documentation
 

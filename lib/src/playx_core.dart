@@ -5,11 +5,11 @@ import 'package:playx_core/src/logger/base_logger.dart';
 import 'package:playx_core/src/logger/playx_logger.dart';
 import 'package:worker_manager/worker_manager.dart';
 
-import 'models/envs_settings.dart';
+import 'env/playx_env.dart';
+import 'env/playx_env_settings.dart';
 import 'models/prefs_settings.dart';
 import 'models/work_manager_settings.dart';
 import 'prefs/async_prefs.dart';
-import 'prefs/envs.dart';
 import 'prefs/prefs.dart';
 import 'prefs/prefs_with_cache.dart';
 import 'prefs/secure/secure_prefs.dart';
@@ -122,12 +122,7 @@ abstract class PlayxCore {
 
     logger.i('Booting Environment...');
     if (envSettings != null) {
-      await PlayxEnv.load(
-        fileName: envSettings.fileName,
-        parser: envSettings.parser,
-        mergeWith: envSettings.mergeWith,
-        isOptional: envSettings.isOptional,
-      );
+      await PlayxEnv.load(envSettings);
     }
 
     if (workerManagerSettings.initWorkerManager) {
@@ -154,6 +149,7 @@ abstract class PlayxCore {
     await PlayxAsyncPrefs.dispose();
     await PlayxPrefsWithCache.dispose();
     await PlayxSecurePrefs.dispose();
+    await PlayxEnv.dispose();
     workerManager.dispose();
   }
 }

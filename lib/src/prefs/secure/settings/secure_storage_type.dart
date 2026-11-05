@@ -20,7 +20,8 @@ enum PlayxSecureStorageType {
   ///
   /// The encryption key is generated on-device and kept in the first healthy
   /// store of [PlayxEncryptedPrefsOptions.keyStores]. If none is available, a
-  /// fallback key is used (see [PlayxEncryptedPrefsOptions.fallbackEncryptionKey]).
+  /// random per-device fallback key kept in preferences is used, which only
+  /// obfuscates data.
   ///
   /// If preferences themselves are unavailable, [memory] is used.
   encryptedPrefs,
