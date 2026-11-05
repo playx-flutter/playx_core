@@ -1,5 +1,5 @@
 name: example
-description: "A new Flutter project."
+description: "Example app for playx_core."
 version: 1.0.0+1
 publish_to: none
 
@@ -20,3 +20,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - .env
+    - .env.dev
+    - .env.prod

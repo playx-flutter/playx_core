@@ -44,3 +44,9 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 !/.flutter-plugins
+
+# playx secure env: the key file is local only. This example commits its
+# demo .env.secrets and generated file so it runs out of the box; real apps
+# should also ignore `.env.secrets*` and `lib/generated/playx_secure_env.g.dart`.
+.playx_secure_env.key
+secure_defines.json
