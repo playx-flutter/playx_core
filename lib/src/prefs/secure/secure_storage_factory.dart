@@ -2,11 +2,14 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../models/secure_prefs_settings.dart';
-import 'auto_storage_backend.dart';
-import 'encrypted_prefs_backend.dart';
+import 'backends/auto_secure_storage_backend.dart';
+import 'backends/encrypted_prefs_backend.dart';
+import 'backends/flutter_secure_storage_backend.dart';
+import 'backends/memory_secure_storage_backend.dart';
+import 'backends/secure_storage_backend.dart';
+import 'backends/simple_secure_storage_backend.dart';
 import 'secure_log.dart';
-import 'secure_storage_backend.dart';
+import 'settings/secure_prefs_settings.dart';
 
 const _autoOrderTypes = {
   PlayxSecureStorageType.simpleSecureStorage,

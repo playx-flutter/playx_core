@@ -3,10 +3,12 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../models/secure_prefs_settings.dart';
-import 'cipher/secure_cipher.dart';
-import 'cipher/web_crypto_key_store.dart';
-import 'secure_log.dart';
+import '../../../utils/safe_json_convert.dart';
+import '../crypto/secure_cipher.dart';
+import '../crypto/web_crypto_key_store.dart';
+import '../secure_log.dart';
+import '../settings/encrypted_prefs_options.dart';
+import '../settings/secure_storage_type.dart';
 import 'secure_storage_backend.dart';
 
 /// Returns a healthy key store of [type], or `null` if it is unavailable.
@@ -463,11 +465,11 @@ class _NamedEntry {
   String encode() => jsonEncode({'n': name, 'v': value, 't': time});
 
   factory _NamedEntry.decode(String json, {String? storageKey}) {
-    final map = jsonDecode(json) as Map<String, dynamic>;
+    final map = jsonDecode(json);
     return _NamedEntry(
-      map['n'] as String,
-      map['v'] as String?,
-      map['t'] as int,
+      asString(map, 'n'),
+      asStringOrNull(map, 'v'),
+      asInt(map, 't'),
       storageKey: storageKey,
     );
   }

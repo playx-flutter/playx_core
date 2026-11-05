@@ -1,10 +1,15 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../playx_core.dart';
-import 'secure/encrypted_prefs_backend.dart';
-import 'secure/secure_log.dart';
-import 'secure/secure_storage_backend.dart';
-import 'secure/secure_storage_factory.dart';
+import '../../utils/safe_convert.dart';
+import 'backends/encrypted_prefs_backend.dart';
+import 'backends/flutter_secure_storage_backend.dart';
+import 'backends/memory_secure_storage_backend.dart';
+import 'backends/secure_storage_backend.dart';
+import 'secure_log.dart';
+import 'secure_storage_factory.dart';
+import 'settings/secure_prefs_settings.dart';
 
 /// Wrapper for handling secure preferences to save and get preferences.
 ///
@@ -44,7 +49,8 @@ abstract class PlayxSecurePrefs {
   static FlutterSecureStorage get securePrefs {
     if (_securePrefs == null) {
       throw Exception(
-          'FlutterSecureStorage is not initialized. Please call create() first.');
+        'FlutterSecureStorage is not initialized. Please call create() first.',
+      );
     }
     return _securePrefs!;
   }
@@ -52,7 +58,8 @@ abstract class PlayxSecurePrefs {
   static PlayxSecureStorageBackend get _storage {
     if (_backend == null) {
       throw Exception(
-          'PlayxSecurePrefs is not initialized. Please call create() first.');
+        'PlayxSecurePrefs is not initialized. Please call create() first.',
+      );
     }
     return _backend!;
   }
@@ -147,7 +154,8 @@ abstract class PlayxSecurePrefs {
     }
     return _guard(
       'migrate from flutter_secure_storage',
-      () => _migrateFrom(from ?? securePrefs, deleteFromSource: deleteFromSource),
+      () =>
+          _migrateFrom(from ?? securePrefs, deleteFromSource: deleteFromSource),
       0,
     );
   }
@@ -230,10 +238,7 @@ abstract class PlayxSecurePrefs {
   ///
   /// - [key]: The key under which the value will be stored.
   /// - [value]: The `String` value to store.
-  static Future<void> setString(
-    String key,
-    String value,
-  ) {
+  static Future<void> setString(String key, String value) {
     final storage = _storage;
     return _guard('write "$key"', () => storage.write(key, value), null);
   }
@@ -261,10 +266,7 @@ abstract class PlayxSecurePrefs {
   ///
   /// - [key]: The key under which the value will be stored.
   /// - [value]: The `int` value to store.
-  static Future<void> setInt(
-    String key,
-    int value,
-  ) =>
+  static Future<void> setInt(String key, int value) =>
       setString(key, value.toString());
 
   /***************************double***************************/
@@ -290,10 +292,7 @@ abstract class PlayxSecurePrefs {
   ///
   /// - [key]: The key under which the value will be stored.
   /// - [value]: The `double` value to store.
-  static Future<void> setDouble(
-    String key,
-    double value,
-  ) =>
+  static Future<void> setDouble(String key, double value) =>
       setString(key, value.toString());
 
   /***************************bool***************************/
@@ -319,10 +318,7 @@ abstract class PlayxSecurePrefs {
   ///
   /// - [key]: The key under which the value will be stored.
   /// - [value]: The `bool` value to store.
-  static Future<void> setBool(
-    String key,
-    bool value,
-  ) =>
+  static Future<void> setBool(String key, bool value) =>
       setString(key, value.toString());
 
   /***************************General***************************/

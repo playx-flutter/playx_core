@@ -3,59 +3,15 @@ import 'dart:typed_data';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../models/secure_prefs_settings.dart';
-import 'cipher/secure_cipher.dart';
-import 'secure_log.dart';
+import '../crypto/secure_cipher.dart';
+import '../secure_log.dart';
+import '../settings/secure_storage_type.dart';
 import 'secure_storage_backend.dart';
+import 'secure_storage_journal.dart';
 
 /// Returns a healthy backend of [type], or `null` if it is unavailable.
 typedef SecureBackendProvider =
     Future<PlayxSecureStorageBackend?> Function(PlayxSecureStorageType type);
-
-/// Bookkeeping that lets [AutoSecureStorageBackend] move data written to a
-/// fallback backend back to the preferred one without resurrecting stale,
-/// removed or cleared values.
-///
-/// Stored as JSON in preferences. It only contains key names and backend
-/// names, never values. When key names are hidden
-/// ([PlayxSecurePrefsSettings.encryptKeys]), it is encrypted with a
-/// per-device key kept in preferences, which obfuscates the names.
-class SecureStorageJournal {
-  /// Fallback backends that may hold values to move to the preferred backend,
-  /// oldest first.
-  final List<String> pendingStores;
-
-  /// Backends that missed a `clear()` and must be cleared once reachable.
-  final Set<String> pendingClear;
-
-  /// Backend holding the latest value of each key touched while the journal
-  /// is active, or `null` if the latest operation removed it.
-  final Map<String, String?> lastWriter;
-
-  SecureStorageJournal({
-    List<String>? pendingStores,
-    Set<String>? pendingClear,
-    Map<String, String?>? lastWriter,
-  }) : pendingStores = pendingStores ?? [],
-       pendingClear = pendingClear ?? {},
-       lastWriter = lastWriter ?? {};
-
-  bool get isEmpty =>
-      pendingStores.isEmpty && pendingClear.isEmpty && lastWriter.isEmpty;
-
-  factory SecureStorageJournal.fromJson(Map<String, dynamic> json) =>
-      SecureStorageJournal(
-        pendingStores: List<String>.from(json['pendingStores'] as List),
-        pendingClear: Set<String>.from(json['pendingClear'] as List),
-        lastWriter: Map<String, String?>.from(json['lastWriter'] as Map),
-      );
-
-  Map<String, dynamic> toJson() => {
-    'pendingStores': pendingStores,
-    'pendingClear': pendingClear.toList(),
-    'lastWriter': lastWriter,
-  };
-}
 
 /// Wraps the backend selected by [PlayxSecureStorageType.auto] and keeps the
 /// [SecureStorageJournal] up to date.
@@ -204,9 +160,7 @@ class AutoSecureStorageBackend implements PlayxSecureStorageBackend {
         await cipher.decrypt(base64Decode(parts[0]), base64Decode(parts[1])),
       );
     }
-    return SecureStorageJournal.fromJson(
-      jsonDecode(json) as Map<String, dynamic>,
-    );
+    return SecureStorageJournal.fromJson(jsonDecode(json));
   }
 
   SecureCipher? _cachedJournalCipher;

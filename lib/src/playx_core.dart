@@ -7,13 +7,13 @@ import 'package:worker_manager/worker_manager.dart';
 
 import 'models/envs_settings.dart';
 import 'models/prefs_settings.dart';
-import 'models/secure_prefs_settings.dart';
 import 'models/work_manager_settings.dart';
 import 'prefs/async_prefs.dart';
 import 'prefs/envs.dart';
 import 'prefs/prefs.dart';
 import 'prefs/prefs_with_cache.dart';
-import 'prefs/secure_prefs.dart';
+import 'prefs/secure/secure_prefs.dart';
+import 'prefs/secure/settings/secure_prefs_settings.dart';
 
 /// Returns the instance of `GetIt` used by the `playx_core` plugin.
 ///
