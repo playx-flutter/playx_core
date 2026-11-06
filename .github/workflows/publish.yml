@@ -11,18 +11,22 @@ jobs:
   publish:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v2
-      - name: Install Flutter
-        uses: subosito/flutter-action@v2
-      - name: Install dependencies
-        run: flutter pub get
-      - name: Format code
-        run: dart format .
-      - name: 'Publish package'
-        uses: k-paxian/dart-package-publisher@master
+      - uses: actions/checkout@v7
+
+      # Publishes only when the version in pubspec.yaml differs from the one on
+      # pub.dev, so merging a pull request without a version bump doesn't fail.
+      # The action runs in its own container with its own Flutter SDK (stable),
+      # and publishes the files exactly as committed (`format` is off).
+      #
+      # Pinned to the commit `master` pointed to when this was written. To
+      # publish without a stored secret, see "Automated publishing" in the
+      # pub.dev admin page of the package.
+      - name: Publish package
+        uses: k-paxian/dart-package-publisher@v.1.6.2
         with:
           credentialJson: ${{ secrets.CREDENTIAL_JSON }}
           flutter: true
           skipTests: true
-          environment: pub.dev
