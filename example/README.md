@@ -46,7 +46,7 @@ In CI, the values can come from environment variables instead of the file:
 PLAYX_SECRET_STRIPE_KEY=pk_live_... dart run playx_core:secure_env --no-file --from-env-prefix PLAYX_SECRET_
 ```
 
-See the [playx_core README](../README.md#sensitive-values-secure-env) for all options.
+See the [secure env guide](../doc/secure-env.md) for all options.
 
 ## Test
 

@@ -79,3 +79,6 @@
 
 # Test coverage output
 coverage/
+
+# Documentation site output (mkdocs build)
+site/
