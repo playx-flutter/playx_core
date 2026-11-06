@@ -36,10 +36,10 @@ class PlayxLoggerSettings {
   /// ```
   final Map<LogLevel, AnsiPen> colors = _defaultColors;
 
-  /// When [name] is not null, it will be used as a prefix for all logs
+  /// Currently has no effect: the logger name is always used as a prefix.
   final bool printLoggerName;
 
-  /// Whether to print the date and time in the log
+  /// Currently has no effect: no date or time is added to the log.
   final bool printDateTime;
 
   /// Current log level
@@ -52,7 +52,7 @@ class PlayxLoggerSettings {
   /// Maximum width of the lower border
   final int maxLineWidth;
 
-  /// You can setup different formatter [ExtendedLoggerFormatter, ColoredLoggerFormatter]
+  /// You can setup different formatter (`ExtendedLoggerFormatter`, `ColoredLoggerFormatter`)
   /// Or your own fully customized formatter with extends [LoggerFormatter]
   final LoggerFormatter formatter;
 

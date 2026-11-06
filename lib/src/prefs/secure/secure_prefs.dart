@@ -335,8 +335,7 @@ abstract class PlayxSecurePrefs {
   static Future<Map<String, dynamic>> getMap(
     String key, {
     Map<String, dynamic> fallback = const {},
-  }) async =>
-      await maybeGetMap(key) ?? fallback;
+  }) async => await maybeGetMap(key) ?? fallback;
 
   /// Stores [value] under [key] as a JSON string.
   ///
@@ -365,8 +364,7 @@ abstract class PlayxSecurePrefs {
     String key, {
     List<T> fallback = const [],
     T Function(dynamic json)? fromJson,
-  }) async =>
-      await maybeGetList<T>(key, fromJson: fromJson) ?? fallback;
+  }) async => await maybeGetList<T>(key, fromJson: fromJson) ?? fallback;
 
   /// Stores [value] under [key] as a JSON array, converting each item with
   /// [toJson] if provided.
@@ -377,8 +375,7 @@ abstract class PlayxSecurePrefs {
     String key,
     List<T> value, {
     Object? Function(T item)? toJson,
-  }) =>
-      setString(key, encodeJsonList(value, toJson));
+  }) => setString(key, encodeJsonList(value, toJson));
 
   /***************************Object***************************/
 
@@ -399,8 +396,7 @@ abstract class PlayxSecurePrefs {
     String key, {
     required T Function(dynamic json) fromJson,
     required T fallback,
-  }) async =>
-      await maybeGetObject<T>(key, fromJson: fromJson) ?? fallback;
+  }) async => await maybeGetObject<T>(key, fromJson: fromJson) ?? fallback;
 
   /// Stores [value] under [key] as the JSON returned by [toJson].
   ///
@@ -409,8 +405,7 @@ abstract class PlayxSecurePrefs {
     String key,
     T value, {
     required Object? Function(T value) toJson,
-  }) =>
-      setString(key, encodeJsonValue(toJson(value)));
+  }) => setString(key, encodeJsonValue(toJson(value)));
 
   /***************************General***************************/
 

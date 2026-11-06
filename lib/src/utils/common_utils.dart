@@ -14,22 +14,21 @@ void setStatusBarColor({
     SystemUiOverlayStyle(
       statusBarColor: color,
       statusBarIconBrightness: isDark ? Brightness.dark : Brightness.light,
-      statusBarBrightness:
-          isDark ? Brightness.light : Brightness.dark, // for iOS
+      statusBarBrightness: isDark
+          ? Brightness.light
+          : Brightness.dark, // for iOS
     ),
   );
 }
 
 /// Sets the navigation bar color and icon brightness (usually at the bottom).
-void setNavigationBarColor({
-  Color color = Colors.black,
-  bool isDark = false,
-}) {
+void setNavigationBarColor({Color color = Colors.black, bool isDark = false}) {
   SystemChrome.setSystemUIOverlayStyle(
     SystemUiOverlayStyle(
       systemNavigationBarColor: color,
-      systemNavigationBarIconBrightness:
-          isDark ? Brightness.dark : Brightness.light,
+      systemNavigationBarIconBrightness: isDark
+          ? Brightness.dark
+          : Brightness.light,
     ),
   );
 }
@@ -44,10 +43,7 @@ void setNavigationBarColor({
 /// - Portrait with upside down: `setOrientation(allowRotation: true)`
 /// - Landscape only: `setOrientation(isPortrait: false)`
 /// - Landscape with both directions: `setOrientation(isPortrait: false, allowRotation: true)`
-void setOrientation({
-  bool isPortrait = true,
-  bool allowRotation = false,
-}) {
+void setOrientation({bool isPortrait = true, bool allowRotation = false}) {
   final orientations = <DeviceOrientation>[];
 
   if (isPortrait) {

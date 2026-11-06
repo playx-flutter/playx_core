@@ -1168,17 +1168,20 @@ void main() {
       expect(simple.data[encryptionKeyName], isNull);
     });
 
-    test('an invalid key in the first store is skipped, not replaced', () async {
-      simple.data[encryptionKeyName] = 'garbage';
-      await start(PlayxSecureStorageType.encryptedPrefs);
-      await PlayxSecurePrefs.setString('token', 'abc');
+    test(
+      'an invalid key in the first store is skipped, not replaced',
+      () async {
+        simple.data[encryptionKeyName] = 'garbage';
+        await start(PlayxSecureStorageType.encryptedPrefs);
+        await PlayxSecurePrefs.setString('token', 'abc');
 
-      expect(simple.data[encryptionKeyName], 'garbage');
-      expect(fss.data[encryptionKeyName], isNotNull);
-      expect(await prefs.getString(keyStoreMarker), 'flutterSecureStorage');
-      expect(await prefs.getString('playx_secure_token'), startsWith('p:'));
-      expect(await PlayxSecurePrefs.getString('token'), 'abc');
-    });
+        expect(simple.data[encryptionKeyName], 'garbage');
+        expect(fss.data[encryptionKeyName], isNotNull);
+        expect(await prefs.getString(keyStoreMarker), 'flutterSecureStorage');
+        expect(await prefs.getString('playx_secure_token'), startsWith('p:'));
+        expect(await PlayxSecurePrefs.getString('token'), 'abc');
+      },
+    );
 
     test('an invalid key in the marked store is left untouched', () async {
       await start(PlayxSecureStorageType.encryptedPrefs);
@@ -1204,39 +1207,43 @@ void main() {
       expect(await PlayxSecurePrefs.maybeGetString('bad'), isNull);
     });
 
-    test('a plain value written after enabling encryptKeys still wins', () async {
-      await start(PlayxSecureStorageType.encryptedPrefs);
-      await PlayxSecurePrefs.setString('a', 'plain');
-      final plainPayload = (await prefs.getString('playx_secure_a'))!;
+    test(
+      'a plain value written after enabling encryptKeys still wins',
+      () async {
+        await start(PlayxSecureStorageType.encryptedPrefs);
+        await PlayxSecurePrefs.setString('a', 'plain');
+        final plainPayload = (await prefs.getString('playx_secure_a'))!;
 
-      await start(PlayxSecureStorageType.encryptedPrefs, encryptKeys: true);
-      expect(await PlayxSecurePrefs.getString('a'), 'plain');
-      await PlayxSecurePrefs.setString('a', 'hidden');
+        await start(PlayxSecureStorageType.encryptedPrefs, encryptKeys: true);
+        expect(await PlayxSecurePrefs.getString('a'), 'plain');
+        await PlayxSecurePrefs.setString('a', 'hidden');
 
-      // A plain entry reappears, e.g. written by an older app version.
-      await prefs.setString('playx_secure_a', plainPayload);
-      expect(await PlayxSecurePrefs.getString('a'), 'plain');
-    });
+        // A plain entry reappears, e.g. written by an older app version.
+        await prefs.setString('playx_secure_a', plainPayload);
+        expect(await PlayxSecurePrefs.getString('a'), 'plain');
+      },
+    );
   });
 
   group('flutter_secure_storage name hashing edge cases', () {
     const hashKey = '_playx_secure_key_names_key_';
 
-    Future<void> startFss() => start(
-      PlayxSecureStorageType.flutterSecureStorage,
-      encryptKeys: true,
+    Future<void> startFss() =>
+        start(PlayxSecureStorageType.flutterSecureStorage, encryptKeys: true);
+
+    test(
+      'an invalid hashing key is replaced and entries are re-hashed',
+      () async {
+        await startFss();
+        await PlayxSecurePrefs.setString('a', '1');
+
+        fss.data[hashKey] = '%%% not a key';
+        await startFss();
+        expect(await PlayxSecurePrefs.getString('a'), '1');
+        expect(fss.data[hashKey], isNot('%%% not a key'));
+        expect(fss.data[hashKey], isNotNull);
+      },
     );
-
-    test('an invalid hashing key is replaced and entries are re-hashed', () async {
-      await startFss();
-      await PlayxSecurePrefs.setString('a', '1');
-
-      fss.data[hashKey] = '%%% not a key';
-      await startFss();
-      expect(await PlayxSecurePrefs.getString('a'), '1');
-      expect(fss.data[hashKey], isNot('%%% not a key'));
-      expect(fss.data[hashKey], isNotNull);
-    });
 
     test('invalid hashed entries are ignored', () async {
       fss.data['_playx_k_broken'] = 'not json';
@@ -1248,13 +1255,16 @@ void main() {
       expect(fss.data['_playx_k_broken'], 'not json');
     });
 
-    test('plain and hashed entries of the same name keep the hashed value', () async {
-      await startFss();
-      await PlayxSecurePrefs.setString('a', 'hashed');
-      fss.data['a'] = 'plain';
+    test(
+      'plain and hashed entries of the same name keep the hashed value',
+      () async {
+        await startFss();
+        await PlayxSecurePrefs.setString('a', 'hashed');
+        fss.data['a'] = 'plain';
 
-      expect(await PlayxSecurePrefs.getString('a'), 'hashed');
-    });
+        expect(await PlayxSecurePrefs.getString('a'), 'hashed');
+      },
+    );
   });
 
   group('auto journal edge cases', () {
@@ -1272,21 +1282,24 @@ void main() {
       expect(await prefs.getString(journalKey), 'not-a-journal:payload');
     });
 
-    test('turning off key hiding for flutter_secure_storage restores names', () async {
-      await start(
-        PlayxSecureStorageType.flutterSecureStorage,
-        encryptKeys: true,
-      );
-      await PlayxSecurePrefs.setString('a', '1');
-      await PlayxSecurePrefs.setString('b', '2');
-      // A plain entry of the same name written directly is kept, not replaced.
-      fss.data['a'] = 'plain';
+    test(
+      'turning off key hiding for flutter_secure_storage restores names',
+      () async {
+        await start(
+          PlayxSecureStorageType.flutterSecureStorage,
+          encryptKeys: true,
+        );
+        await PlayxSecurePrefs.setString('a', '1');
+        await PlayxSecurePrefs.setString('b', '2');
+        // A plain entry of the same name written directly is kept, not replaced.
+        fss.data['a'] = 'plain';
 
-      await start(PlayxSecureStorageType.flutterSecureStorage);
-      expect(await PlayxSecurePrefs.getString('a'), 'plain');
-      expect(await PlayxSecurePrefs.getString('b'), '2');
-      expect(fss.data.keys.where((k) => k.startsWith('_playx_k_')), isEmpty);
-      expect(fss.data.containsKey('_playx_secure_key_names_key_'), isFalse);
-    });
+        await start(PlayxSecureStorageType.flutterSecureStorage);
+        expect(await PlayxSecurePrefs.getString('a'), 'plain');
+        expect(await PlayxSecurePrefs.getString('b'), '2');
+        expect(fss.data.keys.where((k) => k.startsWith('_playx_k_')), isEmpty);
+        expect(fss.data.containsKey('_playx_secure_key_names_key_'), isFalse);
+      },
+    );
   });
 }

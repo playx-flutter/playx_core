@@ -68,8 +68,11 @@ class MapUtils {
       return res;
     } catch (e, s) {
       if (printError) {
-        PlayxCore.logger
-            .error('MapAsyncInIsolate Error', error: e, stackTrace: s);
+        PlayxCore.logger.error(
+          'MapAsyncInIsolate Error',
+          error: e,
+          stackTrace: s,
+        );
       }
       if (onError != null) {
         return onError(data, e, s);
@@ -91,15 +94,15 @@ extension MapAsync<T> on T {
     required Mapper<T, S> mapper,
     bool printError = kDebugMode,
     MapOnError<T, S>? onError,
-  }) =>
-      MapUtils.mapAsync(
-          data: this,
-          mapper: mapper,
-          printError: printError,
-          onError: onError);
+  }) => MapUtils.mapAsync(
+    data: this,
+    mapper: mapper,
+    printError: printError,
+    onError: onError,
+  );
 
   //// Maps the value of the [T] to a new value in an isolate.
-  /// If [useWorkManager] is set to true, it will use [WorkerManager] to execute the task.
+  /// If [useWorkManager] is set to true, it will use `workerManager` to execute the task.
   /// Otherwise, it will use [compute] to execute the task.
   ///
   /// If [onError] is provided, any error thrown while running [mapper] (or
@@ -112,11 +115,11 @@ extension MapAsync<T> on T {
     bool useWorkManager = true,
     bool printError = kDebugMode,
     MapOnError<T, S>? onError,
-  }) =>
-      MapUtils.mapAsyncInIsolate(
-          data: this,
-          mapper: mapper,
-          useWorkManager: useWorkManager,
-          printError: printError,
-          onError: onError);
+  }) => MapUtils.mapAsyncInIsolate(
+    data: this,
+    mapper: mapper,
+    useWorkManager: useWorkManager,
+    printError: printError,
+    onError: onError,
+  );
 }

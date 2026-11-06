@@ -30,26 +30,17 @@ extension PlayxColorExtensions on Color {
 
   /// Returns a new color object by updating the alpha, red, green, or blue value of the current color.
   /// Uses [double] values from 0.0 to 1.0.
-  Color copyWith({
-    double? alpha,
-    double? red,
-    double? green,
-    double? blue,
-  }) {
-    return withValues(
-      alpha: alpha,
-      red: red,
-      green: green,
-      blue: blue,
-    );
+  Color copyWith({double? alpha, double? red, double? green, double? blue}) {
+    return withValues(alpha: alpha, red: red, green: green, blue: blue);
   }
 
   /// Lightens the color by a given [amount] (0.0 to 1.0).
   Color lighten([double amount = .1]) {
     assert(amount >= 0 && amount <= 1);
     final hsl = HSLColor.fromColor(this);
-    final hslLight =
-        hsl.withLightness((hsl.lightness + amount).clamp(0.0, 1.0));
+    final hslLight = hsl.withLightness(
+      (hsl.lightness + amount).clamp(0.0, 1.0),
+    );
     return hslLight.toColor();
   }
 

@@ -4,18 +4,20 @@ import 'package:playx_core/src/extensions/string_extensions.dart';
 void main() {
   group('String Extensions Test', () {
     test(
-        'capitalizeFirstChar returns the string with the first character capitalized',
-        () {
-      final string = "hello".capitalizeFirstChar;
-      expect(string, "Hello");
-    });
+      'capitalizeFirstChar returns the string with the first character capitalized',
+      () {
+        final string = "hello".capitalizeFirstChar;
+        expect(string, "Hello");
+      },
+    );
 
     test(
-        'capitalizeFirstCharForEachWord returns the string with the first character of each word capitalized',
-        () {
-      final string = "hello world".capitalizeFirstCharForEachWord;
-      expect(string, "Hello World");
-    });
+      'capitalizeFirstCharForEachWord returns the string with the first character of each word capitalized',
+      () {
+        final string = "hello world".capitalizeFirstCharForEachWord;
+        expect(string, "Hello World");
+      },
+    );
 
     test('format returns the formatted string', () {
       final string = "Hello %s".format(["World"]);
@@ -43,11 +45,12 @@ void main() {
     });
 
     test(
-        'anyChar returns true if at least one character satisfies the predicate',
-        () {
-      const string = "hello";
-      expect(string.anyChar((s) => s == "h"), true);
-    });
+      'anyChar returns true if at least one character satisfies the predicate',
+      () {
+        const string = "hello";
+        expect(string.anyChar((s) => s == "h"), true);
+      },
+    );
 
     test('lastOrEmpty returns the last character of the string', () {
       const string = "hello";
@@ -65,18 +68,20 @@ void main() {
     });
 
     test(
-        'replaceAfter returns the string after replacing the part of the string after the first occurrence of the delimiter with the replacement string',
-        () {
-      const string = "hello-world";
-      expect(string.replaceAfter("-", "test"), "hello-test");
-    });
+      'replaceAfter returns the string after replacing the part of the string after the first occurrence of the delimiter with the replacement string',
+      () {
+        const string = "hello-world";
+        expect(string.replaceAfter("-", "test"), "hello-test");
+      },
+    );
 
     test(
-        'replaceBefore returns the string after replacing the part of the string before the first occurrence of the delimiter with the replacement string',
-        () {
-      const string = "hello world";
-      expect(string.replaceBefore(" ", "test"), "test world");
-    });
+      'replaceBefore returns the string after replacing the part of the string before the first occurrence of the delimiter with the replacement string',
+      () {
+        const string = "hello world";
+        expect(string.replaceBefore(" ", "test"), "test world");
+      },
+    );
   });
 
   group('parsing and checks', () {

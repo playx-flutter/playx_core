@@ -38,23 +38,27 @@ void main() {
       expect(duration.toRemainingHours(), '08');
     });
 
-    test('toRemainingMinutes() returns the reminder of duration in minutes',
-        () {
-      const duration = Duration(hours: 9, minutes: 8);
-      expect(duration.toRemainingMinutes(), '08');
-    });
-
-    test('toRemainingSeconds() returns the reminder of duration in seconds',
-        () {
-      const duration = Duration(minutes: 9, seconds: 8);
-      expect(duration.toRemainingSeconds(), '08');
-    });
+    test(
+      'toRemainingMinutes() returns the reminder of duration in minutes',
+      () {
+        const duration = Duration(hours: 9, minutes: 8);
+        expect(duration.toRemainingMinutes(), '08');
+      },
+    );
 
     test(
-        'toFormattedDuration() returns the formatted duration in days, hours, minutes and seconds ',
-        () {
-      const duration = Duration(days: 6, hours: 8, minutes: 9, seconds: 8);
-      expect(
+      'toRemainingSeconds() returns the reminder of duration in seconds',
+      () {
+        const duration = Duration(minutes: 9, seconds: 8);
+        expect(duration.toRemainingSeconds(), '08');
+      },
+    );
+
+    test(
+      'toFormattedDuration() returns the formatted duration in days, hours, minutes and seconds ',
+      () {
+        const duration = Duration(days: 6, hours: 8, minutes: 9, seconds: 8);
+        expect(
           duration.toFormattedDuration(
             days: 'd',
             hours: 'h',
@@ -62,8 +66,10 @@ void main() {
             seconds: 's',
             spacer: ' : ',
           ),
-          '06 d : 08 h : 09 m : 08 s');
-    });
+          '06 d : 08 h : 09 m : 08 s',
+        );
+      },
+    );
   });
 
   group('remaining values and formatting', () {

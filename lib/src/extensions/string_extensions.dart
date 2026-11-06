@@ -43,9 +43,9 @@ extension StringExtensions on String {
   ///Extension function to capitalize first character of each word of string.
   String get capitalizeFirstCharForEachWord {
     if (isEmpty) return this;
-    return split(' ')
-        .map((s) => s.isEmpty ? '' : s.capitalizeFirstChar)
-        .join(' ');
+    return split(
+      ' ',
+    ).map((s) => s.isEmpty ? '' : s.capitalizeFirstChar).join(' ');
   }
 
   /// Formats the string with the given [arguments].
@@ -84,7 +84,7 @@ extension StringExtensions on String {
   }
 
   /// Replaces part of string before the first occurrence of given delimiter with the [replacement] string.
-  ///  If the string does not contain the delimiter, returns [missingDelimiterValue!] which defaults to the original string.
+  ///  If the string does not contain the delimiter, returns [defaultValue] which defaults to the original string.
   String replaceBefore(
     String delimiter,
     String replacement, [
@@ -140,13 +140,13 @@ extension StringExtensions on String {
 
   /// Checks if the string is a valid email address.
   bool get isValidEmail => RegExp(
-          r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
-      .hasMatch(this);
+    r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+",
+  ).hasMatch(this);
 
   /// Checks if the string is a valid URL.
-  bool get isValidUrl =>
-      RegExp(r"^(https?:\/\/)?([\w\-]+\.)+[\w\-]+(\/[\w\-\.\/?\%&=]*)?$")
-          .hasMatch(this);
+  bool get isValidUrl => RegExp(
+    r"^(https?:\/\/)?([\w\-]+\.)+[\w\-]+(\/[\w\-\.\/?\%&=]*)?$",
+  ).hasMatch(this);
 
   /// Truncates the string if its length exceeds [maxLength], appending the [suffix].
   String limit(int maxLength, {String suffix = '...'}) {

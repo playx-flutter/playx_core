@@ -6,36 +6,24 @@ void main() {
     group('toInt()', () {
       test('toInt() returns 1 if true', () {
         final value = true.toInt();
-        expect(
-          value,
-          1,
-        );
+        expect(value, 1);
       });
 
       test('toInt() returns 0 if false', () {
         final value = false.toInt();
-        expect(
-          value,
-          0,
-        );
+        expect(value, 0);
       });
     });
 
     group('toggle()', () {
       test('toggle() returns false if value is true', () {
         final value = true.toggle();
-        expect(
-          value,
-          false,
-        );
+        expect(value, false);
       });
 
       test('toggle() returns true if value is false', () {
         final value = false.toggle();
-        expect(
-          value,
-          true,
-        );
+        expect(value, true);
       });
     });
   });

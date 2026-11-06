@@ -4,34 +4,32 @@ import 'package:playx_core/src/extensions/context/colors.dart';
 
 void main() {
   group('ContextColorsExtensions', () {
-    testWidgets('primaryColor returns the primary color',
-        (WidgetTester tester) async {
+    testWidgets('primaryColor returns the primary color', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           theme: ThemeData(primaryColor: const Color(0xFF00FF00)),
           home: Builder(
             builder: (context) {
               expect(context.primaryColor, const Color(0xFF00FF00));
-              return Container(
-                color: context.primaryColor,
-              );
+              return Container(color: context.primaryColor);
             },
           ),
         ),
       );
     });
 
-    testWidgets('primaryColorDark returns the primary color dark',
-        (WidgetTester tester) async {
+    testWidgets('primaryColorDark returns the primary color dark', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           theme: ThemeData(primaryColorDark: const Color(0xFF00FF00)),
           home: Builder(
             builder: (context) {
               expect(context.primaryColorDark, const Color(0xFF00FF00));
-              return Container(
-                color: context.primaryColorDark,
-              );
+              return Container(color: context.primaryColorDark);
             },
           ),
         ),
@@ -40,31 +38,29 @@ void main() {
   });
 
   group('ContextColorsExtensions', () {
-    testWidgets('primaryColorLight returns the primary color light',
-        (WidgetTester tester) async {
+    testWidgets('primaryColorLight returns the primary color light', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           theme: ThemeData(primaryColorLight: const Color(0xFF00FF00)),
           home: Builder(
             builder: (context) {
               expect(context.primaryColorLight, const Color(0xFF00FF00));
-              return Container(
-                color: context.primaryColorLight,
-              );
+              return Container(color: context.primaryColorLight);
             },
           ),
         ),
       );
     });
 
-    testWidgets('backgroundColor returns the background color',
-        (WidgetTester tester) async {
+    testWidgets('backgroundColor returns the background color', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           theme: ThemeData(
-            colorScheme: const ColorScheme.light(
-              surface: Color(0xFF00FF00),
-            ),
+            colorScheme: const ColorScheme.light(surface: Color(0xFF00FF00)),
           ),
           home: Builder(
             builder: (context) {
@@ -77,8 +73,9 @@ void main() {
     });
   });
 
-  testWidgets('scaffoldBackgroundColor returns the scaffold background color',
-      (WidgetTester tester) async {
+  testWidgets('scaffoldBackgroundColor returns the scaffold background color', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         theme: ThemeData(scaffoldBackgroundColor: const Color(0xFF00FF00)),
@@ -92,13 +89,15 @@ void main() {
     );
   });
 
-  testWidgets('bottomAppBarColor returns the bottom app bar color',
-      (WidgetTester tester) async {
+  testWidgets('bottomAppBarColor returns the bottom app bar color', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         theme: ThemeData(
-          bottomAppBarTheme:
-              const BottomAppBarThemeData(color: Color(0xFF00FF00)),
+          bottomAppBarTheme: const BottomAppBarThemeData(
+            color: Color(0xFF00FF00),
+          ),
         ),
         home: Builder(
           builder: (context) {
@@ -124,8 +123,9 @@ void main() {
     );
   });
 
-  testWidgets('dividerColor returns the divider color',
-      (WidgetTester tester) async {
+  testWidgets('dividerColor returns the divider color', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         theme: ThemeData(dividerColor: const Color(0xFF00FF00)),
@@ -139,8 +139,9 @@ void main() {
     );
   });
 
-  testWidgets('disabledColor returns the disabled color',
-      (WidgetTester tester) async {
+  testWidgets('disabledColor returns the disabled color', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         theme: ThemeData(disabledColor: const Color(0xFF00FF00)),
@@ -154,8 +155,9 @@ void main() {
     );
   });
 
-  testWidgets('focusColor returns the focus color',
-      (WidgetTester tester) async {
+  testWidgets('focusColor returns the focus color', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         theme: ThemeData(focusColor: const Color(0xFF00FF00)),
@@ -169,8 +171,9 @@ void main() {
     );
   });
 
-  testWidgets('hoverColor returns the hover color',
-      (WidgetTester tester) async {
+  testWidgets('hoverColor returns the hover color', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         theme: ThemeData(hoverColor: const Color(0xFF00FF00)),
@@ -184,8 +187,9 @@ void main() {
     );
   });
 
-  testWidgets('highlightColor returns the highlight color',
-      (WidgetTester tester) async {
+  testWidgets('highlightColor returns the highlight color', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         theme: ThemeData(highlightColor: const Color(0xFF00FF00)),
@@ -199,8 +203,9 @@ void main() {
     );
   });
 
-  testWidgets('splashColor returns the splash color',
-      (WidgetTester tester) async {
+  testWidgets('splashColor returns the splash color', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         theme: ThemeData(splashColor: const Color(0xFF00FF00)),
@@ -214,8 +219,9 @@ void main() {
     );
   });
 
-  testWidgets('unselectedWidgetColor returns the unselected widget color',
-      (WidgetTester tester) async {
+  testWidgets('unselectedWidgetColor returns the unselected widget color', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         theme: ThemeData(unselectedWidgetColor: const Color(0xFF00FF00)),
@@ -229,8 +235,9 @@ void main() {
     );
   });
 
-  testWidgets('secondaryHeaderColor returns the secondary header color',
-      (WidgetTester tester) async {
+  testWidgets('secondaryHeaderColor returns the secondary header color', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         theme: ThemeData(secondaryHeaderColor: const Color(0xFF00FF00)),
@@ -258,14 +265,13 @@ void main() {
     );
   });
 
-  testWidgets('errorColor returns the error color',
-      (WidgetTester tester) async {
+  testWidgets('errorColor returns the error color', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         theme: ThemeData(
-          colorScheme: const ColorScheme.light(
-            error: Color(0xFF00FF00),
-          ),
+          colorScheme: const ColorScheme.light(error: Color(0xFF00FF00)),
         ),
         home: Builder(
           builder: (context) {
@@ -277,8 +283,9 @@ void main() {
     );
   });
 
-  testWidgets('colorScheme returns the color scheme',
-      (WidgetTester tester) async {
+  testWidgets('colorScheme returns the color scheme', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         theme: ThemeData(
@@ -296,17 +303,18 @@ void main() {
         home: Builder(
           builder: (context) {
             expect(
-                context.colorScheme,
-                const ColorScheme.light(
-                  primary: Color(0xFF00FF00),
-                  secondary: Color(0xFF00FF00),
-                  surface: Color(0xFF00FF00),
-                  onSurface: Color(0xFF00FF00),
-                  onError: Color(0xFF00FF00),
-                  onPrimary: Color(0xFF00FF00),
-                  onSecondary: Color(0xFF00FF00),
-                  error: Color(0xFF00FF00),
-                ));
+              context.colorScheme,
+              const ColorScheme.light(
+                primary: Color(0xFF00FF00),
+                secondary: Color(0xFF00FF00),
+                surface: Color(0xFF00FF00),
+                onSurface: Color(0xFF00FF00),
+                onError: Color(0xFF00FF00),
+                onPrimary: Color(0xFF00FF00),
+                onSecondary: Color(0xFF00FF00),
+                error: Color(0xFF00FF00),
+              ),
+            );
             return Container();
           },
         ),
@@ -314,14 +322,13 @@ void main() {
     );
   });
 
-  testWidgets('secondary returns the secondary color',
-      (WidgetTester tester) async {
+  testWidgets('secondary returns the secondary color', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         theme: ThemeData(
-          colorScheme: const ColorScheme.light(
-            secondary: Color(0xFF00FF00),
-          ),
+          colorScheme: const ColorScheme.light(secondary: Color(0xFF00FF00)),
         ),
         home: Builder(
           builder: (context) {
@@ -333,14 +340,13 @@ void main() {
     );
   });
 
-  testWidgets('buttonPrimaryColor returns the primary color',
-      (WidgetTester tester) async {
+  testWidgets('buttonPrimaryColor returns the primary color', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         theme: ThemeData(
-          colorScheme: const ColorScheme.light(
-            primary: Color(0xFF00FF00),
-          ),
+          colorScheme: const ColorScheme.light(primary: Color(0xFF00FF00)),
         ),
         home: Builder(
           builder: (context) {

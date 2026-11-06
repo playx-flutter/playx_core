@@ -176,8 +176,11 @@ DateTime asDateTimeOr(dynamic json, String key, {required DateTime fallback}) {
 /// Returns a local [DateTime] with current timezone if the value at [key] can be parsed, otherwise null.
 ///
 /// See [toLocalDateTimeOrNull] for [utcOffset].
-DateTime? asLocalDateTimeOrNull(dynamic json, String key,
-    {Duration? utcOffset}) {
+DateTime? asLocalDateTimeOrNull(
+  dynamic json,
+  String key, {
+  Duration? utcOffset,
+}) {
   final value = _getJsonValueOrNull(json, key);
   return toLocalDateTimeOrNull(value, utcOffset: utcOffset);
 }
@@ -194,8 +197,12 @@ DateTime asLocalDateTime(dynamic json, String key, {Duration? utcOffset}) {
 /// Returns a local [DateTime] for the value at [key], or [fallback] if parsing fails.
 ///
 /// See [toLocalDateTimeOrNull] for [utcOffset].
-DateTime asLocalDateTimeOr(dynamic json, String key,
-    {required DateTime fallback, Duration? utcOffset}) {
+DateTime asLocalDateTimeOr(
+  dynamic json,
+  String key, {
+  required DateTime fallback,
+  Duration? utcOffset,
+}) {
   final value = _getJsonValueOrNull(json, key);
   return toLocalDateTimeOr(value, fallback: fallback, utcOffset: utcOffset);
 }
@@ -218,8 +225,12 @@ T asEnum<T extends Enum>(dynamic json, String key, List<T> values) {
 }
 
 /// Returns an enum for the value at [key], or [fallback] if parsing fails.
-T asEnumOr<T extends Enum>(dynamic json, String key, List<T> values,
-    {required T fallback}) {
+T asEnumOr<T extends Enum>(
+  dynamic json,
+  String key,
+  List<T> values, {
+  required T fallback,
+}) {
   final value = _getJsonValueOrNull(json, key);
   return toEnumOr<T>(value, values, fallback: fallback);
 }
@@ -265,8 +276,11 @@ Map<T, S> asMap<T, S>(dynamic json, String key) {
 }
 
 /// Returns a Map for the value at [key], or [fallback] if conversion fails.
-Map<T, S> asMapOr<T, S>(dynamic json, String key,
-    {Map<T, S> fallback = const {}}) {
+Map<T, S> asMapOr<T, S>(
+  dynamic json,
+  String key, {
+  Map<T, S> fallback = const {},
+}) {
   final value = _getJsonValueOrNull(json, key);
   return toMapOr(value, fallback: fallback);
 }
@@ -276,26 +290,38 @@ Map<T, S> asMapOr<T, S>(dynamic json, String key,
 /// ====================
 
 /// Returns a List[int] if the value at [key] is a list of ints, otherwise null.
-List<int>? asListIntOrNull(dynamic json, String key,
-    {int Function(dynamic json)? fromJson}) {
-  final list = asListOrNull<dynamic>(json, key, fromJson: fromJson)
-      ?.map(toIntOrNull)
-      .toList();
+List<int>? asListIntOrNull(
+  dynamic json,
+  String key, {
+  int Function(dynamic json)? fromJson,
+}) {
+  final list = asListOrNull<dynamic>(
+    json,
+    key,
+    fromJson: fromJson,
+  )?.map(toIntOrNull).toList();
   if (list == null || list.any((element) => element == null)) return null;
   return list.whereType<int>().toList();
 }
 
 /// Returns a List[int] for the value at [key].
 /// Throws a [FormatException] if the value is not a list of ints.
-List<int> asListInt(dynamic json, String key,
-    {int Function(dynamic json)? fromJson}) {
+List<int> asListInt(
+  dynamic json,
+  String key, {
+  int Function(dynamic json)? fromJson,
+}) {
   return asListIntOrNull(json, key, fromJson: fromJson) ??
       (throw FormatException('Invalid List<int> value for key: $key'));
 }
 
 /// Returns a List[int] for the value at [key], or [fallback] if conversion fails.
-List<int> asListIntOr(dynamic json, String key,
-    {List<int> fallback = const [], int Function(dynamic json)? fromJson}) {
+List<int> asListIntOr(
+  dynamic json,
+  String key, {
+  List<int> fallback = const [],
+  int Function(dynamic json)? fromJson,
+}) {
   return asListIntOrNull(json, key, fromJson: fromJson) ?? fallback;
 }
 
@@ -304,27 +330,38 @@ List<int> asListIntOr(dynamic json, String key,
 /// ====================
 
 /// Returns a List if the value at [key] is a list of strings, otherwise null.
-List<String>? asListStringOrNull(dynamic json, String key,
-    {String Function(dynamic json)? fromJson}) {
-  final list = asListOrNull<dynamic>(json, key, fromJson: fromJson)
-      ?.map(toStringOrNull)
-      .toList();
+List<String>? asListStringOrNull(
+  dynamic json,
+  String key, {
+  String Function(dynamic json)? fromJson,
+}) {
+  final list = asListOrNull<dynamic>(
+    json,
+    key,
+    fromJson: fromJson,
+  )?.map(toStringOrNull).toList();
   if (list == null || list.any((element) => element == null)) return null;
   return list.whereType<String>().toList();
 }
 
 /// Returns a List for the value at [key].
 /// Throws a [FormatException] if the value is not a list of strings.
-List<String> asListString(dynamic json, String key,
-    {String Function(dynamic json)? fromJson}) {
+List<String> asListString(
+  dynamic json,
+  String key, {
+  String Function(dynamic json)? fromJson,
+}) {
   return asListStringOrNull(json, key, fromJson: fromJson) ??
       (throw FormatException('Invalid List<String> value for key: $key'));
 }
 
 /// Returns a List for the value at [key], or [fallback] if conversion fails.
-List<String> asListStringOr(dynamic json, String key,
-    {List<String> fallback = const [],
-    String Function(dynamic json)? fromJson}) {
+List<String> asListStringOr(
+  dynamic json,
+  String key, {
+  List<String> fallback = const [],
+  String Function(dynamic json)? fromJson,
+}) {
   return asListStringOrNull(json, key, fromJson: fromJson) ?? fallback;
 }
 
@@ -334,8 +371,11 @@ List<String> asListStringOr(dynamic json, String key,
 
 /// Converts the value at [key] to a List? using [fromJson].
 /// Returns null if conversion fails or any element cannot be converted.
-List<T>? asListOrNull<T>(dynamic json, String key,
-    {T Function(dynamic json)? fromJson}) {
+List<T>? asListOrNull<T>(
+  dynamic json,
+  String key, {
+  T Function(dynamic json)? fromJson,
+}) {
   final value = _getJsonValueOrNull(json, key);
   final list = toListOrNull<T>(value, fromJson: fromJson);
 
@@ -344,15 +384,22 @@ List<T>? asListOrNull<T>(dynamic json, String key,
 }
 
 /// Converts the value at [key] to a List.
-List<T> asList<T>(dynamic json, String key,
-    {T Function(dynamic json)? fromJson}) {
+List<T> asList<T>(
+  dynamic json,
+  String key, {
+  T Function(dynamic json)? fromJson,
+}) {
   return asListOrNull(json, key, fromJson: fromJson) ??
       (throw FormatException('Invalid List<$T> value for key: $key'));
 }
 
 /// Converts the value at [key] to a List.
-List<T> asListOr<T>(dynamic json, String key,
-    {List<T> fallback = const [], T Function(dynamic json)? fromJson}) {
+List<T> asListOr<T>(
+  dynamic json,
+  String key, {
+  List<T> fallback = const [],
+  T Function(dynamic json)? fromJson,
+}) {
   return asListOrNull(json, key, fromJson: fromJson) ?? fallback;
 }
 
@@ -363,8 +410,11 @@ List<T> asListOr<T>(dynamic json, String key,
 /// Converts the value at [key] to type T.
 /// Returns null if conversion fails.
 /// Supports custom [fromJson] function to convert the value.
-T? asTOrNull<T>(dynamic json, String key,
-    {T Function(dynamic json)? fromJson}) {
+T? asTOrNull<T>(
+  dynamic json,
+  String key, {
+  T Function(dynamic json)? fromJson,
+}) {
   final value = _getJsonValueOrNull(json, key);
   try {
     if (fromJson != null) return fromJson(value);
@@ -385,8 +435,12 @@ T? asTOrNull<T>(dynamic json, String key,
   return null;
 }
 
-T asTOr<T>(dynamic json, String key,
-    {T Function(dynamic json)? fromJson, required T fallback}) {
+T asTOr<T>(
+  dynamic json,
+  String key, {
+  T Function(dynamic json)? fromJson,
+  required T fallback,
+}) {
   return asTOrNull(json, key, fromJson: fromJson) ?? fallback;
 }
 

@@ -112,15 +112,17 @@ void main() {
       expect(result, 'ext:10');
     });
 
-    test('mapAsync returns fallback via onError instead of rethrowing',
-        () async {
-      final result = await 10.mapAsync<String>(
-        mapper: (_) => throw StateError('boom'),
-        printError: false,
-        onError: (data, error, stack) => 'ext-fallback:$data',
-      );
-      expect(result, 'ext-fallback:10');
-    });
+    test(
+      'mapAsync returns fallback via onError instead of rethrowing',
+      () async {
+        final result = await 10.mapAsync<String>(
+          mapper: (_) => throw StateError('boom'),
+          printError: false,
+          onError: (data, error, stack) => 'ext-fallback:$data',
+        );
+        expect(result, 'ext-fallback:10');
+      },
+    );
 
     test('mapAsyncInIsolate returns the mapped value on success', () async {
       final result = await 3.mapAsyncInIsolate<String>(
@@ -131,16 +133,18 @@ void main() {
       expect(result, 'iso-ext:3');
     });
 
-    test('mapAsyncInIsolate returns fallback via onError instead of rethrowing',
-        () async {
-      final result = await 3.mapAsyncInIsolate<String>(
-        mapper: (_) => throw StateError('boom'),
-        useWorkManager: false,
-        printError: false,
-        onError: (data, error, stack) => 'iso-ext-fallback:$data',
-      );
-      expect(result, 'iso-ext-fallback:3');
-    });
+    test(
+      'mapAsyncInIsolate returns fallback via onError instead of rethrowing',
+      () async {
+        final result = await 3.mapAsyncInIsolate<String>(
+          mapper: (_) => throw StateError('boom'),
+          useWorkManager: false,
+          printError: false,
+          onError: (data, error, stack) => 'iso-ext-fallback:$data',
+        );
+        expect(result, 'iso-ext-fallback:3');
+      },
+    );
 
     test('FutureOr mapper is awaited correctly', () async {
       FutureOr<String> mapper(int n) async => 'future-or:$n';

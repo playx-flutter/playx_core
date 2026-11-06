@@ -64,9 +64,7 @@ extension DateTimeExtensions on DateTime {
   bool get isYesterday => isSameDay(DateTime.now().previousDay);
 
   /// Checks whether the date is in the same day as the given [date]
-  bool isSameDay(
-    DateTime date,
-  ) =>
+  bool isSameDay(DateTime date) =>
       date.year == year && date.month == month && date.day == day;
 
   /// Returns the index of the day of the week
@@ -78,10 +76,7 @@ extension DateTimeExtensions on DateTime {
   }
 
   /// Checks whether the date is in the same week as the given [date]
-  bool isSameWeek({
-    required DateTime date,
-    Weekday firstDay = Weekday.monday,
-  }) {
+  bool isSameWeek({required DateTime date, Weekday firstDay = Weekday.monday}) {
     // Get the day of the week for both dates (from 0 to 6 where 0 is Monday and 6 is Sunday)
     final int dayOfWeek = date.dayOfTheWeekIndex(firstDay: firstDay);
     final int otherDayOfWeek = dayOfTheWeekIndex(firstDay: firstDay);
@@ -152,16 +147,15 @@ extension DateTimeExtensions on DateTime {
     int? minute,
     int? second,
     int? millisecond,
-  }) =>
-      DateTime(
-        year ?? this.year,
-        month ?? this.month,
-        day ?? this.day,
-        hour ?? this.hour,
-        minute ?? this.minute,
-        second ?? this.second,
-        millisecond ?? this.millisecond,
-      );
+  }) => DateTime(
+    year ?? this.year,
+    month ?? this.month,
+    day ?? this.day,
+    hour ?? this.hour,
+    minute ?? this.minute,
+    second ?? this.second,
+    millisecond ?? this.millisecond,
+  );
 
   /// Returns a new [DateTime] with the time set to the start of the day (00:00:00.000).
   /// This is functionally equivalent to [withoutTime].

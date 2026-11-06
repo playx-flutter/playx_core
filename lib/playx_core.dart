@@ -1,3 +1,25 @@
+/// The core of the PlayX ecosystem: preferences, secure storage, environment
+/// configuration, extensions, utilities and logging for Flutter apps.
+///
+/// Call [PlayxCore.bootCore] once before `runApp`, then use:
+///
+/// * [PlayxPrefs], [PlayxAsyncPrefs] and [PlayxPrefsWithCache] for typed
+///   key-value storage (including maps, lists and objects as JSON);
+/// * [PlayxSecurePrefs] for encrypted storage with a choice of backends,
+///   configured with [PlayxSecurePrefsSettings];
+/// * [PlayxEnv] for configuration from `.env` files, environments, flavors and
+///   `--dart-define` values, configured with [PlayxEnvSettings]; sensitive
+///   values can be encrypted with the `secure_env` command
+///   ([PlayxSecureEnvData]);
+/// * extensions on `String`, `Iterable`, `DateTime`, `Duration`, `Color`,
+///   `BuildContext` and more, plus safe conversion helpers such as
+///   [toIntOrNull] and [asStringOrNull];
+/// * [PlayxLogger] for logging.
+///
+/// Guides for every feature are available in the
+/// [documentation](https://github.com/playx-flutter/playx_core/tree/main/doc).
+library;
+
 export 'package:equatable/equatable.dart';
 export 'package:flutter_dotenv/flutter_dotenv.dart' show Parser;
 export 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -39,6 +61,7 @@ export 'src/prefs/prefs_with_cache.dart';
 export 'src/prefs/secure/secure_prefs.dart';
 export 'src/prefs/secure/settings/secure_prefs_settings.dart';
 export 'src/utils/app_scroll_behavior.dart';
+export 'src/utils/color_utils.dart';
 export 'src/utils/common_utils.dart';
 export 'src/utils/mapper_utilities.dart';
 export 'src/utils/playx_platform.dart';

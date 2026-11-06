@@ -16,8 +16,8 @@ extension LocaleExtensions on Locale {
   /// return the TextDirection base on the language
   TextDirection get direction =>
       _rtlLocales.contains(languageCode.toLowerCase())
-          ? TextDirection.rtl
-          : TextDirection.ltr;
+      ? TextDirection.rtl
+      : TextDirection.ltr;
 
   /// Check if the language is Arabic
   bool get isArabic => languageCode.toLowerCase() == 'ar';

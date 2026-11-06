@@ -111,10 +111,14 @@ void main() {
   group('DateTime conversion', () {
     test('toDateTimeOrNull', () {
       expect(toDateTimeOrNull(null), null);
-      expect(toDateTimeOrNull('2020-01-01T00:00:00Z'),
-          DateTime.parse('2020-01-01T00:00:00Z'));
-      expect(toDateTimeOrNull(1577836800000),
-          DateTime.fromMillisecondsSinceEpoch(1577836800000));
+      expect(
+        toDateTimeOrNull('2020-01-01T00:00:00Z'),
+        DateTime.parse('2020-01-01T00:00:00Z'),
+      );
+      expect(
+        toDateTimeOrNull(1577836800000),
+        DateTime.fromMillisecondsSinceEpoch(1577836800000),
+      );
       expect(toDateTimeOrNull('bad'), null);
     });
 
@@ -125,8 +129,10 @@ void main() {
 
     test('toDateTime', () {
       expect(() => toDateTime('bad'), throwsFormatException);
-      expect(toDateTime('2020-01-01T00:00:00Z'),
-          DateTime.parse('2020-01-01T00:00:00Z'));
+      expect(
+        toDateTime('2020-01-01T00:00:00Z'),
+        DateTime.parse('2020-01-01T00:00:00Z'),
+      );
     });
   });
 
@@ -134,10 +140,14 @@ void main() {
   group('Local DateTime conversion', () {
     test('toLocalDateTimeOrNull', () {
       expect(toLocalDateTimeOrNull(null), null);
-      expect(toLocalDateTimeOrNull('2020-01-01T00:00:00Z'),
-          DateTime.parse('2020-01-01T00:00:00Z').toLocal());
-      expect(toLocalDateTimeOrNull(1577836800000),
-          DateTime.fromMillisecondsSinceEpoch(1577836800000).toLocal());
+      expect(
+        toLocalDateTimeOrNull('2020-01-01T00:00:00Z'),
+        DateTime.parse('2020-01-01T00:00:00Z').toLocal(),
+      );
+      expect(
+        toLocalDateTimeOrNull(1577836800000),
+        DateTime.fromMillisecondsSinceEpoch(1577836800000).toLocal(),
+      );
       expect(toLocalDateTimeOrNull('bad'), null);
     });
 
@@ -148,8 +158,10 @@ void main() {
 
     test('toLocalDateTime', () {
       expect(() => toLocalDateTime('bad'), throwsFormatException);
-      expect(toLocalDateTime('2020-01-01T00:00:00Z'),
-          DateTime.parse('2020-01-01T00:00:00Z').toLocal());
+      expect(
+        toLocalDateTime('2020-01-01T00:00:00Z'),
+        DateTime.parse('2020-01-01T00:00:00Z').toLocal(),
+      );
     });
   });
 
@@ -195,13 +207,16 @@ void main() {
 
     test('toTOr', () {
       expect(
-          toTOr<int>('bad', fromJson: (v) => int.tryParse(v) ?? 0, fallback: 7),
-          0);
+        toTOr<int>('bad', fromJson: (v) => int.tryParse(v) ?? 0, fallback: 7),
+        0,
+      );
     });
 
     test('toT', () {
-      expect(() => toT<int>('bad', fromJson: (v) => throw FormatException()),
-          throwsFormatException);
+      expect(
+        () => toT<int>('bad', fromJson: (v) => throw FormatException()),
+        throwsFormatException,
+      );
       expect(toT<int>('5', fromJson: (v) => int.parse(v)), 5);
     });
   });
@@ -210,19 +225,27 @@ void main() {
     const saudi = Duration(hours: 3);
 
     test('reads values without a zone in the given offset', () {
-      final result = toLocalDateTimeOrNull('2024-05-01 10:00:00', utcOffset: saudi)!;
+      final result = toLocalDateTimeOrNull(
+        '2024-05-01 10:00:00',
+        utcOffset: saudi,
+      )!;
       expect(result.isUtc, isFalse);
       expect(result.toUtc(), DateTime.utc(2024, 5, 1, 7));
     });
 
     test('keeps values with a zone and epoch integers as they are', () {
       expect(
-        toLocalDateTimeOrNull('2024-05-01T10:00:00Z', utcOffset: saudi)!.toUtc(),
+        toLocalDateTimeOrNull(
+          '2024-05-01T10:00:00Z',
+          utcOffset: saudi,
+        )!.toUtc(),
         DateTime.utc(2024, 5, 1, 10),
       );
       expect(
-        toLocalDateTimeOrNull('2024-05-01T10:00:00+01:00', utcOffset: saudi)!
-            .toUtc(),
+        toLocalDateTimeOrNull(
+          '2024-05-01T10:00:00+01:00',
+          utcOffset: saudi,
+        )!.toUtc(),
         DateTime.utc(2024, 5, 1, 9),
       );
       final epoch = DateTime.utc(2024, 5, 1).millisecondsSinceEpoch;
@@ -234,14 +257,20 @@ void main() {
 
     test('works with the Or, throwing and JSON variants', () {
       final expected = DateTime.utc(2024, 5, 1, 7);
-      expect(toLocalDateTime('2024-05-01 10:00', utcOffset: saudi).toUtc(), expected);
+      expect(
+        toLocalDateTime('2024-05-01 10:00', utcOffset: saudi).toUtc(),
+        expected,
+      );
       expect(
         toLocalDateTimeOr('bad', fallback: DateTime(2000), utcOffset: saudi),
         DateTime(2000),
       );
       expect(
-        asLocalDateTimeOrNull({'at': '2024-05-01 10:00'}, 'at', utcOffset: saudi)!
-            .toUtc(),
+        asLocalDateTimeOrNull(
+          {'at': '2024-05-01 10:00'},
+          'at',
+          utcOffset: saudi,
+        )!.toUtc(),
         expected,
       );
     });

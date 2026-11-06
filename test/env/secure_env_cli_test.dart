@@ -344,12 +344,19 @@ void main() {
 
     test('a prefix without matches warns', () async {
       expect(
-        await run(
-          ['--no-file', '--define', 'A=1', '--from-env-prefix', 'NOPE_'],
-        ),
+        await run([
+          '--no-file',
+          '--define',
+          'A=1',
+          '--from-env-prefix',
+          'NOPE_',
+        ]),
         0,
       );
-      expect(err.toString(), contains('no environment variables start with NOPE_'));
+      expect(
+        err.toString(),
+        contains('no environment variables start with NOPE_'),
+      );
     });
 
     test('define --out rejects a file that is not JSON', () async {

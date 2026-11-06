@@ -12,8 +12,11 @@ class DefaultColoredLoggerFormatter implements LoggerFormatter {
     final msg = details.message?.toString() ?? '';
     if (!settings.enableColors || kIsWeb) return msg;
 
-    final coloredMsg =
-        msg.split('\n').map((e) => details.pen.write(e)).toList().join('\n');
+    final coloredMsg = msg
+        .split('\n')
+        .map((e) => details.pen.write(e))
+        .toList()
+        .join('\n');
     return coloredMsg;
   }
 }
@@ -23,7 +26,7 @@ class DefaultColoredLoggerFormatter implements LoggerFormatter {
 /// `PlayxLogger` acts as a singleton-like logging service that supports
 /// multiple named loggers while maintaining a default global logger for convenience.
 ///
-/// It wraps the [BaseLogger] interface and provides a default implementation
+/// It wraps the [PlayxBaseLogger] interface and provides a default implementation
 /// via [TalkerPlayxLogger], using the `talker_logger` package under the hood.
 ///
 /// Example usage:
@@ -31,7 +34,7 @@ class DefaultColoredLoggerFormatter implements LoggerFormatter {
 /// ```dart
 /// PlayxLogger.initLogger(
 ///   name: 'app',
-///   settings: PlayxLoggerSettings(name: 'AppLogger'),
+///   settings: PlayxLoggerSettings(enabled: true),
 /// );
 ///
 /// PlayxLogger.d('App started');
@@ -59,13 +62,15 @@ class PlayxLogger {
     bool useColoredFormatter = false,
   }) {
     final logger = TalkerPlayxLogger(
-        settings: settings ??
-            PlayxLoggerSettings(
-              formatter: useColoredFormatter
-                  ? DefaultColoredLoggerFormatter()
-                  : ExtendedLoggerFormatter(),
-            ),
-        name: name);
+      settings:
+          settings ??
+          PlayxLoggerSettings(
+            formatter: useColoredFormatter
+                ? DefaultColoredLoggerFormatter()
+                : ExtendedLoggerFormatter(),
+          ),
+      name: name,
+    );
     name ??= 'PLAYX LOGGER';
     _loggers[name] = logger;
 
@@ -104,14 +109,17 @@ class PlayxLogger {
       _defaultLogger?.warning(message, tag: tag);
 
   /// Logs an error-level [message] with optional [error], [stackTrace], and [tag].
-  static void error(dynamic message,
-          {Object? error, StackTrace? stackTrace, String? tag}) =>
-      _defaultLogger?.error(
-        message,
-        error: error,
-        stackTrace: stackTrace,
-        tag: tag,
-      );
+  static void error(
+    dynamic message, {
+    Object? error,
+    StackTrace? stackTrace,
+    String? tag,
+  }) => _defaultLogger?.error(
+    message,
+    error: error,
+    stackTrace: stackTrace,
+    tag: tag,
+  );
 
   /// Logs a critical-level [message] with optional [tag].
   static void critical(dynamic message, {String? tag}) =>
@@ -134,14 +142,17 @@ class PlayxLogger {
       _defaultLogger?.warning(message, tag: tag);
 
   /// Alias for [error]
-  static void e(dynamic message,
-          {Object? error, StackTrace? stackTrace, String? tag}) =>
-      _defaultLogger?.error(
-        message,
-        error: error,
-        stackTrace: stackTrace,
-        tag: tag,
-      );
+  static void e(
+    dynamic message, {
+    Object? error,
+    StackTrace? stackTrace,
+    String? tag,
+  }) => _defaultLogger?.error(
+    message,
+    error: error,
+    stackTrace: stackTrace,
+    tag: tag,
+  );
 
   /// Alias for [critical]
   static void c(dynamic message, {String? tag}) =>

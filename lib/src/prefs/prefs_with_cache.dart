@@ -25,7 +25,8 @@ abstract class PlayxPrefsWithCache {
   static SharedPreferencesWithCache get sharedPrefs {
     if (_sharedPrefs == null) {
       throw Exception(
-          'SharedPreferencesWithCache is not initialized. Please call create() first.');
+        'SharedPreferencesWithCache is not initialized. Please call create() first.',
+      );
     }
     return _sharedPrefs!;
   }
@@ -40,8 +41,9 @@ abstract class PlayxPrefsWithCache {
     SharedPreferencesWithCacheOptions options =
         const SharedPreferencesWithCacheOptions(),
   }) async {
-    _sharedPrefs =
-        await SharedPreferencesWithCache.create(cacheOptions: options);
+    _sharedPrefs = await SharedPreferencesWithCache.create(
+      cacheOptions: options,
+    );
     return _sharedPrefs!;
   }
 
@@ -52,9 +54,7 @@ abstract class PlayxPrefsWithCache {
   /// Returns `null` if the key does not exist or if an error occurs.
   ///
   /// - [key]: The key of the value to retrieve.
-  static String? maybeGetString(
-    String key,
-  ) {
+  static String? maybeGetString(String key) {
     try {
       return sharedPrefs.getString(key);
     } catch (_) {
@@ -69,20 +69,14 @@ abstract class PlayxPrefsWithCache {
   ///
   /// - [key]: The key of the value to retrieve.
   /// - [fallback]: The value to return if the key does not exist or an error occurs.
-  static String getString(
-    String key, {
-    String fallback = '',
-  }) =>
+  static String getString(String key, {String fallback = ''}) =>
       maybeGetString(key) ?? fallback;
 
   /// Sets the value associated with the given [key] as a `String`.
   ///
   /// - [key]: The key under which the value will be stored.
   /// - [value]: The `String` value to store.
-  static Future<void> setString(
-    String key,
-    String value,
-  ) =>
+  static Future<void> setString(String key, String value) =>
       sharedPrefs.setString(key, value);
 
   /***************************int***************************/
@@ -92,9 +86,7 @@ abstract class PlayxPrefsWithCache {
   /// Returns `null` if the key does not exist or if an error occurs.
   ///
   /// - [key]: The key of the value to retrieve.
-  static int? maybeGetInt(
-    String key,
-  ) {
+  static int? maybeGetInt(String key) {
     try {
       return sharedPrefs.getInt(key);
     } catch (_) {
@@ -108,20 +100,14 @@ abstract class PlayxPrefsWithCache {
   ///
   /// - [key]: The key of the value to retrieve.
   /// - [fallback]: The value to return if the key does not exist or an error occurs.
-  static int getInt(
-    String key, {
-    int fallback = -1,
-  }) =>
+  static int getInt(String key, {int fallback = -1}) =>
       maybeGetInt(key) ?? fallback;
 
   /// Sets the value associated with the given [key] as an `int`.
   ///
   /// - [key]: The key under which the value will be stored.
   /// - [value]: The `int` value to store.
-  static Future<void> setInt(
-    String key,
-    int value,
-  ) =>
+  static Future<void> setInt(String key, int value) =>
       sharedPrefs.setInt(key, value);
 
   /***************************double***************************/
@@ -131,9 +117,7 @@ abstract class PlayxPrefsWithCache {
   /// Returns `null` if the key does not exist or if an error occurs.
   ///
   /// - [key]: The key of the value to retrieve.
-  static double? maybeGetDouble(
-    String key,
-  ) {
+  static double? maybeGetDouble(String key) {
     try {
       return sharedPrefs.getDouble(key);
     } catch (_) {
@@ -147,20 +131,14 @@ abstract class PlayxPrefsWithCache {
   ///
   /// - [key]: The key of the value to retrieve.
   /// - [fallback]: The value to return if the key does not exist or an error occurs.
-  static double getDouble(
-    String key, {
-    double fallback = -1,
-  }) =>
+  static double getDouble(String key, {double fallback = -1}) =>
       maybeGetDouble(key) ?? fallback;
 
   /// Sets the value associated with the given [key] as a `double`.
   ///
   /// - [key]: The key under which the value will be stored.
   /// - [value]: The `double` value to store.
-  static Future<void> setDouble(
-    String key,
-    double value,
-  ) =>
+  static Future<void> setDouble(String key, double value) =>
       sharedPrefs.setDouble(key, value);
 
   /***************************bool***************************/
@@ -170,9 +148,7 @@ abstract class PlayxPrefsWithCache {
   /// Returns `null` if the key does not exist or if an error occurs.
   ///
   /// - [key]: The key of the value to retrieve.
-  static bool? maybeGetBool(
-    String key,
-  ) {
+  static bool? maybeGetBool(String key) {
     try {
       return sharedPrefs.getBool(key);
     } catch (_) {
@@ -186,20 +162,14 @@ abstract class PlayxPrefsWithCache {
   ///
   /// - [key]: The key of the value to retrieve.
   /// - [fallback]: The value to return if the key does not exist or an error occurs.
-  static bool getBool(
-    String key, {
-    bool fallback = false,
-  }) =>
+  static bool getBool(String key, {bool fallback = false}) =>
       maybeGetBool(key) ?? fallback;
 
   /// Sets the value associated with the given [key] as a `bool`.
   ///
   /// - [key]: The key under which the value will be stored.
   /// - [value]: The `bool` value to store.
-  static Future<void> setBool(
-    String key,
-    bool value,
-  ) =>
+  static Future<void> setBool(String key, bool value) =>
       sharedPrefs.setBool(key, value);
 
   /***************************Map***************************/
@@ -215,8 +185,7 @@ abstract class PlayxPrefsWithCache {
   static Map<String, dynamic> getMap(
     String key, {
     Map<String, dynamic> fallback = const {},
-  }) =>
-      maybeGetMap(key) ?? fallback;
+  }) => maybeGetMap(key) ?? fallback;
 
   /// Stores [value] under [key] as a JSON string.
   ///
@@ -235,8 +204,7 @@ abstract class PlayxPrefsWithCache {
   static List<T>? maybeGetList<T>(
     String key, {
     T Function(dynamic json)? fromJson,
-  }) =>
-      decodeJsonListOrNull<T>(maybeGetString(key), fromJson: fromJson);
+  }) => decodeJsonListOrNull<T>(maybeGetString(key), fromJson: fromJson);
 
   /// Retrieves the list stored under [key], or [fallback] if it can't be read.
   ///
@@ -245,8 +213,7 @@ abstract class PlayxPrefsWithCache {
     String key, {
     List<T> fallback = const [],
     T Function(dynamic json)? fromJson,
-  }) =>
-      maybeGetList<T>(key, fromJson: fromJson) ?? fallback;
+  }) => maybeGetList<T>(key, fromJson: fromJson) ?? fallback;
 
   /// Stores [value] under [key] as a JSON array, converting each item with
   /// [toJson] if provided.
@@ -257,8 +224,7 @@ abstract class PlayxPrefsWithCache {
     String key,
     List<T> value, {
     Object? Function(T item)? toJson,
-  }) =>
-      setString(key, encodeJsonList(value, toJson));
+  }) => setString(key, encodeJsonList(value, toJson));
 
   /***************************Object***************************/
 
@@ -269,8 +235,7 @@ abstract class PlayxPrefsWithCache {
   static T? maybeGetObject<T>(
     String key, {
     required T Function(dynamic json) fromJson,
-  }) =>
-      decodeJsonObjectOrNull<T>(maybeGetString(key), fromJson: fromJson);
+  }) => decodeJsonObjectOrNull<T>(maybeGetString(key), fromJson: fromJson);
 
   /// Retrieves the object stored under [key], or [fallback] if it can't be read.
   ///
@@ -279,8 +244,7 @@ abstract class PlayxPrefsWithCache {
     String key, {
     required T Function(dynamic json) fromJson,
     required T fallback,
-  }) =>
-      maybeGetObject<T>(key, fromJson: fromJson) ?? fallback;
+  }) => maybeGetObject<T>(key, fromJson: fromJson) ?? fallback;
 
   /// Stores [value] under [key] as the JSON returned by [toJson].
   ///
@@ -289,18 +253,14 @@ abstract class PlayxPrefsWithCache {
     String key,
     T value, {
     required Object? Function(T value) toJson,
-  }) =>
-      setString(key, encodeJsonValue(toJson(value)));
+  }) => setString(key, encodeJsonValue(toJson(value)));
 
   /// Finds and returns the value associated with the given [key] as an `Object`.
   ///
   /// Returns `null` if the key does not exist or if an error occurs.
   ///
   /// - [key]: The key of the value to retrieve.
-  static Object? find(
-    String key,
-  ) =>
-      sharedPrefs.get(key);
+  static Object? find(String key) => sharedPrefs.get(key);
 
   /// Clears all data in the shared preferences.
   ///
@@ -310,10 +270,7 @@ abstract class PlayxPrefsWithCache {
   /// Removes the value associated with the given [key].
   ///
   /// - [key]: The key of the value to remove.
-  static Future<void> remove(
-    String key,
-  ) =>
-      sharedPrefs.remove(key);
+  static Future<void> remove(String key) => sharedPrefs.remove(key);
 
   /// Updates the cache with the latest values from the platform.
   ///

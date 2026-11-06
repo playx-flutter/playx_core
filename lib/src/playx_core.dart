@@ -61,8 +61,10 @@ abstract class PlayxCore {
   /// ```
   static GetIt get getIt {
     if (_getIt == null) {
-      throw Exception('PlayxCore has not been initialized. '
-          'Please call `bootCore` before accessing the GetIt instance.');
+      throw Exception(
+        'PlayxCore has not been initialized. '
+        'Please call `bootCore` before accessing the GetIt instance.',
+      );
     }
     return _getIt!;
   }
@@ -113,7 +115,8 @@ abstract class PlayxCore {
 
     if (prefsSettings.createPlayxPrefsWithCache) {
       await PlayxPrefsWithCache.create(
-          options: prefsSettings.prefsWithCacheOptions);
+        options: prefsSettings.prefsWithCacheOptions,
+      );
     }
 
     if (securePrefsSettings.createSecurePrefs) {

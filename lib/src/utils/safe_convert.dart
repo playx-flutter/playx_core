@@ -74,8 +74,8 @@ bool? toBoolOrNull(dynamic value) {
     return value == 1
         ? true
         : value == 0
-            ? false
-            : null;
+        ? false
+        : null;
   }
   if (value is String) {
     final lower = value.toLowerCase();
@@ -85,8 +85,8 @@ bool? toBoolOrNull(dynamic value) {
     return numVal == 1
         ? true
         : numVal == 0
-            ? false
-            : null;
+        ? false
+        : null;
   }
   return null;
 }
@@ -169,9 +169,11 @@ DateTime? toLocalDateTimeOrNull(dynamic value, {Duration? utcOffset}) {
 /// Converts [value] to [DateTime] in local time zone or returns [fallback] if conversion fails.
 ///
 /// See [toLocalDateTimeOrNull] for [utcOffset].
-DateTime toLocalDateTimeOr(dynamic value,
-        {required DateTime fallback, Duration? utcOffset}) =>
-    toLocalDateTimeOrNull(value, utcOffset: utcOffset) ?? fallback;
+DateTime toLocalDateTimeOr(
+  dynamic value, {
+  required DateTime fallback,
+  Duration? utcOffset,
+}) => toLocalDateTimeOrNull(value, utcOffset: utcOffset) ?? fallback;
 
 /// Converts [value] to [DateTime] in local time zone or throws [FormatException] if conversion fails.
 ///
@@ -226,9 +228,11 @@ List<T>? toListOrNull<T>(dynamic value, {T Function(dynamic json)? fromJson}) {
 }
 
 /// Converts [value] to List or returns [fallback] if conversion fails.
-List<T> toListOr<T>(dynamic value,
-        {List<T> fallback = const [], T Function(dynamic json)? fromJson}) =>
-    toListOrNull<T>(value, fromJson: fromJson) ?? fallback;
+List<T> toListOr<T>(
+  dynamic value, {
+  List<T> fallback = const [],
+  T Function(dynamic json)? fromJson,
+}) => toListOrNull<T>(value, fromJson: fromJson) ?? fallback;
 
 /// Converts [value] to List or throws [FormatException] if conversion fails.
 List<T> toList<T>(dynamic value, {T Function(dynamic json)? fromJson}) =>
@@ -245,18 +249,18 @@ T? toEnumOrNull<T extends Enum>(dynamic value, List<T> values) {
   final stringValue = toStringOrNull(value)?.toLowerCase();
   if (stringValue == null) return null;
   try {
-    return values.firstWhere(
-      (e) => e.name.toLowerCase() == stringValue,
-    );
+    return values.firstWhere((e) => e.name.toLowerCase() == stringValue);
   } catch (_) {
     return null;
   }
 }
 
 /// Converts [value] to an enum or returns [fallback] if conversion fails.
-T toEnumOr<T extends Enum>(dynamic value, List<T> values,
-        {required T fallback}) =>
-    toEnumOrNull(value, values) ?? fallback;
+T toEnumOr<T extends Enum>(
+  dynamic value,
+  List<T> values, {
+  required T fallback,
+}) => toEnumOrNull(value, values) ?? fallback;
 
 /// Converts [value] to an enum or throws [FormatException] if conversion fails.
 T toEnum<T extends Enum>(dynamic value, List<T> values) =>
@@ -303,8 +307,7 @@ T toTOr<T>(
   dynamic value, {
   required T Function(dynamic json) fromJson,
   required T fallback,
-}) =>
-    toTOrNull(value, fromJson: fromJson) ?? fallback;
+}) => toTOrNull(value, fromJson: fromJson) ?? fallback;
 
 /// Converts [value] to [T] using [fromJson] or throws [FormatException] if conversion fails.
 T toT<T>(dynamic value, {required T Function(dynamic json) fromJson}) =>

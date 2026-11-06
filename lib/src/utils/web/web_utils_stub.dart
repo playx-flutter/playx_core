@@ -23,7 +23,9 @@ class WebUtils {
     }
     SystemChrome.setApplicationSwitcherDescription(
       ApplicationSwitcherDescription(
-          label: title, primaryColor: primaryColor?.toARGB32()),
+        label: title,
+        primaryColor: primaryColor?.toARGB32(),
+      ),
     );
   }
 

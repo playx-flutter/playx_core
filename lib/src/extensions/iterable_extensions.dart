@@ -8,18 +8,14 @@ import '../../playx_core.dart';
 /// Extensions on [Iterable] class to make it easier to work with.
 extension PlayxIterableExtensions<T> on Iterable<T> {
   /// Count the number of elements that satisfy predicate [predicate].
-  int countWhere([
-    bool Function(T element)? predicate,
-  ]) =>
+  int countWhere([bool Function(T element)? predicate]) =>
       predicate == null ? length : where(predicate).length;
 
   /// Count the number of elements that are not null.
   int countNotNull() => countWhere((e) => e != null);
 
   /// Asynchronously map each element of this collection by [action].
-  Future<List<S>> asyncMap<S>({
-    required Mapper<T, S> mapper,
-  }) =>
+  Future<List<S>> asyncMap<S>({required Mapper<T, S> mapper}) =>
       Future.wait(map((i) async => mapper(i)));
 
   /// Maps the value of the [List] of type [T] to a new value of type [S] in an isolate.
@@ -30,15 +26,23 @@ extension PlayxIterableExtensions<T> on Iterable<T> {
     bool printEachItemError = false,
   }) async {
     try {
-      final res = await Future.wait(map((e) => e.mapAsyncInIsolate(
-          mapper: mapper,
-          useWorkManager: useWorkManager,
-          printError: printEachItemError)));
+      final res = await Future.wait(
+        map(
+          (e) => e.mapAsyncInIsolate(
+            mapper: mapper,
+            useWorkManager: useWorkManager,
+            printError: printEachItemError,
+          ),
+        ),
+      );
       return res;
     } catch (e, s) {
       if (printError) {
-        PlayxCore.logger
-            .error('AsyncMapInIsolate Error', error: e, stackTrace: s);
+        PlayxCore.logger.error(
+          'AsyncMapInIsolate Error',
+          error: e,
+          stackTrace: s,
+        );
       }
       rethrow;
     }
@@ -152,7 +156,8 @@ extension PlayxIterableExtensions<T> on Iterable<T> {
 
   /// Returns a new list sorted in descending order by the key returned by the [keySelector] function.
   List<T> sortedByDescending<K extends Comparable<K>>(
-      K Function(T) keySelector) {
+    K Function(T) keySelector,
+  ) {
     final list = List<T>.of(this);
     list.sort((a, b) => keySelector(b).compareTo(keySelector(a)));
     return list;
@@ -164,9 +169,7 @@ extension NestedIterablesExtensions<T> on Iterable<Iterable<T>> {
   List<T> flatten() => [for (final sublist in this) ...sublist];
 
   /// Returns a new list after flattening the original Iterable of Iterables and then mapping each element.
-  Iterable<S> flatMap<S>({
-    required S Function(T data) mapper,
-  }) =>
+  Iterable<S> flatMap<S>({required S Function(T data) mapper}) =>
       flatten().map((e) => mapper(e));
 
   /// Returns a new list after flattening the original Iterable of Iterables and then mapping each element asynchronously.
@@ -175,12 +178,8 @@ extension NestedIterablesExtensions<T> on Iterable<Iterable<T>> {
       flatten().asyncMap(mapper: f);
 
   /// Returns a new list after flattening the original Iterable of Iterables and then mapping each element asynchronously.
-  Future<Iterable<S>> flatMapAsync<S>({
-    required Mapper<T, S> mapper,
-  }) async =>
-      flatten().asyncMap(
-        mapper: mapper,
-      );
+  Future<Iterable<S>> flatMapAsync<S>({required Mapper<T, S> mapper}) async =>
+      flatten().asyncMap(mapper: mapper);
 }
 
 /// Extensions for [Iterable]s of numbers.

@@ -21,7 +21,8 @@ abstract class PlayxPrefs {
   static SharedPreferences get sharedPrefs {
     if (_sharedPrefs == null) {
       throw Exception(
-          'SharedPreferences is not initialized. Please call create() first.');
+        'SharedPreferences is not initialized. Please call create() first.',
+      );
     }
     return _sharedPrefs!;
   }
@@ -39,9 +40,7 @@ abstract class PlayxPrefs {
   /// This method is marked as `protected` and is only visible for testing.
   @protected
   @visibleForTesting
-  static void setMockInitialValues(
-    Map<String, Object> values,
-  ) =>
+  static void setMockInitialValues(Map<String, Object> values) =>
       // ignore: invalid_use_of_visible_for_testing_member
       SharedPreferences.setMockInitialValues(values);
 
@@ -142,8 +141,7 @@ abstract class PlayxPrefs {
   static Map<String, dynamic> getMap(
     String key, {
     Map<String, dynamic> fallback = const {},
-  }) =>
-      maybeGetMap(key) ?? fallback;
+  }) => maybeGetMap(key) ?? fallback;
 
   /// Stores [value] under [key] as a JSON string.
   ///
@@ -162,8 +160,7 @@ abstract class PlayxPrefs {
   static List<T>? maybeGetList<T>(
     String key, {
     T Function(dynamic json)? fromJson,
-  }) =>
-      decodeJsonListOrNull<T>(maybeGetString(key), fromJson: fromJson);
+  }) => decodeJsonListOrNull<T>(maybeGetString(key), fromJson: fromJson);
 
   /// Retrieves the list stored under [key], or [fallback] if it can't be read.
   ///
@@ -172,8 +169,7 @@ abstract class PlayxPrefs {
     String key, {
     List<T> fallback = const [],
     T Function(dynamic json)? fromJson,
-  }) =>
-      maybeGetList<T>(key, fromJson: fromJson) ?? fallback;
+  }) => maybeGetList<T>(key, fromJson: fromJson) ?? fallback;
 
   /// Stores [value] under [key] as a JSON array, converting each item with
   /// [toJson] if provided.
@@ -184,8 +180,7 @@ abstract class PlayxPrefs {
     String key,
     List<T> value, {
     Object? Function(T item)? toJson,
-  }) =>
-      setString(key, encodeJsonList(value, toJson));
+  }) => setString(key, encodeJsonList(value, toJson));
 
   /***************************Object***************************/
 
@@ -196,8 +191,7 @@ abstract class PlayxPrefs {
   static T? maybeGetObject<T>(
     String key, {
     required T Function(dynamic json) fromJson,
-  }) =>
-      decodeJsonObjectOrNull<T>(maybeGetString(key), fromJson: fromJson);
+  }) => decodeJsonObjectOrNull<T>(maybeGetString(key), fromJson: fromJson);
 
   /// Retrieves the object stored under [key], or [fallback] if it can't be read.
   ///
@@ -206,8 +200,7 @@ abstract class PlayxPrefs {
     String key, {
     required T Function(dynamic json) fromJson,
     required T fallback,
-  }) =>
-      maybeGetObject<T>(key, fromJson: fromJson) ?? fallback;
+  }) => maybeGetObject<T>(key, fromJson: fromJson) ?? fallback;
 
   /// Stores [value] under [key] as the JSON returned by [toJson].
   ///
@@ -216,8 +209,7 @@ abstract class PlayxPrefs {
     String key,
     T value, {
     required Object? Function(T value) toJson,
-  }) =>
-      setString(key, encodeJsonValue(toJson(value)));
+  }) => setString(key, encodeJsonValue(toJson(value)));
 
   /*************************** Other Methods ***************************/
 

@@ -1,5 +1,5 @@
-import 'package:web/web.dart';
 import 'package:flutter/services.dart';
+import 'package:web/web.dart';
 
 /// A collection of static helper methods for performing common web-related tasks.
 /// Only works when running on the web.
@@ -26,10 +26,21 @@ class WebUtils {
   /// Sets the title of the web tab and application switcher.
   ///
   /// This affects browser tab titles and some OS-level application switchers.
-  static void setAppTitle(String title) {
+  ///
+  /// [primaryColor] is passed to the application switcher description.
+  /// [webOnly] only matters on other platforms (see the non-web version) and is
+  /// ignored here; it exists so the same call compiles everywhere.
+  static void setAppTitle({
+    required String title,
+    Color? primaryColor,
+    bool webOnly = true,
+  }) {
     document.title = title;
     SystemChrome.setApplicationSwitcherDescription(
-      ApplicationSwitcherDescription(label: title),
+      ApplicationSwitcherDescription(
+        label: title,
+        primaryColor: primaryColor?.toARGB32(),
+      ),
     );
   }
 
