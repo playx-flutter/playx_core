@@ -3,6 +3,7 @@ library;
 import 'package:get_it/get_it.dart';
 import 'package:playx_core/src/logger/base_logger.dart';
 import 'package:playx_core/src/logger/playx_logger.dart';
+import 'package:playx_core/src/logger/playx_logger_settings.dart';
 import 'package:worker_manager/worker_manager.dart';
 
 import 'env/playx_env.dart';
@@ -90,11 +91,22 @@ abstract class PlayxCore {
   /// - [workerManagerSettings]: Settings to configure the worker manager. If
   ///  enabled, the worker manager will be initialized with the specified settings.
   ///
+  /// - [loggerSettings]: Settings of the `PLAYX CORE` logger, which writes the
+  ///   boot messages and the package's own warnings. By default it prints
+  ///   single-line colored messages with `debugPrint` in debug builds. Use it to
+  ///   turn colors off, add the time, silence the boot messages (`level:
+  ///   LogLevel.warning`), or choose where logs go.
+  ///
   /// Example:
   /// ```dart
   /// await PlayxCore.bootCore(
   ///   securePrefsSettings: PlayxSecurePrefsSettings(),
   ///   envSettings: PlayxEnvSettings(),
+  ///   loggerSettings: PlayxLoggerSettings(
+  ///     useColors: false,
+  ///     printDateTime: true,
+  ///     formatter: DefaultColoredLoggerFormatter(),
+  ///   ),
   /// );
   /// ```
   static Future<void> bootCore({
@@ -103,8 +115,13 @@ abstract class PlayxCore {
     PlayxEnvSettings? envSettings,
     PlayxPrefsSettings prefsSettings = const PlayxPrefsSettings(),
     WorkManagerSettings workerManagerSettings = const WorkManagerSettings(),
+    PlayxLoggerSettings? loggerSettings,
   }) async {
-    PlayxLogger.initLogger(name: 'PLAYX CORE', useColoredFormatter: true);
+    PlayxLogger.initLogger(
+      name: 'PLAYX CORE',
+      settings: loggerSettings,
+      useColoredFormatter: true,
+    );
     logger.i('Booting Preferences...');
     if (prefsSettings.createPlayxPrefs) {
       await PlayxPrefs.create();

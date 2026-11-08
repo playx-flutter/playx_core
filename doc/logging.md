@@ -63,6 +63,121 @@ PlayxLogger.setDefaultLogger(network);         // make it the target of PlayxLog
 
 `PlayxCore.logger` returns the `PLAYX CORE` logger created by `bootCore`.
 
+## Message layout
+
+Every message is written as:
+
+```
+[time] [LEVEL] [name] [tag] message
+```
+
+Each part is optional: the **time** with `printDateTime`, the **level** with `printLevel`, the **logger name** with `printLoggerName` (on by default), and the **tag** when you pass one.
+
+```dart
+PlayxLogger.initLogger(
+  name: 'APP',
+  settings: PlayxLoggerSettings(
+    printDateTime: true,
+    printLevel: true,
+    useColors: false,
+    formatter: const DefaultColoredLoggerFormatter(),   // plain lines, no box
+  ),
+);
+
+PlayxLogger.w('Slow response', tag: 'net');
+// [13:45:30.123] [WARNING] [APP] [net] Slow response
+```
+
+| Option | Default | Result |
+| --- | --- | --- |
+| `printLoggerName` | `true` | `[APP] …` |
+| `printDateTime` | `false` | `[13:45:30.123] …` |
+| `dateTimeFormat` | `PlayxLogDateTimeFormat.time` | `time`: `13:45:30.123`, `dateTime`: `2024-05-15 13:45:30.123`, `iso8601`: `2024-05-15T13:45:30.123` |
+| `dateTimeFormatter` | `null` | Your own function (for example with `intl`); overrides `dateTimeFormat`. |
+| `printLevel` | `false` | `[INFO] …`: handy when colors are off, because the level is otherwise only shown by color. |
+
+> **Single lines instead of boxes.** The default formatter (`ExtendedLoggerFormatter`) draws a box around each message. `DefaultColoredLoggerFormatter()` prints plain lines, colored only when `useColors` is on. It is what the `PLAYX CORE` logger uses by default.
+
+## Colors and the `flutter:` prefix
+
+Two things can make console output look noisy, and they have different causes.
+
+**1. Escape codes such as `^[[38;5;4m`.** These are ANSI color codes. Terminals render them as colors; some consoles (Xcode, some IDE panels) show them as text. Turn them off:
+
+```dart
+PlayxLoggerSettings(useColors: false)
+```
+
+Colors are also switched off automatically when they can't be shown, see [Color detection](#color-detection).
+
+**2. The `flutter: ` prefix.** The platform adds it to everything written with `print` or `debugPrint` (`flutter: ` on iOS and macOS, `I/flutter` on Android). The logger can't remove it, but it can use another channel with `target`:
+
+| `target` | Console shows | Notes |
+| --- | --- | --- |
+| `PlayxLogTarget.debugPrint` (default) | `flutter: [APP] hello` | Shown by every console. Safe for long messages. |
+| `PlayxLogTarget.stdout` | `[APP] hello` | **No prefix** in a terminal running the app. Some consoles only collect `print` output, such as a mobile device's system log, and may not show it. Falls back to `debugPrint` on web. |
+| `PlayxLogTarget.developerLog` | `[APP] hello` under the logger's name, no ANSI codes | Appears in DevTools and IDE debug consoles. **Not** shown in the terminal of `flutter run`. |
+
+These behaviors were checked with `flutter run -d macos`. Try your own console and device: where each channel shows up varies by tool. A custom `output` overrides `target`.
+
+```dart
+PlayxLoggerSettings(
+  useColors: false,
+  target: PlayxLogTarget.stdout,
+  formatter: const DefaultColoredLoggerFormatter(),
+)
+```
+
+### Color detection
+
+With `useColors: true` (the default), colors are still dropped when something says the console can't show them:
+
+| Situation | Colors |
+| --- | --- |
+| Web, or `target: PlayxLogTarget.developerLog` | off |
+| `--dart-define=PLAYX_LOG_COLORS=true` or `false` | forced, whatever else is set (not on web or `developerLog`) |
+| `useColors: false` | off |
+| `NO_COLOR` environment variable set (non-empty), or `TERM=dumb` | off |
+| `target: PlayxLogTarget.stdout` in a terminal that doesn't support ANSI | off |
+| Anything else | on |
+
+An app can't see which console shows its `print` output, so on a phone or in an IDE panel colors stay on unless one of the signals above applies.
+
+### Android Studio and IntelliJ
+
+The Run panel doesn't interpret ANSI codes: it prints them as text. Based on the Flutter plugin's source (not tested on every version), there are two ways to get a clean panel:
+
+- **Turn colors off** with a build define. In the run configuration, set *Additional run args* to `--dart-define=PLAYX_LOG_COLORS=false`. No code change is needed, and other developers keep their colors.
+- **Use `PlayxLogTarget.developerLog`** for real styling. The IDE shows the logger name as a gray `[name]` prefix, and the `error` and `stackTrace` of `logger.error(...)` in red. The log level is also passed, so DevTools can filter by severity. No ANSI codes are written, and the name is not repeated in the text. The cost: these entries are not printed in the terminal of `flutter run`.
+
+```dart
+PlayxLoggerSettings(target: PlayxLogTarget.developerLog)
+```
+
+## Configuring the `PLAYX CORE` logger
+
+`bootCore` creates the logger that writes the boot messages (`Booting Preferences...`) and the package's own warnings. Configure it with `loggerSettings`:
+
+```dart
+await PlayxCore.bootCore(
+  loggerSettings: PlayxLoggerSettings(
+    useColors: false,
+    printDateTime: true,
+    formatter: const DefaultColoredLoggerFormatter(),
+  ),
+);
+```
+
+| Goal | Settings |
+| --- | --- |
+| No escape codes | `useColors: false` |
+| Hide the boot messages, keep warnings and errors | `level: LogLevel.warning` |
+| Silence the package completely | `enabled: false` |
+| Time on every line | `printDateTime: true` |
+| Send the package's logs elsewhere | `output: (message) => ...` |
+
+Without `loggerSettings`, the core logger prints single-line colored messages with `debugPrint` in debug builds, as before. The same logger is the default one for `PlayxLogger.i(...)`, so these settings apply to your own messages too, unless you create another logger and make it the default.
+
 ## Settings
 
 ```dart
@@ -81,29 +196,21 @@ PlayxLogger.initLogger(
 | Option | Default | Meaning |
 | --- | --- | --- |
 | `enabled` | `kDebugMode` | Master switch. When `false`, nothing is logged. |
-| `printToConsole` | `kDebugMode` | Whether formatted messages are passed to `output`. When `false` they are discarded (see the note below). |
+| `printToConsole` | `kDebugMode` | Whether formatted messages are passed to `output` / `target`. When `false` they are discarded (see the note below). |
 | `level` | `LogLevel.verbose` | Messages with a lower priority than this are ignored. |
-| `useColors` | `true` | ANSI colors. Always off on web, where they render as noise. |
+| `useColors` | `true` | ANSI colors. Dropped automatically where they can't be shown: see [Color detection](#color-detection). |
 | `colors` | red/yellow/blue/gray per level | Colors per `LogLevel` (`AnsiPen`). |
-| `formatter` | `ExtendedLoggerFormatter()` | How messages are laid out (`ExtendedLoggerFormatter`, `ColoredLoggerFormatter`, or your own `LoggerFormatter`). `useColoredFormatter: true` in `initLogger` uses the colored one. |
+| `printLoggerName`, `printDateTime`, `dateTimeFormat`, `dateTimeFormatter`, `printLevel` | see [Message layout](#message-layout) | What each message starts with. |
+| `formatter` | `ExtendedLoggerFormatter()` | How messages are laid out: `ExtendedLoggerFormatter` (boxed), `ColoredLoggerFormatter`, `DefaultColoredLoggerFormatter` (plain lines), or your own `LoggerFormatter`. `useColoredFormatter: true` in `initLogger` uses the plain one. |
 | `lineSymbol` | `─` | The symbol of the separator line. |
 | `maxLineWidth` | `140` | Width of the separator line. |
-| `output` | `debugPrint` | Where formatted messages go. |
+| `target` | `PlayxLogTarget.debugPrint` | The channel used when there is no `output`. See [Colors and the `flutter:` prefix](#colors-and-the-flutter-prefix). |
+| `output` | `null` | Where formatted messages go; overrides `target`. |
 | `filter` | `null` | A `LoggerFilter` to drop messages. |
-| `printLoggerName`, `printDateTime` | | Accepted, but **currently have no effect**: the logger name is always shown and no timestamp is added. |
 
-> **`printToConsole` and `output`.** With `printToConsole: true` messages go to `output` (or `debugPrint` when none is given). With `printToConsole: false` nothing is printed, even if you passed an `output`. To send logs somewhere else (a file, a crash reporter), keep `printToConsole: true` and pass `output`.
+> **`printToConsole` and `output`.** With `printToConsole: true` messages go to `output` (or to the `target` when none is given). With `printToConsole: false` nothing is printed, even if you passed an `output`. To send logs somewhere else (a file, a crash reporter), keep `printToConsole: true` and pass `output`.
 
-Types such as `LogLevel`, `AnsiPen`, `LoggerFormatter` and `LoggerFilter` come from `talker_logger`. Add it to your own `pubspec.yaml` to use them:
-
-```yaml
-dependencies:
-  talker_logger: ^5.1.0
-```
-
-```dart
-import 'package:talker_logger/talker_logger.dart';
-```
+`LogLevel`, `AnsiPen`, `LoggerFormatter`, `LoggerFilter`, `LoggerOutput`, `LogDetails`, `ExtendedLoggerFormatter`, `ColoredLoggerFormatter` and `TalkerLoggerSettings` are re-exported by `playx_core`, so you don't need to depend on `talker_logger` yourself.
 
 ### Sending logs elsewhere
 
@@ -162,7 +269,7 @@ You only implement the seven level methods: the short aliases (`d`, `i`, `w`, `e
 
 The package logs through the `PLAYX CORE` logger, for example:
 
-- startup steps (`Booting Preferences...`);
+- startup steps (`Booting Preferences...`), configurable with [`bootCore(loggerSettings:)`](#configuring-the-playx-core-logger);
 - skipped env files and reads before `PlayxEnv.load`;
 - secure storage fallbacks and failures (`auto` choosing another backend, an unreadable key, a lost key);
 - errors in `MapUtils` helpers when `printError` is set.

@@ -53,6 +53,14 @@
 - `toLocalDateTime*` and `asLocalDateTime*` accept a `utcOffset` to read timestamps without zone information in a given zone (for example a server sending local Saudi time).
 - Optional `onError` callback (`MapOnError<T, S>`) on `MapUtils.mapAsync`, `MapUtils.mapAsyncInIsolate` and the `MapAsync<T>` extension methods. When provided, errors thrown while running the mapper (or while dispatching the isolate task) are caught, logged (subject to `printError`), and the value returned by `onError` is returned instead of rethrowing. If `onError` is `null` (the default), errors are rethrown after logging.
 
+**Logging** (see [Logging](doc/logging.md))
+- `PlayxCore.bootCore(loggerSettings:)` configures the `PLAYX CORE` logger: turn colors off (no more `^[[38;5;4m` in consoles that don't render ANSI), add the time, hide the boot messages with `level: LogLevel.warning`, or send logs elsewhere.
+- `PlayxLoggerSettings.printLoggerName` and `printDateTime` now work (they were accepted but ignored). New options: `dateTimeFormat` (`PlayxLogDateTimeFormat`), `dateTimeFormatter`, `printLevel` (`[INFO]`-style labels) and `target` (`PlayxLogTarget`: `debugPrint`, `stdout` or `developerLog`) to choose the output channel, for example to avoid the `flutter: ` prefix that the platform adds to `print` and `debugPrint`. Messages are written as `[time] [LEVEL] [name] [tag] message`.
+- Colors are dropped automatically when the console can't show them (web, `NO_COLOR`, `TERM=dumb`, a `stdout` terminal without ANSI support). `--dart-define=PLAYX_LOG_COLORS=true|false` forces them on or off for a build, for example in an Android Studio run configuration, whose Run panel prints ANSI codes as text.
+- `PlayxLogTarget.developerLog` now passes the logger name, the level and `error`/`stackTrace` to `dart:developer`'s `log` (styled by Android Studio and DevTools) instead of formatted text.
+- `DefaultColoredLoggerFormatter` (plain single lines) has a `const` constructor.
+- `LogLevel`, `AnsiPen`, `LoggerFormatter`, `LoggerFilter`, `LoggerOutput`, `LogDetails`, `ExtendedLoggerFormatter`, `ColoredLoggerFormatter` and `TalkerLoggerSettings` are re-exported, so apps don't need a direct `talker_logger` dependency.
+
 **Documentation**
 - Guides for every area in [`doc/`](doc/README.md): getting started, preferences, secure preferences, environment configuration, secure env, extensions, utilities, logging, testing and a [migration guide](doc/migration-2.0.md). The guides are published as a searchable website (with the API reference) on GitHub Pages by `.github/workflows/docs.yml`. The README is now a concise overview that links to them, and the example app demonstrates environments and secure env.
 

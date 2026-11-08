@@ -17,7 +17,16 @@ const envSettings = PlayxEnvSettings(
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await PlayxCore.bootCore(envSettings: envSettings);
+  await PlayxCore.bootCore(
+    envSettings: envSettings,
+    // Readable logs: the time on every line. Colors are dropped automatically
+    // where the console cannot show them.
+    loggerSettings: PlayxLoggerSettings(
+      useColors: true,
+      printDateTime: true,
+      formatter: const ExtendedLoggerFormatter(),
+    ),
+  );
   runApp(const MyApp());
 }
 
@@ -64,6 +73,7 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       _counter++;
       PlayxPrefs.setInt('counter', _counter);
+      PlayxLogger.i('Counter: $_counter');
     });
   }
 

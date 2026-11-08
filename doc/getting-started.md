@@ -56,6 +56,12 @@ await PlayxCore.bootCore(
   ),
   // Isolate pool used by the *InIsolate helpers.
   workerManagerSettings: const WorkManagerSettings(isolatesCount: 2),
+  // How the package's own logs look: no colors, with the time, no box.
+  loggerSettings: PlayxLoggerSettings(
+    useColors: false,
+    printDateTime: true,
+    formatter: const DefaultColoredLoggerFormatter(),
+  ),
 );
 ```
 
@@ -72,7 +78,7 @@ await PlayxCore.bootCore(
 | Load `PlayxEnv` | `envSettings` is not `null` | not loaded |
 | Start the worker manager | `workerManagerSettings.initWorkerManager` (with `isolatesCount`, `dynamicSpawning`) | `true` |
 
-The logger named `PLAYX CORE` is always initialized first, and `GetIt` becomes available at the end.
+The logger named `PLAYX CORE` is always initialized first (configure it with `loggerSettings`), and `GetIt` becomes available at the end.
 
 `bootCore` throws if loading the env fails (for example a missing `requiredKeys` entry, or `isOptional: false` with a missing file), so a misconfigured build fails at startup rather than deep inside the app.
 
@@ -93,7 +99,7 @@ final auth = getIt<AuthService>();
 
 ## Logging
 
-`bootCore` creates the logger `PLAYX CORE`, used by the package itself (for example when a secure storage fallback happens). You can use it too, or create your own. See [Logging](logging.md).
+`bootCore` creates the logger `PLAYX CORE`, used by the package itself (for example when a secure storage fallback happens). You can use it too, or create your own. Pass `loggerSettings` to turn colors off, add the time, hide the boot messages or change where logs go: see [Logging](logging.md#configuring-the-playx-core-logger).
 
 ```dart
 PlayxCore.logger.i('App started');

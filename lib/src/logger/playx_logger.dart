@@ -6,7 +6,13 @@ import 'playx_logger_settings.dart';
 import 'talker_playx_logger.dart';
 
 /// A default logger formatter that uses colored output for log messages.
+///
+/// Prints each message as plain lines, without the box that
+/// `ExtendedLoggerFormatter` draws, and without any color when colors are off
+/// ([PlayxLoggerSettings.useColors] is `false`, or on the web).
 class DefaultColoredLoggerFormatter implements LoggerFormatter {
+  const DefaultColoredLoggerFormatter();
+
   @override
   String fmt(LogDetails details, TalkerLoggerSettings settings) {
     final msg = details.message?.toString() ?? '';

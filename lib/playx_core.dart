@@ -27,6 +27,17 @@ export 'package:get_it/get_it.dart';
 export 'package:shared_preferences/shared_preferences.dart';
 export 'package:simple_secure_storage/simple_secure_storage.dart'
     show DarwinAccessibility;
+export 'package:talker_logger/talker_logger.dart'
+    show
+        AnsiPen,
+        ColoredLoggerFormatter,
+        ExtendedLoggerFormatter,
+        LogDetails,
+        LogLevel,
+        LoggerFilter,
+        LoggerFormatter,
+        LoggerOutput,
+        TalkerLoggerSettings;
 export 'package:worker_manager/worker_manager.dart';
 
 export 'src/env/env_values.dart';
