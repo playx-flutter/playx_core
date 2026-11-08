@@ -74,8 +74,8 @@ bool? toBoolOrNull(dynamic value) {
     return value == 1
         ? true
         : value == 0
-            ? false
-            : null;
+        ? false
+        : null;
   }
   if (value is String) {
     final lower = value.toLowerCase();
@@ -85,8 +85,8 @@ bool? toBoolOrNull(dynamic value) {
     return numVal == 1
         ? true
         : numVal == 0
-            ? false
-            : null;
+        ? false
+        : null;
   }
   return null;
 }
@@ -143,17 +143,43 @@ DateTime toDateTime(dynamic value) =>
 // --------------------- LOCAL DATETIME ---------------------
 
 /// Safely converts [value] to [DateTime] in local time zone, or returns null if conversion fails.
-DateTime? toLocalDateTimeOrNull(dynamic value) {
-  return toDateTimeOrNull(value)?.toLocal();
+///
+/// [utcOffset] is the zone of values without zone information, e.g. a server
+/// sending `2024-05-01 10:00:00` in Saudi time: `Duration(hours: 3)`. Values
+/// with a zone (`Z`, `+03:00`) and epoch integers are absolute and unaffected.
+/// Without it, values without zone information are read as local time.
+DateTime? toLocalDateTimeOrNull(dynamic value, {Duration? utcOffset}) {
+  final parsed = toDateTimeOrNull(value);
+  if (parsed == null) return null;
+  if (utcOffset != null && !parsed.isUtc && value is! int) {
+    return DateTime.utc(
+      parsed.year,
+      parsed.month,
+      parsed.day,
+      parsed.hour,
+      parsed.minute,
+      parsed.second,
+      parsed.millisecond,
+      parsed.microsecond,
+    ).subtract(utcOffset).toLocal();
+  }
+  return parsed.toLocal();
 }
 
 /// Converts [value] to [DateTime] in local time zone or returns [fallback] if conversion fails.
-DateTime toLocalDateTimeOr(dynamic value, {required DateTime fallback}) =>
-    toLocalDateTimeOrNull(value) ?? fallback;
+///
+/// See [toLocalDateTimeOrNull] for [utcOffset].
+DateTime toLocalDateTimeOr(
+  dynamic value, {
+  required DateTime fallback,
+  Duration? utcOffset,
+}) => toLocalDateTimeOrNull(value, utcOffset: utcOffset) ?? fallback;
 
 /// Converts [value] to [DateTime] in local time zone or throws [FormatException] if conversion fails.
-DateTime toLocalDateTime(dynamic value) =>
-    toLocalDateTimeOrNull(value) ??
+///
+/// See [toLocalDateTimeOrNull] for [utcOffset].
+DateTime toLocalDateTime(dynamic value, {Duration? utcOffset}) =>
+    toLocalDateTimeOrNull(value, utcOffset: utcOffset) ??
     (throw FormatException('Invalid DateTime value: $value'));
 
 // --------------------- MAP ---------------------
@@ -202,9 +228,11 @@ List<T>? toListOrNull<T>(dynamic value, {T Function(dynamic json)? fromJson}) {
 }
 
 /// Converts [value] to List or returns [fallback] if conversion fails.
-List<T> toListOr<T>(dynamic value,
-        {List<T> fallback = const [], T Function(dynamic json)? fromJson}) =>
-    toListOrNull<T>(value, fromJson: fromJson) ?? fallback;
+List<T> toListOr<T>(
+  dynamic value, {
+  List<T> fallback = const [],
+  T Function(dynamic json)? fromJson,
+}) => toListOrNull<T>(value, fromJson: fromJson) ?? fallback;
 
 /// Converts [value] to List or throws [FormatException] if conversion fails.
 List<T> toList<T>(dynamic value, {T Function(dynamic json)? fromJson}) =>
@@ -221,18 +249,18 @@ T? toEnumOrNull<T extends Enum>(dynamic value, List<T> values) {
   final stringValue = toStringOrNull(value)?.toLowerCase();
   if (stringValue == null) return null;
   try {
-    return values.firstWhere(
-      (e) => e.name.toLowerCase() == stringValue,
-    );
+    return values.firstWhere((e) => e.name.toLowerCase() == stringValue);
   } catch (_) {
     return null;
   }
 }
 
 /// Converts [value] to an enum or returns [fallback] if conversion fails.
-T toEnumOr<T extends Enum>(dynamic value, List<T> values,
-        {required T fallback}) =>
-    toEnumOrNull(value, values) ?? fallback;
+T toEnumOr<T extends Enum>(
+  dynamic value,
+  List<T> values, {
+  required T fallback,
+}) => toEnumOrNull(value, values) ?? fallback;
 
 /// Converts [value] to an enum or throws [FormatException] if conversion fails.
 T toEnum<T extends Enum>(dynamic value, List<T> values) =>
@@ -279,8 +307,7 @@ T toTOr<T>(
   dynamic value, {
   required T Function(dynamic json) fromJson,
   required T fallback,
-}) =>
-    toTOrNull(value, fromJson: fromJson) ?? fallback;
+}) => toTOrNull(value, fromJson: fromJson) ?? fallback;
 
 /// Converts [value] to [T] using [fromJson] or throws [FormatException] if conversion fails.
 T toT<T>(dynamic value, {required T Function(dynamic json) fromJson}) =>

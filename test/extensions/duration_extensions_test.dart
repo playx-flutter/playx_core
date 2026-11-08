@@ -38,23 +38,27 @@ void main() {
       expect(duration.toRemainingHours(), '08');
     });
 
-    test('toRemainingMinutes() returns the reminder of duration in minutes',
-        () {
-      const duration = Duration(hours: 9, minutes: 8);
-      expect(duration.toRemainingMinutes(), '08');
-    });
-
-    test('toRemainingSeconds() returns the reminder of duration in seconds',
-        () {
-      const duration = Duration(minutes: 9, seconds: 8);
-      expect(duration.toRemainingSeconds(), '08');
-    });
+    test(
+      'toRemainingMinutes() returns the reminder of duration in minutes',
+      () {
+        const duration = Duration(hours: 9, minutes: 8);
+        expect(duration.toRemainingMinutes(), '08');
+      },
+    );
 
     test(
-        'toFormattedDuration() returns the formatted duration in days, hours, minutes and seconds ',
-        () {
-      const duration = Duration(days: 6, hours: 8, minutes: 9, seconds: 8);
-      expect(
+      'toRemainingSeconds() returns the reminder of duration in seconds',
+      () {
+        const duration = Duration(minutes: 9, seconds: 8);
+        expect(duration.toRemainingSeconds(), '08');
+      },
+    );
+
+    test(
+      'toFormattedDuration() returns the formatted duration in days, hours, minutes and seconds ',
+      () {
+        const duration = Duration(days: 6, hours: 8, minutes: 9, seconds: 8);
+        expect(
           duration.toFormattedDuration(
             days: 'd',
             hours: 'h',
@@ -62,7 +66,48 @@ void main() {
             seconds: 's',
             spacer: ' : ',
           ),
-          '06 d : 08 h : 09 m : 08 s');
+          '06 d : 08 h : 09 m : 08 s',
+        );
+      },
+    );
+  });
+
+  group('remaining values and formatting', () {
+    const duration = Duration(hours: 27, minutes: 5, seconds: 9);
+
+    test('remaining values with and without a leading zero', () {
+      expect(duration.toRemainingHours(), '03');
+      expect(duration.toRemainingMinutes(), '05');
+      expect(duration.toRemainingMinutes(leadingZero: false), '5');
+      expect(duration.toRemainingSeconds(), '09');
+      expect(duration.toRemainingSeconds(leadingZero: false), '9');
+    });
+
+    test('toFormattedDuration joins the requested parts', () {
+      expect(
+        duration.toFormattedDuration(
+          days: 'd',
+          hours: 'h',
+          minutes: 'm',
+          seconds: 's',
+          spacer: ', ',
+        ),
+        '01 d, 03 h, 05 m, 09 s',
+      );
+      expect(
+        duration.toFormattedDuration(
+          hours: 'h',
+          minutes: 'm',
+          leadingZero: false,
+          leaveSpaceBetweenTimeAndText: false,
+        ),
+        '3h5m',
+      );
+    });
+
+    test('delay waits then returns the callback result', () async {
+      expect(await Duration.zero.delay(() => 5), 5);
+      expect(await Duration.zero.delay<int>(), isNull);
     });
   });
 }

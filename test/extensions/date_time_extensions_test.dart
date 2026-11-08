@@ -46,24 +46,15 @@ void main() {
     });
 
     test(
-        'copyWith returns new instance of DateTime with the same date but overrides the values of the given parameters',
-        () {
-      final dateTime = DateTime(2021, 10, 10, 10, 10, 10);
-      expect(
-          dateTime.copyWith(
-            year: 2022,
-            month: 11,
-            day: 11,
-          ),
-          DateTime(
-            2022,
-            11,
-            11,
-            10,
-            10,
-            10,
-          ));
-    });
+      'copyWith returns new instance of DateTime with the same date but overrides the values of the given parameters',
+      () {
+        final dateTime = DateTime(2021, 10, 10, 10, 10, 10);
+        expect(
+          dateTime.copyWith(year: 2022, month: 11, day: 11),
+          DateTime(2022, 11, 11, 10, 10, 10),
+        );
+      },
+    );
 
     group('isToday', () {
       test('isToday returns true if the date is today', () {
@@ -103,108 +94,115 @@ void main() {
 
     group('isSameDay', () {
       test(
-          'isSameDay returns true if the date is in the same day as the given date',
-          () {
-        final dateTime = DateTime(2021, 10, 10, 10, 10, 10);
-        expect(dateTime.isSameDay(DateTime(2021, 10, 10, 10, 10, 10)), true);
-      });
+        'isSameDay returns true if the date is in the same day as the given date',
+        () {
+          final dateTime = DateTime(2021, 10, 10, 10, 10, 10);
+          expect(dateTime.isSameDay(DateTime(2021, 10, 10, 10, 10, 10)), true);
+        },
+      );
 
       test(
-          'isSameDay returns false if the date is not in the same day as the given date',
-          () {
-        final dateTime = DateTime(2021, 10, 10, 10, 10, 10);
-        expect(dateTime.isSameDay(DateTime(2021, 10, 11, 10, 10, 10)), false);
-      });
+        'isSameDay returns false if the date is not in the same day as the given date',
+        () {
+          final dateTime = DateTime(2021, 10, 10, 10, 10, 10);
+          expect(dateTime.isSameDay(DateTime(2021, 10, 11, 10, 10, 10)), false);
+        },
+      );
     });
   });
 
   group('isSameWeek', () {
     test(
-        'isSameWeek returns true if the date is in the same week as the given date',
-        () {
-      final dateTime = DateTime(
-        2021,
-        10,
-        11,
-      );
+      'isSameWeek returns true if the date is in the same week as the given date',
+      () {
+        final dateTime = DateTime(2021, 10, 11);
 
-      expect(
+        expect(
           dateTime.isSameWeek(
-              date: DateTime(
-                2021,
-                10,
-                12,
-              ),
-              firstDay: Weekday.monday),
-          true);
-    });
+            date: DateTime(2021, 10, 12),
+            firstDay: Weekday.monday,
+          ),
+          true,
+        );
+      },
+    );
 
     test(
-        'isSameWeek returns false if the date is not in the same week as the given date',
-        () {
-      final dateTime = DateTime(2021, 10, 10, 10, 10, 10);
-      expect(
-          dateTime.isSameWeek(date: DateTime(2021, 10, 20, 10, 10, 10)), false);
-    });
+      'isSameWeek returns false if the date is not in the same week as the given date',
+      () {
+        final dateTime = DateTime(2021, 10, 10, 10, 10, 10);
+        expect(
+          dateTime.isSameWeek(date: DateTime(2021, 10, 20, 10, 10, 10)),
+          false,
+        );
+      },
+    );
   });
 
   group('isSameMonth', () {
     test(
-        'isSameMonth returns true if the date is in the same month as the given date',
-        () {
-      final dateTime = DateTime(2021, 10, 10, 10, 10, 10);
-      expect(dateTime.isSameMonth(DateTime(2021, 10, 20, 10, 10, 10)), true);
-    });
+      'isSameMonth returns true if the date is in the same month as the given date',
+      () {
+        final dateTime = DateTime(2021, 10, 10, 10, 10, 10);
+        expect(dateTime.isSameMonth(DateTime(2021, 10, 20, 10, 10, 10)), true);
+      },
+    );
 
     test(
-        'isSameMonth returns false if the date is not in the same month as the given date',
-        () {
-      final dateTime = DateTime(2021, 10, 10, 10, 10, 10);
-      expect(dateTime.isSameMonth(DateTime(2021, 11, 20, 10, 10, 10)), false);
-    });
+      'isSameMonth returns false if the date is not in the same month as the given date',
+      () {
+        final dateTime = DateTime(2021, 10, 10, 10, 10, 10);
+        expect(dateTime.isSameMonth(DateTime(2021, 11, 20, 10, 10, 10)), false);
+      },
+    );
   });
 
   group('isSameYear', () {
     test(
-        'isSameYear returns true if the date is in the same year as the given date',
-        () {
-      final dateTime = DateTime(2021, 10, 10, 10, 10, 10);
-      expect(dateTime.isSameYear(DateTime(2021, 11, 20, 10, 10, 10)), true);
-    });
+      'isSameYear returns true if the date is in the same year as the given date',
+      () {
+        final dateTime = DateTime(2021, 10, 10, 10, 10, 10);
+        expect(dateTime.isSameYear(DateTime(2021, 11, 20, 10, 10, 10)), true);
+      },
+    );
 
     test(
-        'isSameYear returns false if the date is not in the same year as the given date',
-        () {
-      final dateTime = DateTime(2021, 10, 10, 10, 10, 10);
-      expect(dateTime.isSameYear(DateTime(2022, 11, 20, 10, 10, 10)), false);
-    });
+      'isSameYear returns false if the date is not in the same year as the given date',
+      () {
+        final dateTime = DateTime(2021, 10, 10, 10, 10, 10);
+        expect(dateTime.isSameYear(DateTime(2022, 11, 20, 10, 10, 10)), false);
+      },
+    );
   });
 
   group('isInThisWeek', () {
     test(
-        'isInThisWeek returns false if the date is not in the same week as the given date',
-        () {
-      final dateTime = DateTime(2021, 10, 10, 10, 10, 10);
-      expect(dateTime.isInThisWeek(), false);
-    });
+      'isInThisWeek returns false if the date is not in the same week as the given date',
+      () {
+        final dateTime = DateTime(2021, 10, 10, 10, 10, 10);
+        expect(dateTime.isInThisWeek(), false);
+      },
+    );
   });
 
   group('isInThisMonth', () {
     test(
-        'isInThisMonth returns false if the date is not in the same month as the given date',
-        () {
-      final dateTime = DateTime(2021, 10, 10, 10, 10, 10);
-      expect(dateTime.isInThisMonth, false);
-    });
+      'isInThisMonth returns false if the date is not in the same month as the given date',
+      () {
+        final dateTime = DateTime(2021, 10, 10, 10, 10, 10);
+        expect(dateTime.isInThisMonth, false);
+      },
+    );
   });
 
   group('isInThisYear', () {
     test(
-        'isInThisYear returns false if the date is not in the same year as the given date',
-        () {
-      final dateTime = DateTime(2021, 10, 10, 10, 10, 10);
-      expect(dateTime.isInThisYear, false);
-    });
+      'isInThisYear returns false if the date is not in the same year as the given date',
+      () {
+        final dateTime = DateTime(2021, 10, 10, 10, 10, 10);
+        expect(dateTime.isInThisYear, false);
+      },
+    );
   });
 
   group('isInTheFuture', () {
@@ -238,45 +236,31 @@ void main() {
     });
 
     test(
-        'dayOfTheWeekIndex returns the index of the day of the week with firstDay value',
-        () {
-      //monday
-      final dateTime = DateTime(
-        2024,
-        3,
-        11,
-      );
-      expect(dateTime.dayOfTheWeekIndex(firstDay: Weekday.monday), 0);
-    });
+      'dayOfTheWeekIndex returns the index of the day of the week with firstDay value',
+      () {
+        //monday
+        final dateTime = DateTime(2024, 3, 11);
+        expect(dateTime.dayOfTheWeekIndex(firstDay: Weekday.monday), 0);
+      },
+    );
 
     test(
-        'dayOfTheWeekIndex returns the index of the day of the week with firstDay value',
-        () {
-      final dateTime = DateTime(
-        2024,
-        3,
-        11,
-      );
-      expect(dateTime.dayOfTheWeekIndex(firstDay: Weekday.saturday), 2);
-    });
+      'dayOfTheWeekIndex returns the index of the day of the week with firstDay value',
+      () {
+        final dateTime = DateTime(2024, 3, 11);
+        expect(dateTime.dayOfTheWeekIndex(firstDay: Weekday.saturday), 2);
+      },
+    );
   });
 
   group('monthOfTheYear', () {
     test('monthOfTheYear returns the month of the year', () {
-      final dateTime = DateTime(
-        2021,
-        10,
-        10,
-      );
+      final dateTime = DateTime(2021, 10, 10);
       expect(dateTime.monthOfTheYear(), Month.october);
     });
 
     test('monthOfTheYear returns the month of the year', () {
-      final dateTime = DateTime(
-        2021,
-        1,
-        10,
-      );
+      final dateTime = DateTime(2021, 1, 10);
       expect(dateTime.monthOfTheYear(), Month.january);
     });
   });
@@ -288,23 +272,55 @@ void main() {
 
   group('isLeapYear', () {
     test('isLeapYear returns true if the year is leap year', () {
-      final dateTime = DateTime(
-        2020,
-        1,
-        1,
-        12,
-      );
+      final dateTime = DateTime(2020, 1, 1, 12);
       expect(dateTime.isLeapYear, true);
     });
 
     test('isLeapYear returns false if the year is not leap year', () {
-      final dateTime = DateTime(
-        2021,
-        1,
-        1,
-        12,
-      );
+      final dateTime = DateTime(2021, 1, 1, 12);
       expect(dateTime.isLeapYear, false);
+    });
+  });
+
+  group('copyWith and boundaries', () {
+    final date = DateTime(2024, 5, 15, 13, 45, 30, 500);
+
+    test('copyWith replaces only the given parts', () {
+      expect(
+        date.copyWith(year: 2025, month: 1, day: 2),
+        DateTime(2025, 1, 2, 13, 45, 30, 500),
+      );
+      expect(
+        date.copyWith(hour: 1, minute: 2, second: 3, millisecond: 4),
+        DateTime(2024, 5, 15, 1, 2, 3, 4),
+      );
+      expect(date.copyWith(), date);
+    });
+
+    test('start and end of the day', () {
+      expect(date.startOfDay, DateTime(2024, 5, 15));
+      expect(date.endOfDay, DateTime(2024, 5, 15, 23, 59, 59, 999));
+      expect(date.withoutTime(), date.startOfDay);
+    });
+
+    test('start and end of the month', () {
+      expect(date.startOfMonth, DateTime(2024, 5, 1));
+      expect(date.endOfMonth, DateTime(2024, 5, 31, 23, 59, 59, 999));
+      expect(
+        DateTime(2024, 2, 10).endOfMonth,
+        DateTime(2024, 2, 29, 23, 59, 59, 999),
+      );
+    });
+
+    test('start and end of the week depend on the first day', () {
+      // 2024-05-15 is a Wednesday.
+      expect(date.startOfWeek(), DateTime(2024, 5, 13));
+      expect(date.endOfWeek(), DateTime(2024, 5, 19, 23, 59, 59, 999));
+      expect(date.startOfWeek(firstDay: Weekday.sunday), DateTime(2024, 5, 12));
+      expect(
+        date.endOfWeek(firstDay: Weekday.sunday),
+        DateTime(2024, 5, 18, 23, 59, 59, 999),
+      );
     });
   });
 }

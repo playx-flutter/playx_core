@@ -1,0 +1,71 @@
+# Documentation site, published to GitHub Pages by .github/workflows/docs.yml.
+# Preview locally:  pip install -r requirements-docs.txt && mkdocs serve
+site_name: PlayX Core
+site_description: Preferences, secure storage, environment configuration, extensions and utilities for Flutter apps.
+site_url: https://playx-flutter.github.io/playx_core/
+repo_url: https://github.com/playx-flutter/playx_core
+repo_name: playx-flutter/playx_core
+edit_uri: edit/main/doc/
+
+docs_dir: doc
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  features:
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - search.highlight
+    - search.suggest
+    - content.code.copy
+    - content.action.edit
+    - toc.follow
+
+nav:
+  - Home: README.md
+  - Getting started: getting-started.md
+  - Storage:
+      - Preferences: preferences.md
+      - Secure preferences: secure-prefs.md
+  - Configuration:
+      - Environment configuration: env.md
+      - Secure env: secure-env.md
+  - Utilities:
+      - Extensions: extensions.md
+      - Utilities: utilities.md
+      - Logging: logging.md
+  - Guides:
+      - Testing: testing.md
+      - Migrating to 2.0: migration-2.0.md
+  - API reference: https://playx-flutter.github.io/playx_core/api/
+  - Changelog: https://pub.dev/packages/playx_core/changelog
+
+markdown_extensions:
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+
+# Broken links and anchors fail `mkdocs build --strict`.
+validation:
+  omitted_files: warn
+  absolute_links: warn
+  unrecognized_links: warn
+  anchors: warn

@@ -1,6 +1,89 @@
 # Changelog
 
-## 0.7.1
+## 2.0.0
+
+> Upgrading from 1.x? Follow the [migration guide](doc/migration-2.0.md). The package now has full documentation in [`doc/`](doc/README.md).
+
+### Breaking changes
+
+- **Minimum SDK** is now Dart `>=3.12.0 <4.0.0` and Flutter `>=3.44.0` (was Dart 3.5 / Flutter 3.24), required by `simple_secure_storage` 0.4.3.
+- **`PlayxEnv` getters are synchronous.** Values are in memory after `load()`, so `await PlayxEnv.getString(...)` becomes `PlayxEnv.getString(...)`.
+- **`PlayxEnv.load` takes a `PlayxEnvSettings`** instead of named arguments, and **`PlayxEnv.instance`** (flutter_dotenv's global `dotenv`) is removed in favor of `PlayxEnv.all` and `PlayxEnv.values`. `PlayxEnv` moved to `lib/src/env/`.
+- **Stricter parsing in `PlayxEnv` and `PlayxSecurePrefs`.** Both use the `safe_convert` helpers: an unrecognized bool (anything but `true`/`false`/`1`/`0`) reads as `null`, so `getBool` returns its fallback instead of `false`; `"1.5"` reads as `1` for ints.
+- **`PlayxSecurePrefsSettings` groups the `flutter_secure_storage` options** (`iosOptions`, `androidOptions`, `linuxOptions`, `windowsOptions`, `macOsOptions`) into `flutterSecureStorageOptions: PlayxFlutterSecureStorageOptions(...)`. `webOptions` is removed.
+- **The default `AndroidOptions` no longer sets `encryptedSharedPreferences`**, which `flutter_secure_storage` 11 removed (existing Android data is migrated automatically on first access).
+- **Web:** `PlayxSecurePrefs` now uses AES-GCM encrypted preferences with a **non-extractable WebCrypto key** kept in IndexedDB for every storage type except `memory`. No password, salt or key ships with the app. Data saved by 1.x with `flutter_secure_storage` is migrated automatically on the first start.
+- **`WebUtils.setAppTitle` takes named arguments on the web too** (`setAppTitle(title: 'x')`), matching the non-web version. The two signatures differed, so the same call could not compile on both.
+
+### Added
+
+**Secure preferences** (see [Secure preferences](doc/secure-prefs.md))
+- Choice of backends via `PlayxSecurePrefsSettings.storageType` (`PlayxSecureStorageType`). The default stays `flutterSecureStorage`:
+  - `simpleSecureStorage`: uses [`simple_secure_storage`](https://pub.dev/packages/simple_secure_storage), configured with `PlayxSimpleSecureStorageOptions`.
+  - `encryptedPrefs`: stores AES-GCM encrypted values in `SharedPreferencesAsync`, configured with `PlayxEncryptedPrefsOptions`. The key is kept in the first healthy store of `keyStores` (`simple_secure_storage`, then `flutter_secure_storage`) and is not replaced while values encrypted with it may still be readable. A per-device fallback key is used when no key store is available. Falls back to `memory` if preferences are unavailable. `clear()` only removes keys with the configured prefix.
+  - `auto`: uses the first backend of `autoOrder` (default: `simple_secure_storage`, `flutter_secure_storage`, `encryptedPrefs`) that passes a health check, then `memory`. Values written, removed or cleared on a fallback backend are applied to the preferred backend once it works again.
+  - `memory`: in-memory only.
+- `PlayxSecurePrefsSettings.encryptKeys` (default `false`) hides key names where storage would expose them: encrypted prefs (all platforms, including web) and `flutter_secure_storage` on Android. Each value is stored under an HMAC-SHA256 of its name, keyed by a key kept in secure storage, and the name is kept inside the encrypted value. Existing values are converted when it is turned on or off. The `auto` journal is encrypted as well.
+- `PlayxSecurePrefsSettings.throwOnError` (default `true`). When `false`, storage errors are logged instead of thrown, and `memory` is used if the backend can't be created.
+- `PlayxSecurePrefs.migrateFromFlutterSecureStorage()` moves existing data when switching an app away from the default backend.
+- `PlayxSecurePrefs.storageType`, `PlayxSecurePrefs.isInitialized` and `PlayxSecurePrefs.dispose()`. `PlayxCore.dispose()` now also disposes `PlayxSecurePrefs`.
+
+**Environment configuration** (see [Environment configuration](doc/env.md))
+- Layered configuration: `.env`, then `.env.<environment>` (from `environment`, `--dart-define=PLAYX_ENV=<name>` or the Flutter flavor), then `additionalFiles`, secure env, `mergeWith`, `PLAYX_DEFINES` and `dartDefines`. Later files can reference earlier values.
+- `--dart-define` values without declaring them in code: `--dart-define=PLAYX_DEFINES="DEBUG=true;API_URL=..."` (or `base64:` encoded `.env` content) is read automatically. Disable with `usePlayxDefines: false`. `dartDefines` covers individual `--dart-define` / `--dart-define-from-file` values.
+- `requiredKeys`, failing at startup with a `PlayxEnvException` listing missing keys. Missing files are logged, or throw when `isOptional` is `false`.
+- New getters: `getNum`, `getUri`, `getEnum`, `getDuration`, `getList` (comma-separated or JSON), `getMap` and `getObject`, each with a `maybeGet*` variant.
+- `EnvValues`: an immutable set of values with all the typed getters, exposed as `PlayxEnv.values` and usable on its own (for example for remote config).
+- `isLoaded`, `environment`, `loadedFiles`, `all`, `containsKey` and `isSecure`, plus `loadFromString`, `setMockValues` and `dispose()` for tests. `PlayxCore.dispose()` now also disposes `PlayxEnv`.
+
+**Secure env** (see [Secure env](doc/secure-env.md))
+- Put sensitive values in a gitignored `.env.secrets` (or CI variables) and run `dart run playx_core:secure_env` (`dart run playx:secure_env` in apps using `playx`) to generate an encrypted Dart file, passed as `PlayxEnvSettings.secureEnv`. Names and values are encrypted with AES-256-GCM and the key is embedded split, or passed with `--dart-define=PLAYX_ENV_KEY`.
+- Supports per-environment files, `--from-env`, `--from-env-prefix PLAYX_SECRET_` and `--define` for CI, and an encrypted `PLAYX_SECURE_DEFINES` define. Secure values are excluded from `PlayxEnv.all`.
+- Sample Codemagic, GitHub Actions and Vercel configurations in [`doc/ci/`](doc/ci/). Generated files start with `// dart format off` so the byte lists stay compact.
+
+**Preferences**
+- JSON helpers on `PlayxPrefs`, `PlayxAsyncPrefs`, `PlayxPrefsWithCache` and `PlayxSecurePrefs` to store maps, lists and objects: `setMap`/`maybeGetMap`/`getMap`, `setList`/`maybeGetList`/`getList` (with optional `toJson`/`fromJson` item converters) and `setObject`/`maybeGetObject`/`getObject`. Invalid or mismatched stored values return `null` or the fallback.
+
+**Extensions and utilities** (see [Extensions](doc/extensions.md) and [Utilities](doc/utilities.md))
+- Padding: `PlayxNumPaddingExtensions` on `num` (`p`, `px`, `py`, `pAll`, `pLR`, `pTB`, `pZero`, single-side `pt`, `pb`, `pl`, `pr`, and RTL-aware `ps`/`pe` as `EdgeInsetsDirectional`) and `PlayxWidgetPaddingExtensions` on `Widget` (`withPadding`, `pAll`, `pSymmetric`, `pOnly`, `pDirectional`, `pZero`), returning `Padding`. Values are unscaled; scale the number first (`16.r.p`) when using a scaling package.
+- Border extensions (`border_extensions.dart`): `radius`, `ellipticalRadius`, `borderRadius` with `Top`/`Bottom`/`Left`/`Right` and RTL-aware `Start`/`End` variants, `roundedShape`, `border` and `borderSide` on `num`; `border`/`borderSide` on `Color`; `clipRounded`, `clipBorderRadius` and `bordered` on widgets.
+- `String.capitalizedInitialChar` (Unicode-safe initial) and `String.toPrettyJson()`.
+- `BuildContext.crossAxisCount(...)` for responsive grid columns.
+- `ColorUtils` (`fromHex`, `fromRGB`) is now exported from `playx_core.dart`.
+- `toLocalDateTime*` and `asLocalDateTime*` accept a `utcOffset` to read timestamps without zone information in a given zone (for example a server sending local Saudi time).
+- Optional `onError` callback (`MapOnError<T, S>`) on `MapUtils.mapAsync`, `MapUtils.mapAsyncInIsolate` and the `MapAsync<T>` extension methods. When provided, errors thrown while running the mapper (or while dispatching the isolate task) are caught, logged (subject to `printError`), and the value returned by `onError` is returned instead of rethrowing. If `onError` is `null` (the default), errors are rethrown after logging.
+
+**Logging** (see [Logging](doc/logging.md))
+- `PlayxCore.bootCore(loggerSettings:)` configures the `PLAYX CORE` logger: turn colors off (no more `^[[38;5;4m` in consoles that don't render ANSI), add the time, hide the boot messages with `level: LogLevel.warning`, or send logs elsewhere.
+- `PlayxLoggerSettings.printLoggerName` and `printDateTime` now work (they were accepted but ignored). New options: `dateTimeFormat` (`PlayxLogDateTimeFormat`), `dateTimeFormatter`, `printLevel` (`[INFO]`-style labels) and `target` (`PlayxLogTarget`: `debugPrint`, `stdout` or `developerLog`) to choose the output channel, for example to avoid the `flutter: ` prefix that the platform adds to `print` and `debugPrint`. Messages are written as `[time] [LEVEL] [name] [tag] message`.
+- Colors are dropped automatically when the console can't show them (web, `NO_COLOR`, `TERM=dumb`, a `stdout` terminal without ANSI support). `--dart-define=PLAYX_LOG_COLORS=true|false` forces them on or off for a build, for example in an Android Studio run configuration, whose Run panel prints ANSI codes as text.
+- `PlayxLogTarget.developerLog` now passes the logger name, the level and `error`/`stackTrace` to `dart:developer`'s `log` (styled by Android Studio and DevTools) instead of formatted text.
+- `DefaultColoredLoggerFormatter` (plain single lines) has a `const` constructor.
+- `LogLevel`, `AnsiPen`, `LoggerFormatter`, `LoggerFilter`, `LoggerOutput`, `LogDetails`, `ExtendedLoggerFormatter`, `ColoredLoggerFormatter` and `TalkerLoggerSettings` are re-exported, so apps don't need a direct `talker_logger` dependency.
+
+**Documentation**
+- Guides for every area in [`doc/`](doc/README.md): getting started, preferences, secure preferences, environment configuration, secure env, extensions, utilities, logging, testing and a [migration guide](doc/migration-2.0.md). The guides are published as a searchable website (with the API reference) on GitHub Pages by `.github/workflows/docs.yml`. The README is now a concise overview that links to them, and the example app demonstrates environments and secure env.
+
+### Changed
+
+- Dependencies: `flutter_secure_storage` ^11.2.0, `simple_secure_storage` ^0.4.3, `flutter_dotenv` ^6.0.1, `pointycastle`, `flutter_lints` ^6.0.0 and `lints` ^6.0.0. Ranges were widened for `shared_preferences` (`>=2.3.0 <3.0.0`), `get_it` (`>=8.0.0 <10.0.0`), `equatable` (`>=2.0.7 <4.0.0`), `talker_logger`, `worker_manager` and `web`.
+- `clearOnReinstall` no longer requires `PlayxPrefs` to be created. It keeps using the same flag, so existing installs are not cleared.
+- `WebUtils` now uses the web implementation on WebAssembly builds too (the condition is `dart.library.js_interop` instead of `dart.library.html`).
+- Secure preferences, environment and JSON helper code was reorganized into focused files and folders. Import `package:playx_core/playx_core.dart` rather than files under `src/`.
+
+### Fixed
+
+- `BuildContext.form` threw outside a `Form` instead of returning `null` (it now uses `Form.maybeOf`).
+- `asListInt` and `asListIntOr` rejected values that `asListIntOrNull` accepts, such as `[1, '2', 3.0]`; they now convert the same way.
+- `PlayxAsyncPrefs.maybeGetString`, `maybeGetInt`, `maybeGetDouble` and `maybeGetBool` did not catch asynchronous errors; they now return `null` as documented.
+- A clean-up of the private `_mapAsync` isolate entry point (removed a redundant `try/catch` that only rethrew).
+- Documented that `context.size` resolves to `BuildContext`'s own render size rather than the `MediaQuery` size; use `context.width`, `context.height` or `context.aspectRatio` for the screen size.
+- `PlayxLogger`'s documentation example used a `PlayxLoggerSettings(name: ...)` argument that doesn't exist.
+
+### Tests
+
+- Test coverage rose from about 80% to about 98%: loggers, all preference stores, `PlayxCore`, secure storage backends and edge cases, env, secure env and its command, extensions, conversion helpers and web behavior (including browser tests).
+
 ## 1.0.0
 - Added support for nested JSON keys using dot notation (e.g., `'data.user.name'`) in all `safe_json_convert` functions.
 - Introduced `toEnum`/`asEnum` and `toUri`/`asUri` safe conversion functions.

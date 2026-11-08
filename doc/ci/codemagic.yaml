@@ -1,0 +1,49 @@
+# Codemagic: build with playx secure env.
+#
+# Setup (Codemagic > App settings > Environment variables), group `playx_secrets`:
+#   PLAYX_ENV               e.g. prod (selects .env.prod and the secure env)
+#   PLAYX_SECRET_STRIPE_KEY one variable per secret, mark them "Secure"
+#   PLAYX_SECRET_MAPS_KEY
+#
+# `dart run playx:secure_env --from-env-prefix PLAYX_SECRET_` collects every
+# PLAYX_SECRET_* variable (without the prefix) into an encrypted
+# lib/generated/playx_secure_env.g.dart before the build. Adding a secret only
+# needs a new variable, not a script change.
+#
+# Apps depending on playx_core only: use `dart run playx_core:secure_env`.
+workflows:
+  android-release:
+    name: Android release
+    instance_type: mac_mini_m2
+    environment:
+      flutter: stable
+      groups:
+        - playx_secrets
+    scripts:
+      - name: Get packages
+        script: flutter pub get
+      - name: Generate encrypted secure env
+        script: dart run playx:secure_env --from-env-prefix PLAYX_SECRET_
+      - name: Build app bundle
+        # Add --flavor $PLAYX_ENV if your app uses flavors.
+        script: flutter build appbundle --release
+    artifacts:
+      - build/**/outputs/**/*.aab
+
+  ios-release:
+    name: iOS release
+    instance_type: mac_mini_m2
+    environment:
+      flutter: stable
+      groups:
+        - playx_secrets
+      # Configure code signing as usual, e.g. `ios_signing:`.
+    scripts:
+      - name: Get packages
+        script: flutter pub get
+      - name: Generate encrypted secure env
+        script: dart run playx:secure_env --from-env-prefix PLAYX_SECRET_
+      - name: Build IPA
+        script: flutter build ipa --release
+    artifacts:
+      - build/ios/ipa/*.ipa

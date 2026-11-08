@@ -23,11 +23,13 @@ void main() {
         expect(locale.direction, TextDirection.rtl);
       });
 
-      test('direction returns TextDirection.ltr if the language is not RTL',
-          () {
-        const locale = Locale('en');
-        expect(locale.direction, TextDirection.ltr);
-      });
+      test(
+        'direction returns TextDirection.ltr if the language is not RTL',
+        () {
+          const locale = Locale('en');
+          expect(locale.direction, TextDirection.ltr);
+        },
+      );
     });
 
     group('isArabic', () {

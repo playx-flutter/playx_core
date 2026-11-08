@@ -1,45 +1,121 @@
 name: Build
+
 on:
   push:
-    branches: [main , qa]
+    branches: [main, qa]
+  pull_request:
+    branches: [main, qa]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A newer push to the same branch or pull request replaces a running build.
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
+  # Analyze and test on the oldest and the newest Flutter the package supports
+  # (the minimum comes from `environment:` in pubspec.yaml).
   test:
-    defaults:
-      run:
-        working-directory: ./
+    name: Test (Flutter ${{ matrix.label }})
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         include:
-          - flutter-version: 3.24.0
-            flutter-channel: stable
-          - flutter-version: latest
-            flutter-channel: stable
+          - label: minimum
+            flutter-version: 3.44.x
+          - label: latest
+            flutter-version: ''
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v7
+
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: ${{ matrix.flutter }}
+          channel: stable
+          flutter-version: ${{ matrix.flutter-version }}
+          cache: true
 
-      - name: Install deps
-        run: flutter packages get
+      - name: Install dependencies
+        run: flutter pub get
 
-      - name: Format
-        run: dart format --set-exit-if-changed .
+      - name: Analyze
+        run: flutter analyze lib test bin
+
+      - name: Test
+        run: flutter test --coverage
+
+      - name: Check test coverage
+        uses: VeryGoodOpenSource/very_good_coverage@v3
+        with:
+          min_coverage: 90
+
+      - name: Upload coverage reports to Codecov
+        if: matrix.label == 'latest'
+        uses: codecov/codecov-action@v7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: playx-flutter/playx_core
+
+  # Tests that need a browser: WebCrypto storage, WebUtils and secure env on web.
+  web:
+    name: Web tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Test in Chrome
+        run: flutter test --platform chrome $(grep -rl "@TestOn('browser')" test)
+
+  # The example app depends on the package by path and uses env, secure env and
+  # preferences, so it catches API breaks the package tests can't.
+  example:
+    name: Example app
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: example
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
 
       - name: Analyze
         run: flutter analyze lib test
 
       - name: Test
-        run: flutter test --coverage
+        run: flutter test
 
-      - name: Check Test Coverage
-        uses: VeryGoodOpenSource/very_good_coverage@v1.2.0
+  # `dart format` output differs between Dart versions, so the check runs on one
+  # pinned SDK. Format with the same version locally, and bump it here when you
+  # upgrade Flutter.
+  format:
+    name: Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: subosito/flutter-action@v2
         with:
-          min_coverage: 32
-          
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v4.0.1
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          slug: playx-flutter/playx_core
+          channel: stable
+          flutter-version: 3.47.8
+          cache: true
+
+      - name: Check formatting
+        run: dart format --output=none --set-exit-if-changed .

@@ -1,10 +1,52 @@
+/// The core of the PlayX ecosystem: preferences, secure storage, environment
+/// configuration, extensions, utilities and logging for Flutter apps.
+///
+/// Call [PlayxCore.bootCore] once before `runApp`, then use:
+///
+/// * [PlayxPrefs], [PlayxAsyncPrefs] and [PlayxPrefsWithCache] for typed
+///   key-value storage (including maps, lists and objects as JSON);
+/// * [PlayxSecurePrefs] for encrypted storage with a choice of backends,
+///   configured with [PlayxSecurePrefsSettings];
+/// * [PlayxEnv] for configuration from `.env` files, environments, flavors and
+///   `--dart-define` values, configured with [PlayxEnvSettings]; sensitive
+///   values can be encrypted with the `secure_env` command
+///   ([PlayxSecureEnvData]);
+/// * extensions on `String`, `Iterable`, `DateTime`, `Duration`, `Color`,
+///   `BuildContext` and more, plus safe conversion helpers such as
+///   [toIntOrNull] and [asStringOrNull];
+/// * [PlayxLogger] for logging.
+///
+/// Guides for every feature are available in the
+/// [documentation](https://github.com/playx-flutter/playx_core/tree/main/doc).
+library;
+
 export 'package:equatable/equatable.dart';
+export 'package:flutter_dotenv/flutter_dotenv.dart' show Parser;
 export 'package:flutter_secure_storage/flutter_secure_storage.dart';
 export 'package:get_it/get_it.dart';
 export 'package:shared_preferences/shared_preferences.dart';
+export 'package:simple_secure_storage/simple_secure_storage.dart'
+    show DarwinAccessibility;
+export 'package:talker_logger/talker_logger.dart'
+    show
+        AnsiPen,
+        ColoredLoggerFormatter,
+        ExtendedLoggerFormatter,
+        LogDetails,
+        LogLevel,
+        LoggerFilter,
+        LoggerFormatter,
+        LoggerOutput,
+        TalkerLoggerSettings;
 export 'package:worker_manager/worker_manager.dart';
 
+export 'src/env/env_values.dart';
+export 'src/env/playx_env.dart';
+export 'src/env/playx_env_exception.dart';
+export 'src/env/playx_env_settings.dart';
+export 'src/env/secure/playx_secure_env_data.dart';
 export 'src/extensions/bool_extensions.dart';
+export 'src/extensions/border_extensions.dart';
 export 'src/extensions/color_extensions.dart';
 export 'src/extensions/context/colors.dart';
 export 'src/extensions/context/localization.dart';
@@ -15,25 +57,25 @@ export 'src/extensions/date_time_extensions.dart';
 export 'src/extensions/duration_extensions.dart';
 export 'src/extensions/iterable_extensions.dart';
 export 'src/extensions/locale_extensions.dart';
+export 'src/extensions/padding_extensions.dart';
 export 'src/extensions/string_extensions.dart';
-export 'src/models/envs_settings.dart';
+export 'src/logger/base_logger.dart';
+export 'src/logger/playx_logger.dart';
+export 'src/logger/playx_logger_settings.dart';
+export 'src/logger/talker_playx_logger.dart';
 export 'src/models/prefs_settings.dart';
-export 'src/models/secure_prefs_settings.dart';
 export 'src/models/work_manager_settings.dart';
 export 'src/playx_core.dart';
 export 'src/prefs/async_prefs.dart';
-export 'src/prefs/envs.dart';
 export 'src/prefs/prefs.dart';
 export 'src/prefs/prefs_with_cache.dart';
-export 'src/prefs/secure_prefs.dart';
+export 'src/prefs/secure/secure_prefs.dart';
+export 'src/prefs/secure/settings/secure_prefs_settings.dart';
 export 'src/utils/app_scroll_behavior.dart';
+export 'src/utils/color_utils.dart';
 export 'src/utils/common_utils.dart';
 export 'src/utils/mapper_utilities.dart';
 export 'src/utils/playx_platform.dart';
 export 'src/utils/safe_convert.dart';
 export 'src/utils/safe_json_convert.dart';
 export 'src/utils/web/web_utils.dart';
-export 'src/logger/base_logger.dart';
-export 'src/logger/playx_logger.dart';
-export 'src/logger/playx_logger_settings.dart';
-export 'src/logger/talker_playx_logger.dart';

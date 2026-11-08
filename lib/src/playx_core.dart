@@ -3,17 +3,18 @@ library;
 import 'package:get_it/get_it.dart';
 import 'package:playx_core/src/logger/base_logger.dart';
 import 'package:playx_core/src/logger/playx_logger.dart';
+import 'package:playx_core/src/logger/playx_logger_settings.dart';
 import 'package:worker_manager/worker_manager.dart';
 
-import 'models/envs_settings.dart';
+import 'env/playx_env.dart';
+import 'env/playx_env_settings.dart';
 import 'models/prefs_settings.dart';
-import 'models/secure_prefs_settings.dart';
 import 'models/work_manager_settings.dart';
 import 'prefs/async_prefs.dart';
-import 'prefs/envs.dart';
 import 'prefs/prefs.dart';
 import 'prefs/prefs_with_cache.dart';
-import 'prefs/secure_prefs.dart';
+import 'prefs/secure/secure_prefs.dart';
+import 'prefs/secure/settings/secure_prefs_settings.dart';
 
 /// Returns the instance of `GetIt` used by the `playx_core` plugin.
 ///
@@ -61,8 +62,10 @@ abstract class PlayxCore {
   /// ```
   static GetIt get getIt {
     if (_getIt == null) {
-      throw Exception('PlayxCore has not been initialized. '
-          'Please call `bootCore` before accessing the GetIt instance.');
+      throw Exception(
+        'PlayxCore has not been initialized. '
+        'Please call `bootCore` before accessing the GetIt instance.',
+      );
     }
     return _getIt!;
   }
@@ -88,11 +91,22 @@ abstract class PlayxCore {
   /// - [workerManagerSettings]: Settings to configure the worker manager. If
   ///  enabled, the worker manager will be initialized with the specified settings.
   ///
+  /// - [loggerSettings]: Settings of the `PLAYX CORE` logger, which writes the
+  ///   boot messages and the package's own warnings. By default it prints
+  ///   single-line colored messages with `debugPrint` in debug builds. Use it to
+  ///   turn colors off, add the time, silence the boot messages (`level:
+  ///   LogLevel.warning`), or choose where logs go.
+  ///
   /// Example:
   /// ```dart
   /// await PlayxCore.bootCore(
   ///   securePrefsSettings: PlayxSecurePrefsSettings(),
   ///   envSettings: PlayxEnvSettings(),
+  ///   loggerSettings: PlayxLoggerSettings(
+  ///     useColors: false,
+  ///     printDateTime: true,
+  ///     formatter: DefaultColoredLoggerFormatter(),
+  ///   ),
   /// );
   /// ```
   static Future<void> bootCore({
@@ -101,8 +115,13 @@ abstract class PlayxCore {
     PlayxEnvSettings? envSettings,
     PlayxPrefsSettings prefsSettings = const PlayxPrefsSettings(),
     WorkManagerSettings workerManagerSettings = const WorkManagerSettings(),
+    PlayxLoggerSettings? loggerSettings,
   }) async {
-    PlayxLogger.initLogger(name: 'PLAYX CORE', useColoredFormatter: true);
+    PlayxLogger.initLogger(
+      name: 'PLAYX CORE',
+      settings: loggerSettings,
+      useColoredFormatter: true,
+    );
     logger.i('Booting Preferences...');
     if (prefsSettings.createPlayxPrefs) {
       await PlayxPrefs.create();
@@ -113,7 +132,8 @@ abstract class PlayxCore {
 
     if (prefsSettings.createPlayxPrefsWithCache) {
       await PlayxPrefsWithCache.create(
-          options: prefsSettings.prefsWithCacheOptions);
+        options: prefsSettings.prefsWithCacheOptions,
+      );
     }
 
     if (securePrefsSettings.createSecurePrefs) {
@@ -122,12 +142,7 @@ abstract class PlayxCore {
 
     logger.i('Booting Environment...');
     if (envSettings != null) {
-      await PlayxEnv.load(
-        fileName: envSettings.fileName,
-        parser: envSettings.parser,
-        mergeWith: envSettings.mergeWith,
-        isOptional: envSettings.isOptional,
-      );
+      await PlayxEnv.load(envSettings);
     }
 
     if (workerManagerSettings.initWorkerManager) {
@@ -153,6 +168,8 @@ abstract class PlayxCore {
     await PlayxPrefs.dispose();
     await PlayxAsyncPrefs.dispose();
     await PlayxPrefsWithCache.dispose();
+    await PlayxSecurePrefs.dispose();
+    await PlayxEnv.dispose();
     workerManager.dispose();
   }
 }

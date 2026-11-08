@@ -16,19 +16,13 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(
-        SystemChrome.latestStyle?.statusBarColor,
-        Colors.red,
-      );
+      expect(SystemChrome.latestStyle?.statusBarColor, Colors.red);
       expect(
         SystemChrome.latestStyle?.statusBarIconBrightness,
         Brightness.dark,
       );
 
-      expect(
-        SystemChrome.latestStyle?.statusBarBrightness,
-        Brightness.light,
-      );
+      expect(SystemChrome.latestStyle?.statusBarBrightness, Brightness.light);
     });
   });
 
@@ -40,10 +34,7 @@ void main() {
         returnsNormally,
       );
       await tester.pumpAndSettle();
-      expect(
-        SystemChrome.latestStyle?.systemNavigationBarColor,
-        Colors.green,
-      );
+      expect(SystemChrome.latestStyle?.systemNavigationBarColor, Colors.green);
       expect(
         SystemChrome.latestStyle?.systemNavigationBarIconBrightness,
         Brightness.light,
@@ -57,22 +48,21 @@ void main() {
       expect(() => setOrientation(), returnsNormally);
     });
 
-    testWidgets('setOrientation landscape with rotation does not throw',
-        (tester) async {
+    testWidgets('setOrientation landscape with rotation does not throw', (
+      tester,
+    ) async {
       await tester.pumpWidget(const SizedBox());
-      expect(() => setOrientation(isPortrait: false, allowRotation: true),
-          returnsNormally);
+      expect(
+        () => setOrientation(isPortrait: false, allowRotation: true),
+        returnsNormally,
+      );
     });
   });
 
   group('Keyboard', () {
     testWidgets('hideKeyboard does not throw', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: TextField(),
-          ),
-        ),
+        const MaterialApp(home: Scaffold(body: TextField())),
       );
       await tester.pumpAndSettle();
       FocusScope.of(tester.element(find.byType(TextField))).requestFocus();
@@ -81,11 +71,7 @@ void main() {
 
     testWidgets('showKeyboard does not throw', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: TextField(),
-          ),
-        ),
+        const MaterialApp(home: Scaffold(body: TextField())),
       );
       await tester.pumpAndSettle();
       FocusScope.of(tester.element(find.byType(TextField))).requestFocus();
@@ -94,8 +80,9 @@ void main() {
   });
 
   group('Full screen', () {
-    testWidgets('enterFullScreen and exitFullScreen do not throw',
-        (tester) async {
+    testWidgets('enterFullScreen and exitFullScreen do not throw', (
+      tester,
+    ) async {
       await tester.pumpWidget(const SizedBox());
       await tester.pumpAndSettle();
       expect(() => enterFullScreen(), returnsNormally);

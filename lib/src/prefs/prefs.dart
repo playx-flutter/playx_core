@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../utils/json_value_codec.dart';
 
 /// Wrapper for handling shared preferences to save and retrieve data.
 ///
@@ -20,7 +21,8 @@ abstract class PlayxPrefs {
   static SharedPreferences get sharedPrefs {
     if (_sharedPrefs == null) {
       throw Exception(
-          'SharedPreferences is not initialized. Please call create() first.');
+        'SharedPreferences is not initialized. Please call create() first.',
+      );
     }
     return _sharedPrefs!;
   }
@@ -38,9 +40,7 @@ abstract class PlayxPrefs {
   /// This method is marked as `protected` and is only visible for testing.
   @protected
   @visibleForTesting
-  static void setMockInitialValues(
-    Map<String, Object> values,
-  ) =>
+  static void setMockInitialValues(Map<String, Object> values) =>
       // ignore: invalid_use_of_visible_for_testing_member
       SharedPreferences.setMockInitialValues(values);
 
@@ -127,6 +127,89 @@ abstract class PlayxPrefs {
   /// Sets the shared preferences value for the given [key] to the provided [value] of type `bool`.
   static Future<void> setBool(String key, bool value) =>
       sharedPrefs.setBool(key, value);
+
+  /***************************Map***************************/
+
+  /// Retrieves the JSON map stored under [key].
+  ///
+  /// Returns `null` if the key does not exist or doesn't hold a JSON object.
+  static Map<String, dynamic>? maybeGetMap(String key) =>
+      decodeJsonMapOrNull(maybeGetString(key));
+
+  /// Retrieves the JSON map stored under [key], or [fallback] if the key does
+  /// not exist or doesn't hold a JSON object.
+  static Map<String, dynamic> getMap(
+    String key, {
+    Map<String, dynamic> fallback = const {},
+  }) => maybeGetMap(key) ?? fallback;
+
+  /// Stores [value] under [key] as a JSON string.
+  ///
+  /// Values must be JSON values or objects with a `toJson()` method.
+  /// Throws a `JsonUnsupportedObjectError` otherwise.
+  static Future<void> setMap(String key, Map<String, dynamic> value) =>
+      setString(key, encodeJsonValue(value));
+
+  /***************************List***************************/
+
+  /// Retrieves the list stored under [key], converting each item with
+  /// [fromJson] if provided.
+  ///
+  /// Returns `null` if the key does not exist, doesn't hold a JSON array, or
+  /// an item can't be converted.
+  static List<T>? maybeGetList<T>(
+    String key, {
+    T Function(dynamic json)? fromJson,
+  }) => decodeJsonListOrNull<T>(maybeGetString(key), fromJson: fromJson);
+
+  /// Retrieves the list stored under [key], or [fallback] if it can't be read.
+  ///
+  /// See [maybeGetList].
+  static List<T> getList<T>(
+    String key, {
+    List<T> fallback = const [],
+    T Function(dynamic json)? fromJson,
+  }) => maybeGetList<T>(key, fromJson: fromJson) ?? fallback;
+
+  /// Stores [value] under [key] as a JSON array, converting each item with
+  /// [toJson] if provided.
+  ///
+  /// Without [toJson], items must be JSON values or objects with a `toJson()`
+  /// method. Throws a `JsonUnsupportedObjectError` otherwise.
+  static Future<void> setList<T>(
+    String key,
+    List<T> value, {
+    Object? Function(T item)? toJson,
+  }) => setString(key, encodeJsonList(value, toJson));
+
+  /***************************Object***************************/
+
+  /// Retrieves the object stored under [key], created with [fromJson].
+  ///
+  /// Returns `null` if the key does not exist, doesn't hold valid JSON, or
+  /// [fromJson] throws.
+  static T? maybeGetObject<T>(
+    String key, {
+    required T Function(dynamic json) fromJson,
+  }) => decodeJsonObjectOrNull<T>(maybeGetString(key), fromJson: fromJson);
+
+  /// Retrieves the object stored under [key], or [fallback] if it can't be read.
+  ///
+  /// See [maybeGetObject].
+  static T getObject<T>(
+    String key, {
+    required T Function(dynamic json) fromJson,
+    required T fallback,
+  }) => maybeGetObject<T>(key, fromJson: fromJson) ?? fallback;
+
+  /// Stores [value] under [key] as the JSON returned by [toJson].
+  ///
+  /// Throws a `JsonUnsupportedObjectError` if the result can't be encoded.
+  static Future<void> setObject<T>(
+    String key,
+    T value, {
+    required Object? Function(T value) toJson,
+  }) => setString(key, encodeJsonValue(toJson(value)));
 
   /*************************** Other Methods ***************************/
 
