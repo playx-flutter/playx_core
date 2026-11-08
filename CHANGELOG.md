@@ -53,6 +53,10 @@
 - `toLocalDateTime*` and `asLocalDateTime*` accept a `utcOffset` to read timestamps without zone information in a given zone (for example a server sending local Saudi time).
 - Optional `onError` callback (`MapOnError<T, S>`) on `MapUtils.mapAsync`, `MapUtils.mapAsyncInIsolate` and the `MapAsync<T>` extension methods. When provided, errors thrown while running the mapper (or while dispatching the isolate task) are caught, logged (subject to `printError`), and the value returned by `onError` is returned instead of rethrowing. If `onError` is `null` (the default), errors are rethrown after logging.
 
+**AI tooling**
+- `llms.txt` and `llms-full.txt` are published with the documentation site (generated from the guides by `dart run tool/build_llms.dart`; a test fails when they are stale).
+- `skills/playx-core/SKILL.md`, an agent skill with the correct API and the 1.x pitfalls.
+
 **Logging** (see [Logging](doc/logging.md))
 - `PlayxCore.bootCore(loggerSettings:)` configures the `PLAYX CORE` logger: turn colors off (no more `^[[38;5;4m` in consoles that don't render ANSI), add the time, hide the boot messages with `level: LogLevel.warning`, or send logs elsewhere.
 - `PlayxLoggerSettings.printLoggerName` and `printDateTime` now work (they were accepted but ignored). New options: `dateTimeFormat` (`PlayxLogDateTimeFormat`), `dateTimeFormatter`, `printLevel` (`[INFO]`-style labels) and `target` (`PlayxLogTarget`: `debugPrint`, `stdout` or `developerLog`) to choose the output channel, for example to avoid the `flutter: ` prefix that the platform adds to `print` and `debugPrint`. Messages are written as `[time] [LEVEL] [name] [tag] message`.

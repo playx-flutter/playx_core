@@ -163,6 +163,11 @@ Read it online at **[playx-flutter.github.io/playx_core](https://playx-flutter.g
 | [Migrating to 2.0](doc/migration-2.0.md) | Breaking changes, with before/after code |
 | [CI/CD samples](doc/ci/) | Codemagic, GitHub Actions, Vercel |
 
+### For AI assistants
+
+- [`llms.txt`](https://playx-flutter.github.io/playx_core/llms.txt) indexes the guides, and [`llms-full.txt`](https://playx-flutter.github.io/playx_core/llms-full.txt) holds all of them in one file, for tools that read the [llms.txt](https://llmstxt.org) format. Regenerate them with `dart run tool/build_llms.dart`.
+- [`skills/playx-core/SKILL.md`](skills/playx-core/SKILL.md) is an agent skill with the correct API and the 1.x pitfalls. Copy it to `.claude/skills/playx-core/` (or your assistant's equivalent) in your app.
+
 The [API reference](https://pub.dev/documentation/playx_core/latest/) covers every class and member, and the [changelog](CHANGELOG.md) lists what changed in each version.
 
 ## Example

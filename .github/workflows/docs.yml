@@ -8,6 +8,7 @@ on:
     branches: [main]
     paths:
       - 'doc/**'
+      - 'tool/build_llms.dart'
       - 'mkdocs.yml'
       - 'requirements-docs.txt'
       - 'lib/**'
@@ -16,6 +17,7 @@ on:
   pull_request:
     paths:
       - 'doc/**'
+      - 'tool/build_llms.dart'
       - 'mkdocs.yml'
       - 'requirements-docs.txt'
       - 'lib/**'

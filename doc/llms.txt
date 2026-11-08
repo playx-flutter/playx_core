@@ -1,0 +1,23 @@
+# playx_core
+
+> Flutter package: typed preferences, encrypted secure storage, environment configuration (with encrypted secrets), extensions, utilities and logging. One import: `package:playx_core/playx_core.dart`.
+
+Call `PlayxCore.bootCore()` once before `runApp`. Requires Dart 3.12 and Flutter 3.44. Every guide is also in one file: [llms-full.txt](https://playx-flutter.github.io/playx_core/llms-full.txt).
+
+## Guides
+
+- [Getting started](https://playx-flutter.github.io/playx_core/getting-started/): Install, `PlayxCore.bootCore` and what it sets up, dependency injection with GetIt.
+- [Preferences](https://playx-flutter.github.io/playx_core/preferences/): `PlayxPrefs`, `PlayxAsyncPrefs` and `PlayxPrefsWithCache`: typed shared_preferences helpers.
+- [Secure preferences](https://playx-flutter.github.io/playx_core/secure-prefs/): `PlayxSecurePrefs`: encrypted storage for tokens and credentials, with a choice of backend.
+- [Environment configuration](https://playx-flutter.github.io/playx_core/env/): `PlayxEnv`: typed config from `.env` files, flavors and `--dart-define`.
+- [Secure env](https://playx-flutter.github.io/playx_core/secure-env/): Encrypt secret env values into a generated Dart file with `dart run playx_core:secure_env`, including CI setups.
+- [Extensions](https://playx-flutter.github.io/playx_core/extensions/): Extensions for String, Iterable, DateTime, Duration, Future, Color, borders, padding, Locale and BuildContext.
+- [Utilities](https://playx-flutter.github.io/playx_core/utilities/): Safe conversion, safe JSON access, `MapUtils`, system UI, clipboard, platform checks, `WebUtils`, colors and scroll behavior.
+- [Logging](https://playx-flutter.github.io/playx_core/logging/): `PlayxLogger`: levels, named loggers, message layout, colors, output targets and custom backends.
+- [Testing](https://playx-flutter.github.io/playx_core/testing/): Testing code that uses playx_core, and running this package's tests.
+
+## Optional
+
+- [Migrating from 1.x to 2.0](https://playx-flutter.github.io/playx_core/migration-2.0/): Checklist for upgrading from 1.x to 2.0.
+- [API reference](https://playx-flutter.github.io/playx_core/api/): every class and method
+- [Changelog](https://pub.dev/packages/playx_core/changelog): release notes

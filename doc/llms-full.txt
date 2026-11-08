@@ -1,0 +1,2481 @@
+# playx_core documentation
+
+Source: https://playx-flutter.github.io/playx_core/. Generated from the guides; do not edit.
+
+---
+
+<!-- https://playx-flutter.github.io/playx_core/getting-started/ -->
+# Getting started
+
+## Requirements
+
+| | Minimum |
+| --- | --- |
+| Dart | 3.12 |
+| Flutter | 3.44 |
+
+Supported platforms: Android, iOS, macOS, Windows, Linux and web.
+
+## Installation
+
+```yaml
+dependencies:
+  playx_core: ^2.0.0
+```
+
+Using the full PlayX ecosystem? Depend on [`playx`](https://pub.dev/packages/playx) instead, which includes `playx_core`.
+
+```dart
+import 'package:playx_core/playx_core.dart';
+```
+
+One import gives you everything: preferences, secure storage, environment configuration, extensions, utilities, logging, and re-exports of `GetIt`, `Equatable`, `SharedPreferences` and `worker_manager`.
+
+## Booting the core
+
+Call `PlayxCore.bootCore` once, before `runApp`. It creates the pieces you ask for and initializes logging and dependency injection.
+
+```dart
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await PlayxCore.bootCore();
+
+  runApp(const MyApp());
+}
+```
+
+With no arguments it creates `PlayxPrefs`, `PlayxAsyncPrefs`, `PlayxSecurePrefs` (using `flutter_secure_storage`) and the worker manager. Everything is configured through settings objects:
+
+```dart
+await PlayxCore.bootCore(
+  // Which preference stores to create.
+  prefsSettings: const PlayxPrefsSettings(
+    createPlayxPrefsWithCache: true,
+  ),
+  // Secure storage backend and behavior.
+  securePrefsSettings: const PlayxSecurePrefsSettings(
+    storageType: PlayxSecureStorageType.auto,
+  ),
+  // Environment configuration. Omit to skip loading any env.
+  envSettings: const PlayxEnvSettings(
+    requiredKeys: ['API_URL'],
+  ),
+  // Isolate pool used by the *InIsolate helpers.
+  workerManagerSettings: const WorkManagerSettings(isolatesCount: 2),
+  // How the package's own logs look: no colors, with the time, no box.
+  loggerSettings: PlayxLoggerSettings(
+    useColors: false,
+    printDateTime: true,
+    formatter: const DefaultColoredLoggerFormatter(),
+  ),
+);
+```
+
+### What `bootCore` sets up
+
+`bootCore` runs these steps in order. Each is skipped when its setting turns it off.
+
+| Step | Setting | Default |
+| --- | --- | --- |
+| Create `PlayxPrefs` | `prefsSettings.createPlayxPrefs` | `true` |
+| Create `PlayxAsyncPrefs` | `prefsSettings.createPlayxAsyncPrefs` | `true` |
+| Create `PlayxPrefsWithCache` | `prefsSettings.createPlayxPrefsWithCache` (with `prefsWithCacheOptions`) | `false` |
+| Create `PlayxSecurePrefs` | `securePrefsSettings.createSecurePrefs` | `true` |
+| Load `PlayxEnv` | `envSettings` is not `null` | not loaded |
+| Start the worker manager | `workerManagerSettings.initWorkerManager` (with `isolatesCount`, `dynamicSpawning`) | `true` |
+
+The logger named `PLAYX CORE` is always initialized first (configure it with `loggerSettings`), and `GetIt` becomes available at the end.
+
+`bootCore` throws if loading the env fails (for example a missing `requiredKeys` entry, or `isOptional: false` with a missing file), so a misconfigured build fails at startup rather than deep inside the app.
+
+> Create only what you use. Skipping a store you don't need avoids reading it at startup, and calling a store that wasn't created throws an `Exception` saying so.
+
+## Dependency injection
+
+`playx_core` re-exports [`GetIt`](https://pub.dev/packages/get_it). After `bootCore`, use the global `getIt`:
+
+```dart
+getIt.registerSingleton<AuthService>(AuthService());
+getIt.registerLazySingleton<Api>(() => Api(PlayxEnv.getUri('API_URL', fallback: Uri())));
+
+final auth = getIt<AuthService>();
+```
+
+`getIt` (and `PlayxCore.getIt`) throws an `Exception` if `bootCore` hasn't run. `PlayxCore.dispose()` resets it.
+
+## Logging
+
+`bootCore` creates the logger `PLAYX CORE`, used by the package itself (for example when a secure storage fallback happens). You can use it too, or create your own. Pass `loggerSettings` to turn colors off, add the time, hide the boot messages or change where logs go: see [Logging](logging.md#configuring-the-playx-core-logger).
+
+```dart
+PlayxCore.logger.i('App started');
+```
+
+## Disposing
+
+`PlayxCore.dispose()` releases everything `bootCore` created: `GetIt`, the preference stores, `PlayxSecurePrefs`, `PlayxEnv` and the worker manager. It is mainly useful in tests:
+
+```dart
+tearDown(PlayxCore.dispose);
+```
+
+See [Testing](testing.md) for complete test setups.
+
+## What next
+
+- Store data: [Preferences](preferences.md) and [Secure preferences](secure-prefs.md).
+- Configure the app per environment: [Environment configuration](env.md), and [Secure env](secure-env.md) for sensitive values.
+- Upgrading from 1.x? Read [Migrating to 2.0](migration-2.0.md).
+
+---
+
+<!-- https://playx-flutter.github.io/playx_core/preferences/ -->
+# Preferences
+
+`playx_core` wraps the [`shared_preferences`](https://pub.dev/packages/shared_preferences) plugin in three static helpers with the same typed API. They store plain (unencrypted) values; for secrets use [secure preferences](secure-prefs.md).
+
+## Which one should I use?
+
+| | `PlayxPrefs` | `PlayxAsyncPrefs` | `PlayxPrefsWithCache` |
+| --- | --- | --- | --- |
+| Backed by | `SharedPreferences` | `SharedPreferencesAsync` | `SharedPreferencesWithCache` |
+| Reads | synchronous | `Future` | synchronous (from a cache) |
+| Writes | `Future<void>` | `Future<void>` | `Future<void>` |
+| Always reads the latest platform value | no (in-memory snapshot) | **yes** | no, until `reloadCache()` |
+| Created at boot | by default | by default | opt-in (`createPlayxPrefsWithCache`) |
+
+- **`PlayxPrefs`** is the simplest choice: read values synchronously in `build` methods or `initState`.
+- **`PlayxAsyncPrefs`** always asks the platform, so it is the right choice when other isolates, processes or native code may change the same preferences.
+- **`PlayxPrefsWithCache`** reads synchronously from a cache that can be limited to an allow list, and refreshed with `reloadCache()`.
+
+> The three stores are independent: a value saved with one is not guaranteed to be visible to the others. Pick one per kind of data.
+
+## Setting up
+
+`bootCore` creates them according to `PlayxPrefsSettings`:
+
+```dart
+await PlayxCore.bootCore(
+  prefsSettings: const PlayxPrefsSettings(
+    createPlayxPrefs: true,            // default
+    createPlayxAsyncPrefs: true,       // default
+    createPlayxPrefsWithCache: true,   // default: false
+    prefsWithCacheOptions: SharedPreferencesWithCacheOptions(
+      allowList: {'theme', 'locale'},  // optional: only cache these keys
+    ),
+  ),
+);
+```
+
+Or create one yourself: `await PlayxPrefs.create();`.
+
+Using a store that hasn't been created is safe for reads (they return `null` or the fallback) and throws an `Exception` for the `sharedPrefs` getter.
+
+## Reading and writing
+
+All three classes offer the same methods. `PlayxPrefs` and `PlayxPrefsWithCache` return values directly; `PlayxAsyncPrefs` returns `Future`s.
+
+| Type | Read (`null` if missing) | Read with fallback (default) | Write |
+| --- | --- | --- | --- |
+| `String` | `maybeGetString(key)` | `getString(key, fallback: '')` | `setString(key, value)` |
+| `int` | `maybeGetInt(key)` | `getInt(key, fallback: -1)` | `setInt(key, value)` |
+| `double` | `maybeGetDouble(key)` | `getDouble(key, fallback: -1)` | `setDouble(key, value)` |
+| `bool` | `maybeGetBool(key)` | `getBool(key, fallback: false)` | `setBool(key, value)` |
+
+```dart
+// PlayxPrefs: synchronous reads.
+await PlayxPrefs.setString('name', 'John Doe');
+await PlayxPrefs.setInt('age', 25);
+
+final name = PlayxPrefs.getString('name');                 // 'John Doe'
+final age = PlayxPrefs.getInt('age');                      // 25
+final height = PlayxPrefs.maybeGetDouble('height');        // null
+final darkMode = PlayxPrefs.getBool('dark', fallback: true);
+
+// PlayxAsyncPrefs: awaited reads.
+await PlayxAsyncPrefs.setString('token', 'abc');
+final token = await PlayxAsyncPrefs.getString('token');
+```
+
+Reads never throw: a missing key, a value of another type, or a store that isn't initialized all give `null` (`maybeGet*`) or the fallback (`get*`).
+
+### Other operations
+
+```dart
+PlayxPrefs.find('name');            // the raw value (Object?), or null
+await PlayxPrefs.remove('name');    // delete one key
+await PlayxPrefs.clear();           // delete everything in this store
+await PlayxPrefs.dispose();         // forget the instance (mostly for tests)
+
+await PlayxPrefsWithCache.reloadCache();   // refresh the cache from the platform
+```
+
+On `PlayxAsyncPrefs`, `find` returns a `Future<Object?>`.
+
+## Maps, lists and objects
+
+Every preference class (including [`PlayxSecurePrefs`](secure-prefs.md)) can store structured data. Values are saved as JSON strings.
+
+| | Read (`null` if unusable) | Read with fallback | Write |
+| --- | --- | --- | --- |
+| Map | `maybeGetMap(key)` | `getMap(key, fallback: {})` | `setMap(key, map)` |
+| List | `maybeGetList<T>(key, fromJson:)` | `getList<T>(key, fallback: [], fromJson:)` | `setList<T>(key, list, toJson:)` |
+| Object | `maybeGetObject<T>(key, fromJson:)` | `getObject<T>(key, fromJson:, fallback:)` | `setObject<T>(key, value, toJson:)` |
+
+```dart
+// Maps
+await PlayxPrefs.setMap('settings', {'theme': 'dark', 'fontSize': 14});
+final settings = PlayxPrefs.getMap('settings');            // Map<String, dynamic>
+
+// Lists of JSON values need no converters...
+await PlayxPrefs.setList('ids', [1, 2, 3]);
+final ids = PlayxPrefs.getList<int>('ids');                // [1, 2, 3]
+
+// ...lists of your own types do.
+await PlayxAsyncPrefs.setList('users', users, toJson: (u) => u.toJson());
+final saved = await PlayxAsyncPrefs.getList(
+  'users',
+  fromJson: User.fromJson,
+);
+
+// Single objects
+await PlayxSecurePrefs.setObject('user', user, toJson: (u) => u.toJson());
+final user = await PlayxSecurePrefs.maybeGetObject(
+  'user',
+  fromJson: User.fromJson,
+);
+```
+
+`fromJson` receives the decoded JSON (`dynamic`), so the [safe JSON helpers](utilities.md#safe-json-access) work well there:
+
+```dart
+class User {
+  final String name;
+  final int age;
+  const User(this.name, this.age);
+
+  factory User.fromJson(dynamic json) =>
+      User(asString(json, 'name'), asIntOr(json, 'age'));
+
+  Map<String, dynamic> toJson() => {'name': name, 'age': age};
+}
+```
+
+**What happens with bad data**
+
+- `maybeGet*` returns `null` and `get*` returns its fallback when the key is missing, the stored string isn't valid JSON, has another shape (for example a list where a map is expected), an item can't be converted, or `fromJson` throws.
+- `setMap` and `setList` without `toJson` accept JSON values and objects with a `toJson()` method. Anything else (for example a `DateTime`) throws a `JsonUnsupportedObjectError`, so convert it first.
+
+## Tips
+
+- Prefer a few well-named keys; consider a constants class (`abstract class PrefKeys { static const theme = 'theme'; }`).
+- Store small settings, not large documents or binary data.
+- Writes return a `Future`; `await` them when the next read depends on the write (for `PlayxPrefsWithCache` and `PlayxPrefs` the in-memory value updates immediately).
+- To observe changes in a UI, keep the value in your state management and write through to preferences.
+
+See also: [Testing](testing.md) for `setMockInitialValues`, [Secure preferences](secure-prefs.md) for encrypted storage.
+
+---
+
+<!-- https://playx-flutter.github.io/playx_core/secure-prefs/ -->
+# Secure preferences
+
+`PlayxSecurePrefs` stores small secrets (tokens, keys, credentials) encrypted at rest. It has the same typed API as the [other preference stores](preferences.md), but every operation is asynchronous, and you choose **where** the data lives.
+
+- [Quick start](#quick-start)
+- [Choosing a backend](#choosing-a-backend)
+- [Settings reference](#settings-reference)
+- [The `auto` backend](#the-auto-backend)
+- [Encrypted preferences](#encrypted-preferences)
+- [Hiding key names](#hiding-key-names-encryptkeys)
+- [Web](#web)
+- [Switching an existing app](#switching-an-existing-app-from-flutter_secure_storage)
+- [Errors and failures](#errors-and-failures)
+- [Security notes](#security-notes)
+
+## Quick start
+
+`PlayxCore.bootCore` creates it with the default settings:
+
+```dart
+await PlayxCore.bootCore();
+
+await PlayxSecurePrefs.setString('access_token', 'abc123');
+final token = await PlayxSecurePrefs.getString('access_token');
+final missing = await PlayxSecurePrefs.maybeGetString('nope');   // null
+
+await PlayxSecurePrefs.remove('access_token');
+await PlayxSecurePrefs.clear();
+```
+
+Typed values and structured data work like the other stores:
+
+```dart
+await PlayxSecurePrefs.setInt('attempts', 3);
+await PlayxSecurePrefs.setBool('biometrics', true);
+await PlayxSecurePrefs.setDouble('balance', 12.5);
+await PlayxSecurePrefs.setMap('session', {'id': 7, 'role': 'admin'});
+await PlayxSecurePrefs.setObject('user', user, toJson: (u) => u.toJson());
+```
+
+| Type | Read (`null` if missing) | Read with fallback | Write |
+| --- | --- | --- | --- |
+| `String` | `maybeGetString` | `getString` (`''`) | `setString` |
+| `int` | `maybeGetInt` | `getInt` (`-1`) | `setInt` |
+| `double` | `maybeGetDouble` | `getDouble` (`-1`) | `setDouble` |
+| `bool` | `maybeGetBool` | `getBool` (`false`) | `setBool` |
+| Map / List / Object | `maybeGetMap`, `maybeGetList`, `maybeGetObject` | `getMap`, `getList`, `getObject` | `setMap`, `setList`, `setObject` |
+
+Numbers and bools are stored as strings and parsed back; a value that can't be parsed reads as `null` (so `getBool` returns its fallback). See [Preferences](preferences.md#maps-lists-and-objects) for maps, lists and objects.
+
+Other members:
+
+| Member | Purpose |
+| --- | --- |
+| `PlayxSecurePrefs.storageType` | The backend actually in use, e.g. after an `auto` fallback. |
+| `PlayxSecurePrefs.isInitialized` | Whether `create` has been called. |
+| `PlayxSecurePrefs.securePrefs` | The underlying `FlutterSecureStorage` instance (always created). |
+| `PlayxSecurePrefs.create(securePrefsSettings:)` | Create it yourself instead of through `bootCore`. |
+| `PlayxSecurePrefs.dispose()` | Release it (mostly for tests). |
+| `PlayxSecurePrefs.migrateFromFlutterSecureStorage()` | Move data from `flutter_secure_storage`. See [below](#switching-an-existing-app-from-flutter_secure_storage). |
+
+## Choosing a backend
+
+Select it with `PlayxSecurePrefsSettings.storageType`. The API stays the same whichever you pick.
+
+| `PlayxSecureStorageType` | Stores values in | Notes |
+| --- | --- | --- |
+| `flutterSecureStorage` (default) | [`flutter_secure_storage`](https://pub.dev/packages/flutter_secure_storage): Keystore-backed storage on Android, Keychain on iOS and macOS, DPAPI on Windows, libsecret on Linux | The default of previous versions. No startup health check. |
+| `simpleSecureStorage` | [`simple_secure_storage`](https://pub.dev/packages/simple_secure_storage): the same native stores through a different, actively maintained plugin | Initialization errors are thrown (unless `throwOnError: false`). |
+| `encryptedPrefs` | `SharedPreferencesAsync`, each value encrypted with AES-256-GCM | The key lives in a secure store, with a fallback. Works anywhere preferences work. |
+| `auto` | The first healthy backend of `autoOrder` | **Recommended** when you want the app to keep working on devices where a plugin fails. |
+| `memory` | A map in memory | Nothing survives a restart. For tests, or as a last resort. |
+
+```dart
+await PlayxCore.bootCore(
+  securePrefsSettings: const PlayxSecurePrefsSettings(
+    storageType: PlayxSecureStorageType.auto,
+  ),
+);
+```
+
+**Which should I pick?**
+
+- *Existing app, no problems with `flutter_secure_storage`:* keep the default.
+- *Seeing plugin errors or crashes on some devices:* use `auto` with `simple_secure_storage` first. Data in the old store can be moved with [`migrateFromFlutterSecureStorage`](#switching-an-existing-app-from-flutter_secure_storage).
+- *Web:* nothing to choose; every type except `memory` uses [WebCrypto](#web).
+- *Tests:* `memory`.
+
+## Settings reference
+
+### `PlayxSecurePrefsSettings`
+
+| Option | Default | Meaning |
+| --- | --- | --- |
+| `storageType` | `flutterSecureStorage` | The backend. |
+| `autoOrder` | `[simpleSecureStorage, flutterSecureStorage, encryptedPrefs]` | Order `auto` tries backends in. Only these three types are allowed; `memory` is always the last resort. The first entry is the *preferred* backend. |
+| `throwOnError` | `true` | When `false`, errors are logged instead of thrown: reads return `null`, writes are ignored, and `memory` is used if the backend can't be created. |
+| `encryptKeys` | `false` | Hide key names. See [below](#hiding-key-names-encryptkeys). |
+| `flutterSecureStorageOptions` | defaults | Platform options for `flutter_secure_storage`. |
+| `simpleSecureStorageOptions` | defaults | Options for `simple_secure_storage`. |
+| `encryptedPrefsOptions` | defaults | Options for `encryptedPrefs`. |
+| `clearOnReinstall` | `true` | Clear the store on the first start after a reinstall (the iOS and macOS Keychain survives uninstalling). |
+| `createSecurePrefs` | `true` | Whether `bootCore` creates it. |
+
+### `PlayxFlutterSecureStorageOptions`
+
+Groups the native `flutter_secure_storage` options: `iosOptions`, `androidOptions`, `linuxOptions`, `windowsOptions`, `macOsOptions`. Defaults use `KeychainAccessibility.first_unlock` on iOS.
+
+```dart
+const PlayxSecurePrefsSettings(
+  flutterSecureStorageOptions: PlayxFlutterSecureStorageOptions(
+    iosOptions: IOSOptions(accessibility: KeychainAccessibility.unlocked),
+  ),
+);
+```
+
+### `PlayxSimpleSecureStorageOptions`
+
+| Option | Default | Meaning |
+| --- | --- | --- |
+| `appName` | `null` | Your app name, used by the plugin on some platforms. |
+| `namespace` | `null` | Your app namespace, e.g. `com.example.app`. |
+| `prefix` | `'sss_'` | Prepended to every key to avoid conflicts. |
+| `darwinAccessibility` | `afterFirstUnlock` | Keychain accessibility on iOS and macOS. |
+
+### `PlayxEncryptedPrefsOptions`
+
+| Option | Default | Meaning |
+| --- | --- | --- |
+| `keyPrefix` | `'playx_secure_'` | Prefix of every key stored in preferences. It isolates secure values from your other preferences, so `clear()` only removes keys with this prefix. Must not be empty. |
+| `keyStores` | `[simpleSecureStorage, flutterSecureStorage]` | Where the encryption key is kept, in order of preference. Only these two are allowed. |
+
+## The `auto` backend
+
+`auto` picks a backend **at every start**:
+
+1. For each type in `autoOrder`, it creates the backend and runs a **health check**: write a random value, read it back, delete it.
+2. The first backend that passes is used. Failures are logged, not thrown.
+3. If none passes, it uses `memory`, so the app still starts (nothing is persisted that session).
+
+```dart
+// Prefer simple_secure_storage, fall back to encrypted preferences.
+const PlayxSecurePrefsSettings(
+  storageType: PlayxSecureStorageType.auto,
+  autoOrder: [
+    PlayxSecureStorageType.simpleSecureStorage,
+    PlayxSecureStorageType.encryptedPrefs,
+  ],
+);
+```
+
+### Data follows the preferred backend
+
+If a fallback was used in one session, `auto` keeps a small journal (in preferences) of what happened, so the data can be moved to the preferred backend on a later start where it works again:
+
+- values written during the fallback are moved back;
+- values removed during the fallback stay removed;
+- a `clear()` during the fallback (for example a logout) is applied to the preferred backend too;
+- an older fallback value never overwrites a newer one.
+
+The journal contains key names and backend names, never values. With `encryptKeys: true` it is encrypted as well.
+
+> **Native crashes can't be caught.** Only Dart exceptions trigger a fallback. If a plugin crashes the app natively on some devices, put it last in `autoOrder` or remove it.
+
+## Encrypted preferences
+
+`encryptedPrefs` encrypts each value with **AES-256-GCM** (with a random nonce per value, and authentication, so tampering is detected) and saves it in `SharedPreferencesAsync`. Two keys are involved:
+
+- **The primary key**: random bytes generated on the device, kept in the first healthy store of `keyStores` (on web, a [non-extractable WebCrypto key](#web)). A marker in preferences remembers which store holds it.
+- **The fallback key**: random bytes kept in plain preferences, used when the primary key can't be loaded. It only **obfuscates** the data: anyone with the preferences file can decrypt it.
+
+Each stored value records which key encrypted it, so values written with the fallback key stay readable once the primary key is back.
+
+### Protecting the primary key
+
+The key is never discarded while values encrypted with it may still be readable:
+
+| Situation | What happens |
+| --- | --- |
+| The key store is unavailable this session | The fallback key is used; the stored key is left untouched. |
+| The key store works but the key reads back missing or invalid | The fallback key is used; the stored key is **not** replaced. |
+| It stays missing for **3 starts in a row** (for example the Android Keystore was reset) | The key is considered lost: values encrypted with it are removed (they can't be decrypted anymore) and a new key is created. |
+| The key is missing and there is no data that needs it | A new key is created right away. |
+| A key store is removed from `keyStores` later | An existing key is still read from where it was created; `keyStores` only decides where **new** keys go. |
+
+## Hiding key names (`encryptKeys`)
+
+Encrypting values doesn't hide **key names** such as `access_token`: some stores keep them readable in files. Enable `encryptKeys` to store each value under a keyed hash (HMAC-SHA256) of its name instead:
+
+```dart
+const PlayxSecurePrefsSettings(
+  storageType: PlayxSecureStorageType.auto,
+  encryptKeys: true,
+);
+```
+
+| Storage | Names with `encryptKeys: true` |
+| --- | --- |
+| `encryptedPrefs` (every platform, so all of web) | Hidden; only `keyPrefix` stays visible |
+| `flutterSecureStorage` on Android | Hidden (otherwise plain text in a private preferences file) |
+| `simpleSecureStorage` on Android | Already encrypted by the plugin |
+| iOS and macOS Keychain | Kept by the OS, out of app files |
+| Windows and Linux credential stores | Not hidden |
+
+How it works:
+
+- The hash key is kept in secure storage (the keystore, or a non-extractable WebCrypto key on web), so names can't be guessed from the files alone.
+- The real name is stored **inside** the encrypted value, so `readAll`, migrations and recovery keep working.
+- It can be turned on or off at any time: stored values are converted on the next start. For `flutter_secure_storage` the conversion happens lazily on first use, so startup does no extra work.
+- If the primary key is unavailable for a session, names are hashed with the fallback key; each entry carries a timestamp, so the newest value wins once the primary key is back, and removals made meanwhile are applied.
+- Values you write directly to `PlayxSecurePrefs.securePrefs` bypass playx and keep plain names. playx still reads them as a fallback.
+
+## Web
+
+On web every storage type except `memory` uses `encryptedPrefs` with a **non-extractable WebCrypto key** stored in IndexedDB:
+
+- Nothing secret ships with your app: there is no password, salt or key to configure.
+- Scripts can use the key while the page runs, but the browser never lets them read or export its bytes. Stored data can't be decrypted on another machine or offline.
+- Values saved by 1.x (which used `flutter_secure_storage` on web) are migrated automatically on the first start.
+
+What it doesn't protect against: code running in your page (for example XSS) and full access to the user's browser profile. For auth tokens on web, prefer `HttpOnly` cookies set by your server.
+
+## Switching an existing app from `flutter_secure_storage`
+
+Values saved with the default backend stay in `flutter_secure_storage`. After changing `storageType`, copy them over:
+
+```dart
+await PlayxCore.bootCore(
+  securePrefsSettings: const PlayxSecurePrefsSettings(
+    storageType: PlayxSecureStorageType.auto,
+  ),
+);
+
+// Safe to call on every start: once the source is empty it does nothing.
+final moved = await PlayxSecurePrefs.migrateFromFlutterSecureStorage();
+```
+
+| Parameter | Default | Meaning |
+| --- | --- | --- |
+| `from` | `PlayxSecurePrefs.securePrefs` | The `FlutterSecureStorage` holding the data. Pass your own instance if it was created with custom options. |
+| `deleteFromSource` | `true` | Delete migrated values from `flutter_secure_storage` afterwards. |
+
+- Keys that already exist in the new backend are kept, because they are newer.
+- It returns the number of values copied, and `0` when the current backend is `flutterSecureStorage` itself.
+- It understands entries whose names were hidden by `encryptKeys`, and skips playx's own internal keys.
+- It **reads** `flutter_secure_storage`, so it runs into any native crash that plugin has on a device. If that is why you are switching, consider doing the migration once, behind your own guard.
+
+## Errors and failures
+
+By default errors are thrown to your code. Set `throwOnError: false` for the lenient behavior:
+
+```dart
+const PlayxSecurePrefsSettings(throwOnError: false);
+```
+
+| | `throwOnError: true` (default) | `throwOnError: false` |
+| --- | --- | --- |
+| Read fails | throws | logs, returns `null` / the fallback |
+| Write, remove or clear fails | throws | logs, does nothing |
+| Backend can't be created | `create` throws | logs, uses `memory` |
+| Value can't be decrypted (`encryptedPrefs`) | returns `null` (always) | returns `null` |
+
+`auto` and `encryptedPrefs` never throw because a storage is unavailable: they end up on `memory`. Failures are written to the `PLAYX CORE` logger (see [Logging](logging.md)).
+
+## Security notes
+
+- **What is protected.** Values at rest on the device. Other apps and casual file access can't read them.
+- **What isn't.** A rooted or compromised device, a debugger attached to your running app, and values while they are in memory.
+- **The fallback key is obfuscation**, not secrecy. Treat sessions that use it as lower assurance, and prefer a backend that passes its health check.
+- **Don't store what you can avoid storing.** Refresh tokens and short-lived credentials are good fits; long-lived secrets shared by all users belong on your server.
+
+See also: [Preferences](preferences.md), [Secure env](secure-env.md) (for secrets that ship *with* the app), [Testing](testing.md).
+
+---
+
+<!-- https://playx-flutter.github.io/playx_core/env/ -->
+# Environment configuration
+
+`PlayxEnv` gives your app typed configuration values (API URLs, feature flags, timeouts) from:
+
+1. `.env` files bundled as assets, including one per environment or flavor;
+2. build-time values passed with `--dart-define`;
+3. [encrypted secure env](secure-env.md) for sensitive values.
+
+All sources are merged into one set of values that you read **synchronously** with typed getters.
+
+> **Security:** `.env` files ship as plain text inside your app and `--dart-define` values are compiled into it. Anyone who has the app can read them. Use them for configuration, and [secure env](secure-env.md) for sensitive values.
+
+- [Quick start](#quick-start)
+- [Settings reference](#settings-reference)
+- [How values are layered](#how-values-are-layered)
+- [Environments and flavors](#environments-and-flavors)
+- [File syntax](#file-syntax)
+- [Build-time values](#build-time-values)
+- [Reading values](#reading-values)
+- [Required keys and errors](#required-keys-and-errors)
+- [Inspecting what was loaded](#inspecting-what-was-loaded)
+- [Loading without `bootCore`](#loading-without-bootcore)
+- [Recipes](#recipes)
+
+## Quick start
+
+**1. Create the files** next to your `pubspec.yaml`:
+
+```
+# .env
+API_URL=https://api.example.com
+ENABLE_LOGS=true
+TIMEOUT=30s
+```
+
+**2. Declare them as assets.** List every file you want to load, including environment files:
+
+```yaml
+# pubspec.yaml
+flutter:
+  assets:
+    - .env
+    - .env.dev
+    - .env.prod
+```
+
+**3. Load them at startup** by passing `envSettings` to `bootCore`:
+
+```dart
+await PlayxCore.bootCore(
+  envSettings: const PlayxEnvSettings(
+    requiredKeys: ['API_URL'],   // fail at startup if missing
+  ),
+);
+```
+
+**4. Read values:**
+
+```dart
+final apiUrl = PlayxEnv.getUri('API_URL', fallback: Uri.parse('https://api.example.com'));
+final logs = PlayxEnv.getBool('ENABLE_LOGS');
+final timeout = PlayxEnv.getDuration('TIMEOUT', fallback: const Duration(seconds: 30));
+```
+
+## Settings reference
+
+`PlayxEnvSettings` is a `const` class. Every option is optional.
+
+| Option | Default | Meaning |
+| --- | --- | --- |
+| `fileName` | `'.env'` | The base file. |
+| `environment` | `null` | Environment name (`dev`, `prod`…). Loads `'$fileName.$environment'` after the base file. When `null`, resolved from `--dart-define=PLAYX_ENV`, then the Flutter flavor. |
+| `useFlavor` | `true` | Use the Flutter flavor as the environment when none is set. |
+| `additionalFiles` | `[]` | More files loaded after the environment file, e.g. `['.env.local']`. |
+| `mergeWith` | `{}` | Values that override the files. |
+| `usePlayxDefines` | `true` | Read `--dart-define=PLAYX_DEFINES`. |
+| `dartDefines` | `{}` | Individual build-time values that override everything else. |
+| `secureEnv` | `null` | Encrypted values from [secure env](secure-env.md). |
+| `useSecureDefines` | `true` | Read `--dart-define=PLAYX_SECURE_DEFINES`. |
+| `requiredKeys` | `[]` | Keys that must have a non-empty value once loaded. |
+| `isOptional` | `true` | When `false`, a missing file throws instead of being skipped. |
+| `parser` | `Parser()` | The `flutter_dotenv` parser, if you need custom parsing. |
+
+## How values are layered
+
+Sources are applied in this order. **Later sources override earlier ones**, key by key: a source only replaces the keys it defines, everything else is kept.
+
+| # | Source | Example |
+| --- | --- | --- |
+| 1 | `fileName` | `.env` |
+| 2 | `'$fileName.$environment'` | `.env.prod` |
+| 3 | `additionalFiles`, in order | `.env.local` |
+| 4 | [Secure env](secure-env.md): `secureEnv`, then `PLAYX_SECURE_DEFINES` | generated file |
+| 5 | `mergeWith` | `{'API_URL': '...'}` |
+| 6 | `PLAYX_DEFINES` | `--dart-define=PLAYX_DEFINES="DEBUG=true"` |
+| 7 | `dartDefines` | `--dart-define=DEBUG=true` |
+
+```
+# .env                            # .env.prod
+BASE_URL=https://api.example.com  BASE_URL=https://api.prod.example.com
+TIMEOUT=30s
+```
+
+With `--dart-define=PLAYX_ENV=prod`, `BASE_URL` comes from `.env.prod` and `TIMEOUT` still comes from `.env`. A `--dart-define=PLAYX_DEFINES="BASE_URL=https://staging.example.com"` on top would replace `BASE_URL` only.
+
+**Missing files.** A missing file is logged and skipped, so a missing `.env.prod` simply leaves the values from `.env` in place. With `isOptional: false`, `load` throws a `PlayxEnvException` listing the missing files. The setting applies to all files at once.
+
+## Environments and flavors
+
+The environment name selects `.env.<name>`. It is resolved in this order:
+
+1. `PlayxEnvSettings.environment`, if set;
+2. `--dart-define=PLAYX_ENV=<name>`;
+3. the Flutter flavor (`flutter run --flavor <name>`), unless `useFlavor: false`.
+
+```sh
+flutter run --dart-define=PLAYX_ENV=dev
+flutter run --flavor prod                  # flavors need native flavor setup
+flutter build apk --flavor staging
+```
+
+`PlayxEnv.environment` reports the resolved name and `PlayxEnv.loadedFiles` the files that were actually found. If no name is resolved, only the base file (and `additionalFiles`) is loaded.
+
+Set `environment` in code when the name comes from somewhere else:
+
+```dart
+PlayxEnvSettings(environment: kReleaseMode ? 'prod' : 'dev')
+```
+
+## File syntax
+
+Files use the usual `.env` format:
+
+```
+# Comments start with a hash
+APP_NAME=Playx Core
+GREETING="Hello, world"        # quotes keep spaces
+export TOKEN_URL=https://auth.example.com
+API_URL=https://$HOST/api      # references an earlier value
+PRICE=\$5                      # escape a literal dollar sign
+```
+
+- Variables can reference earlier values with `$NAME`, including values from earlier **files**.
+- **A reference is resolved when its line is read.** If `.env` defines `API_URL=https://$HOST/api` and `.env.prod` only changes `HOST`, `API_URL` keeps the old host. Redefine `API_URL` in `.env.prod` as well.
+- Empty files are fine; unreadable lines are ignored.
+
+## Build-time values
+
+Dart can only read a define whose name is written as a **constant in code**. Reading one by a name known only at runtime works in debug builds, but returns `""` in release builds and throws on web, so playx never does that. There are two ways to pass build-time values.
+
+### `PLAYX_DEFINES`: any number of values, nothing to declare
+
+```sh
+flutter run --dart-define=PLAYX_DEFINES="DEBUG=true;API_URL=https://dev.example.com"
+```
+
+```dart
+PlayxEnv.getBool('DEBUG');   // true, with no setup in code
+```
+
+- Entries use `.env` syntax, separated by `;` or new lines.
+- For values containing `;` or awkward characters, pass base64: `--dart-define=PLAYX_DEFINES=base64:$(base64 < .env.ci)`.
+- It works with `--dart-define-from-file`, which avoids shell quoting:
+
+  ```json
+  { "PLAYX_DEFINES": "DEBUG=true;API_URL=https://dev.example.com" }
+  ```
+
+- Values can reference values from the files (`API_URL=https://$HOST`).
+- An explicit empty entry (`KEY=`) overrides with an empty string, which is the only way to blank a value from the command line.
+- Disable with `usePlayxDefines: false`.
+
+### `dartDefines`: individual, declared defines
+
+```sh
+flutter run --dart-define=DEBUG=true
+```
+
+```dart
+const PlayxEnvSettings(
+  dartDefines: {'DEBUG': String.fromEnvironment('DEBUG')},
+);
+```
+
+Unset defines come through as `''` and are ignored, so `.env` values stay in place. `dartDefines` wins over `PLAYX_DEFINES`.
+
+> If you only need a flag **in code**, `const debug = bool.fromEnvironment('DEBUG');` is a compile-time constant: code behind `if (debug)` is removed from release builds, which runtime configuration can't do.
+
+## Reading values
+
+All getters are synchronous. Each type has `maybeGetX` (returns `null` when there's no usable value) and `getX` (returns a fallback).
+
+| Type | Accepted values | Read | Fallback default |
+| --- | --- | --- | --- |
+| `String` | anything | `maybeGetString`, `getString` | `''` |
+| `int` | `3`, `"3.9"` (truncated) | `maybeGetInt`, `getInt` | `-1` |
+| `double` | `2.5`, `3` | `maybeGetDouble`, `getDouble` | `-1` |
+| `num` | `7`, `2.5` | `maybeGetNum`, `getNum` | `-1` |
+| `bool` | `true`, `false`, `1`, `0` (case-insensitive) | `maybeGetBool`, `getBool` | `false` |
+| `Uri` | `https://example.com/a` | `maybeGetUri`, `getUri` | required `fallback` |
+| enum | the value's name, case-insensitive | `maybeGetEnum(key, Mode.values)`, `getEnum` | required `fallback` |
+| `Duration` | `250ms`, `30s`, `5m`, `1.5h`, `1d` (no unit = milliseconds) | `maybeGetDuration`, `getDuration` | required `fallback` |
+| `List<T>` | `a, b, c` or `[1, 2, 3]` | `maybeGetList<T>`, `getList<T>` | `[]` |
+| JSON object | `{"enabled": true}` | `maybeGetMap`, `getMap` | `{}` |
+| your type | JSON | `maybeGetObject(key, fromJson:)`, `getObject` | required `fallback` |
+
+A value that can't be converted (for example `maybe` as a bool) is treated like a missing one.
+
+```dart
+final retries = PlayxEnv.getInt('RETRIES', fallback: 3);
+final mode = PlayxEnv.getEnum('THEME_MODE', ThemeMode.values, fallback: ThemeMode.system);
+final locales = PlayxEnv.getList<String>('SUPPORTED_LOCALES');       // 'en, ar' -> ['en', 'ar']
+final ports = PlayxEnv.getList<int>('PORTS');                        // '80,443' or '[80, 443]'
+final flags = PlayxEnv.getObject(
+  'FEATURES',
+  fromJson: FeatureFlags.fromJson,                                   // '{"newCheckout": true}'
+  fallback: const FeatureFlags(),
+);
+```
+
+Lists accept a custom `separator` (default `,`), skip empty items, and convert `String`, `int`, `double`, `num`, `bool` and `Uri` items automatically. Pass `fromJson` for other types. If any item can't be converted the whole list reads as `null` (or the fallback).
+
+### `PlayxEnv.values` and `EnvValues`
+
+`PlayxEnv`'s getters are shortcuts for the same getters on `PlayxEnv.values`, an immutable `EnvValues`. You can also wrap any `Map<String, String>`, such as remote config:
+
+```dart
+final remote = EnvValues({'NEW_CHECKOUT': 'true', 'LIMIT': '10'});
+remote.getBool('NEW_CHECKOUT');   // true
+remote.getInt('LIMIT');           // 10
+```
+
+## Required keys and errors
+
+```dart
+const PlayxEnvSettings(requiredKeys: ['API_URL', 'STRIPE_KEY']);
+```
+
+`load` throws a `PlayxEnvException` when:
+
+- a required key is missing or empty: `missingKeys` lists **all** of them;
+- a file is missing and `isOptional` is `false`: `missingFiles` lists them;
+- [secure env](secure-env.md) values can't be decrypted.
+
+```dart
+try {
+  await PlayxEnv.load(settings);
+} on PlayxEnvException catch (e) {
+  print(e.message);        // 'Missing required env keys: API_URL'
+  print(e.missingKeys);    // ['API_URL']
+}
+```
+
+`bootCore` rethrows it, so a misconfigured build fails at startup. Values that did load remain available through `PlayxEnv` even when required keys are missing.
+
+## Inspecting what was loaded
+
+| Member | Meaning |
+| --- | --- |
+| `PlayxEnv.isLoaded` | Whether values have been loaded. |
+| `PlayxEnv.environment` | The resolved environment name, if any. |
+| `PlayxEnv.loadedFiles` | The files that were found, in order. |
+| `PlayxEnv.all` | Every value **except** secure ones: safe to log. |
+| `PlayxEnv.containsKey(key)` | Whether a key has a value (secure keys included). |
+| `PlayxEnv.isSecure(key)` | Whether a key holds a [secure value](secure-env.md). |
+| `PlayxEnv.values` | The loaded `EnvValues`. |
+
+Reading before `load` returns no values and logs one warning, which usually means `envSettings` was not passed to `bootCore`.
+
+## Loading without `bootCore`
+
+```dart
+await PlayxEnv.load(const PlayxEnvSettings(requiredKeys: ['API_URL']));
+```
+
+`loadFromString` loads `.env`-formatted text instead of assets, for configuration fetched at runtime or for tests:
+
+```dart
+PlayxEnv.loadFromString(
+  'API_URL=https://api.example.com\nRETRIES=3',
+  mergeWith: {'RETRIES': '5'},
+  requiredKeys: ['API_URL'],
+);
+```
+
+`PlayxEnv.dispose()` clears everything. See [Testing](testing.md) for `setMockValues`.
+
+## Recipes
+
+**Per-environment API URL**
+
+```
+# .env            # .env.dev                       # .env.prod
+API_URL=https://api.example.com
+                  API_URL=https://dev.example.com  API_URL=https://api.prod.example.com
+```
+
+```sh
+flutter run --dart-define=PLAYX_ENV=dev
+```
+
+**A local override that isn't committed**
+
+```dart
+const PlayxEnvSettings(additionalFiles: ['.env.local'])
+```
+
+Add `.env.local` to `.gitignore` and to your assets while developing. If it isn't there, it is skipped.
+
+**Feature flags from the command line**
+
+```sh
+flutter run --dart-define=PLAYX_DEFINES="NEW_CHECKOUT=true;MAX_UPLOADS=5"
+```
+
+```dart
+if (PlayxEnv.getBool('NEW_CHECKOUT')) { /* ... */ }
+```
+
+**Switching the theme from config**
+
+```dart
+MaterialApp(
+  themeMode: PlayxEnv.getEnum('THEME_MODE', ThemeMode.values, fallback: ThemeMode.system),
+);
+```
+
+See the [example app](https://github.com/playx-flutter/playx_core/tree/main/example) for a complete project, and [Secure env](secure-env.md) for sensitive values.
+
+---
+
+<!-- https://playx-flutter.github.io/playx_core/secure-env/ -->
+# Secure env
+
+Secure env keeps sensitive configuration values (API keys, client secrets, DSNs) **out of plain sight** in your shipped app. You write them in a normal gitignored file, a command encrypts them into a generated Dart file, and `PlayxEnv` decrypts them in memory at startup.
+
+- [What it protects (and what it doesn't)](#what-it-protects-and-what-it-doesnt)
+- [Quick start](#quick-start)
+- [How it works](#how-it-works)
+- [Writing the secrets files](#writing-the-secrets-files)
+- [The `secure_env` command](#the-secure_env-command)
+- [Keys](#keys)
+- [CI/CD](#cicd)
+- [Encrypted define](#encrypted-define-playx_secure_defines)
+- [At runtime](#at-runtime)
+- [Troubleshooting](#troubleshooting)
+
+## What it protects (and what it doesn't)
+
+Plain `.env` assets and `--dart-define` values end up in your app as readable text. Anyone can unzip an APK or IPA, run `strings` on the binary, open browser devtools on a web build, or point an automated scanner at it, and read them.
+
+Secure env removes that: **names and values are encrypted together and stored as numbers**, never as strings, so none of those techniques find anything.
+
+| Threat | Protected? |
+| --- | --- |
+| Unzipping the app, `strings`, asset inspection | **Yes** |
+| Automated scanners that look for API keys in published apps | **Yes** |
+| Secrets committed to git by accident | **Yes**: only the encrypted file and the (gitignored) key exist |
+| Someone reverse engineering your app with a debugger or decompiler | **No**: the app has to decrypt the values itself, so the key ships with it |
+
+> **The honest limit:** anything an app can decrypt on its own, a determined attacker who has the app can decrypt too. Secure env raises the bar from "anyone with unzip" to "a motivated reverse engineer". For keys that would cause real damage if leaked, don't put them in the app at all: keep them on your server (or a serverless function) and let the app call that instead.
+
+## Quick start
+
+**1. Put secrets in a gitignored file.**
+
+```
+# .env.secrets
+STRIPE_KEY=pk_test_123
+MAPS_API_KEY=AIza...
+```
+
+**2. Generate the encrypted Dart file.**
+
+```sh
+dart run playx:secure_env
+```
+
+> Apps using the `playx` package run `dart run playx:secure_env`; apps depending on `playx_core` only run `dart run playx_core:secure_env`. Both take the same options. The examples in this guide use `playx:secure_env`.
+
+This writes `lib/generated/playx_secure_env.g.dart` and creates a key in `.playx_secure_env.key`.
+
+**3. Ignore the secrets and the key.**
+
+```
+# .gitignore
+.env.secrets*
+.playx_secure_env.key
+lib/generated/playx_secure_env.g.dart
+secure_defines.json
+```
+
+**4. Pass the generated value to `PlayxEnv`.**
+
+```dart
+import 'generated/playx_secure_env.g.dart';
+
+await PlayxCore.bootCore(
+  envSettings: const PlayxEnvSettings(
+    secureEnv: playxSecureEnv,
+    requiredKeys: ['STRIPE_KEY'],
+  ),
+);
+
+PlayxEnv.getString('STRIPE_KEY');   // 'pk_test_123'
+PlayxEnv.isSecure('STRIPE_KEY');    // true
+```
+
+Secure values use the same getters as every other value (`getString`, `getInt`, `getUri`…), see [Environment configuration](env.md#reading-values).
+
+## How it works
+
+```
+.env.secrets  ──►  secure_env command  ──►  playx_secure_env.g.dart  ──►  PlayxEnv.load()
+ (gitignored)       AES-256-GCM            encrypted blob + split key     decrypts in memory
+```
+
+- **One encrypted blob.** The whole map (names and values) is serialized, then encrypted with **AES-256-GCM** under a fresh random nonce. GCM also authenticates the data, so tampering is detected.
+- **Stored as numbers.** The generated file holds the blob as integer lists, so nothing appears as a string in the compiled app.
+- **Split key.** The key is stored as two byte lists that are XOR-ed back together at runtime, so it never appears as one contiguous value. (This is obfuscation, see [the limit above](#what-it-protects-and-what-it-doesnt).)
+- **Layering.** Secure values are applied after the `.env` files and before `mergeWith`, `PLAYX_DEFINES` and `dartDefines`, so those can still override a secret, for example for local testing. See [How values are layered](env.md#how-values-are-layered).
+- **Hidden from dumps.** Secure values are excluded from `PlayxEnv.all`, so logging your configuration doesn't leak them. The getters still return them.
+
+## Writing the secrets files
+
+Secrets files use the same syntax as [`.env` files](env.md#file-syntax): comments, quotes, `export`, and `$VAR` references.
+
+| File | Purpose |
+| --- | --- |
+| `.env.secrets` | Secrets for every environment. |
+| `.env.secrets.<env>` | Secrets for one environment, overriding the base file. Read when `--env <env>` is passed. |
+
+```
+# .env.secrets                  # .env.secrets.prod
+STRIPE_KEY=pk_test_123          STRIPE_KEY=pk_live_987
+MAPS_API_KEY=AIza-dev
+```
+
+```sh
+dart run playx:secure_env --env prod
+```
+
+generates a file for `prod` containing `STRIPE_KEY=pk_live_987` and `MAPS_API_KEY=AIza-dev`. A build only contains the secrets of the environment it was generated for, so a production build never ships development secrets.
+
+Regenerate the file whenever you change a secrets file or switch environment.
+
+## The `secure_env` command
+
+```
+dart run playx:secure_env [command] [options]
+```
+
+### Commands
+
+| Command | Does |
+| --- | --- |
+| `generate` (default) | Writes the encrypted Dart file used with `PlayxEnvSettings(secureEnv: playxSecureEnv)`. |
+| `define` | Prints (or writes with `--out`) the encrypted value of the `PLAYX_SECURE_DEFINES` define. See [below](#encrypted-define-playx_secure_defines). |
+| `generate-key` | Prints a new random key, for example to store as a CI secret. |
+| `--help` | Shows all options. |
+
+### Where values come from
+
+Sources are applied in this order; later ones override earlier ones.
+
+| Option | Meaning |
+| --- | --- |
+| `--input <file>` | The secrets file. Default `.env.secrets`. A missing explicit input is an error. |
+| `--env <name>` | Also read `<input>.<name>`. Defaults to the `PLAYX_ENV` environment variable. |
+| `--no-file` | Don't read secrets files (CI with variables only). |
+| `--from-env A,B` | Read these environment variables. An unset one is an error. |
+| `--from-env-prefix P` | Read every environment variable starting with `P`, without the prefix (`PLAYX_SECRET_API_KEY` becomes `API_KEY`). |
+| `--define KEY=VALUE` | Add a value. Repeatable. |
+| `--allow-empty` | Don't fail when there are no values at all. |
+
+### Key options
+
+| Option | Meaning |
+| --- | --- |
+| `--key <base64>` | Use this key. |
+| `PLAYX_ENV_KEY` | Environment variable holding the key. |
+| `--key-file <file>` | Where the key is kept. Default `.playx_secure_env.key`. Created if missing. |
+| `--rotate-key` | Create a new key and overwrite the key file. |
+
+The first available of these is used, in this order: `--key`, `PLAYX_ENV_KEY`, the key file; otherwise a new key is generated and saved to the key file.
+
+### Output options
+
+| Option | Meaning |
+| --- | --- |
+| `--output <file>` | The generated Dart file. Default `lib/generated/playx_secure_env.g.dart`. |
+| `--key-from-define` | Don't embed the key; the build passes it with `--dart-define=PLAYX_ENV_KEY=<key>`. See [Keys](#keys). |
+| `--import <uri>` | The import used by the generated file. Default `package:playx/playx.dart` when the project depends on `playx`, otherwise `package:playx_core/playx_core.dart`. |
+| `--out <file.json>` | `define` only: write a `--dart-define-from-file` JSON file (existing keys in the file are kept). |
+| `--verbose` | Print the *names* of the values and the sources used. Never prints values. |
+
+### Behavior worth knowing
+
+- Output never contains secret values. The command prints counts, and key names only with `--verbose`.
+- It warns when a secrets file, the key file, or a generated file that embeds the key is **not** in `.gitignore` (when run inside a git repository).
+- Exit codes: `0` success, `1` failure (missing input, unset variable, invalid key…), `64` usage error. CI builds therefore fail when something is wrong.
+- The generated file starts with `// dart format off`, so formatting your project doesn't expand it into thousands of lines.
+
+## Keys
+
+| Mode | How | Pros | Cons |
+| --- | --- | --- | --- |
+| **Embedded** (default) | The key is generated once, saved in `.playx_secure_env.key`, and embedded (split) in the generated file. | Nothing to configure at build time. Not visible as a string in the binary. | The generated file contains the key: keep it out of git. |
+| **From a define** | `--key-from-define`; build with `--dart-define=PLAYX_ENV_KEY=<key>`. | The generated file holds only ciphertext and can be committed. | `--dart-define` values are compiled into the app as readable strings, so this keeps the key out of **git**, not out of the **app**. |
+
+When both are present, the embedded key is used first.
+
+- **Rotate** with `--rotate-key` and regenerate. Every previously generated file stops working with the new key, so regenerate them all together.
+- **Create a key** for CI with `dart run playx:secure_env generate-key`.
+- **Reuse a key** across machines by setting `PLAYX_ENV_KEY` (or `--key`) when generating.
+
+## CI/CD
+
+CI machines have no gitignored `.env.secrets`; secrets live in the platform's settings and reach the build as **environment variables**. Run one command before `flutter build`:
+
+```sh
+PLAYX_ENV=prod \
+PLAYX_SECRET_STRIPE_KEY=... PLAYX_SECRET_MAPS_API_KEY=... \
+dart run playx:secure_env --from-env-prefix PLAYX_SECRET_
+
+flutter build appbundle --release
+```
+
+- `PLAYX_ENV` selects the environment (and matches the runtime `PLAYX_ENV` define if you use it).
+- Every `PLAYX_SECRET_<NAME>` variable becomes `<NAME>`, so **adding a secret is a dashboard change only**, with no edit to the build script.
+- The key is created inside the job and embedded in the generated file, which is used by that same build. Nothing else to manage.
+- Prefer `--from-env STRIPE_KEY,MAPS_API_KEY` or `--define KEY=VALUE` if you want explicit names.
+
+Ready-made configurations, copy and adapt:
+
+| Platform | File |
+| --- | --- |
+| Codemagic | [`doc/ci/codemagic.yaml`](ci/codemagic.yaml) |
+| GitHub Actions | [`doc/ci/github-actions.yml`](ci/github-actions.yml) |
+| Vercel (Flutter web) | [`doc/ci/vercel.json`](ci/vercel.json) and [`doc/ci/vercel-build.sh`](ci/vercel-build.sh) |
+
+Any other CI follows the same pattern: expose secrets as `PLAYX_SECRET_*` variables, run the command, then build.
+
+**Web hosts.** A web build is a public JavaScript bundle. Secure env keeps values out of plain sight, but for keys that must stay secret, call a serverless function (for example Vercel `api/`) that holds the key and talks to the third-party service for your app.
+
+## Encrypted define (`PLAYX_SECURE_DEFINES`)
+
+An alternative to the generated file's data: pass the encrypted values as a build define, so they can change without regenerating Dart code.
+
+```sh
+dart run playx:secure_env define --from-env-prefix PLAYX_SECRET_ --out secure_defines.json
+flutter build apk --dart-define-from-file=secure_defines.json
+```
+
+`secure_defines.json` contains only ciphertext:
+
+```json
+{ "PLAYX_SECURE_DEFINES": "v1:..." }
+```
+
+- The app decrypts it with the same key, which comes from the generated file (generate it in the same job, with the same key) or from `PLAYX_ENV_KEY`.
+- Defines override the generated values, so you can ship a base file and adjust per build.
+- Disable reading it with `PlayxEnvSettings(useSecureDefines: false)`.
+- The define is ciphertext, so finding it in the binary is useless without the key.
+
+Most apps don't need this; the CI flow above is simpler.
+
+## At runtime
+
+| Situation | Behavior |
+| --- | --- |
+| Normal | Values are decrypted in memory and served by the usual getters. They are excluded from `PlayxEnv.all`. |
+| No key available, wrong key, or tampered data | `PlayxEnv.load` throws a `PlayxEnvException` (a build misconfiguration that should fail at startup or in CI). The message never includes values. |
+| Generated for another environment | A warning is logged, for example "generated for `prod` but the environment is `dev`". Values are still loaded. |
+| A required key is missing after decrypting | `PlayxEnvException` with `missingKeys`. |
+
+## Troubleshooting
+
+| Message | Cause and fix |
+| --- | --- |
+| `No secret values found` | The secrets file doesn't exist or is empty, and no `--from-env`, `--from-env-prefix` or `--define` supplied values. Create the file, or pass `--allow-empty`. |
+| `Input file … not found` | `--input` points at a missing file. |
+| `Environment variable X is not set` | A name given to `--from-env` isn't exported in the shell. |
+| `Warning: no environment variables start with …` | `--from-env-prefix` matched nothing: check the prefix and that the CI variables are exposed to the step. |
+| `Warning: … is not in .gitignore` | Add the file to `.gitignore` before committing. |
+| `Secure env values could not be decrypted` | The key in the app doesn't match the data, or the data was altered. Regenerate the file, and make sure `--rotate-key` wasn't run for only some artifacts. |
+| `…there is no key` | The generated file was created with `--key-from-define` and the build didn't pass `--dart-define=PLAYX_ENV_KEY=<key>`. |
+| `Secure env was generated for "prod" but the environment is "dev"` | You built with a file generated for another environment. Regenerate with the right `--env`. |
+| The command isn't found | Use `dart run playx_core:secure_env` when your app depends on `playx_core` only, and `dart run playx:secure_env` when it depends on `playx`. |
+
+See also: [Environment configuration](env.md), the [example app](https://github.com/playx-flutter/playx_core/tree/main/example), and [Testing](testing.md).
+
+---
+
+<!-- https://playx-flutter.github.io/playx_core/extensions/ -->
+# Extensions
+
+Everything here is available from `import 'package:playx_core/playx_core.dart';`.
+
+- [String](#string)
+- [Iterable](#iterable)
+- [DateTime](#datetime)
+- [Duration](#duration)
+- [Color](#color)
+- [bool](#bool)
+- [Locale](#locale)
+- [Future](#future)
+- [BuildContext](#buildcontext)
+- [Padding](#padding)
+- [Borders and radius](#borders-and-radius)
+
+## String
+
+### Formatting and case
+
+| Member | Does | Example |
+| --- | --- | --- |
+| `capitalizeFirstChar` | Uppercases the first character. | `'hello'` → `'Hello'` |
+| `capitalizeFirstCharForEachWord` | Uppercases the first character of every space-separated word. | `'hello big world'` → `'Hello Big World'` |
+| `capitalizedInitialChar` | The first visible character, uppercased. Unicode-safe (emoji and combined characters stay whole); empty for blank strings. Ideal for avatar initials. | `'  élodie'` → `'É'` |
+| `format(List args)` | `sprintf`-style formatting. | `'Hi %s, you are %d'.format(['Jane', 30])` |
+| `limit(maxLength, {suffix})` | Truncates and appends a suffix (default `...`). | `'Hello World'.limit(5)` → `'Hello...'` |
+| `toSlug()` | URL-friendly slug. | `'Hello, World! 2024'` → `'hello-world-2024'` |
+| `toPrettyJson({indent})` | Indents a JSON string; returns it unchanged if it isn't valid JSON. | `'{"a":1}'` → `'{\n  "a": 1\n}'` |
+
+### Inspecting and searching
+
+| Member | Does |
+| --- | --- |
+| `reversed` | The characters in reverse order. |
+| `isPalindrome` | Whether the string equals its reverse. |
+| `linesCount` | Number of lines. |
+| `firstOrNull`, `lastOrNull`, `lastOrEmpty` | First / last character, or `null` / `''` when empty. |
+| `containsIgnoreCase(other)`, `equalsIgnoreCase(other)` | Case-insensitive comparison. |
+| `anyChar(predicate)` | Whether any single character satisfies the predicate. |
+| `isNumeric` | Whether it parses as a number. |
+| `isValidEmail`, `isValidUrl` | Basic format checks (not a guarantee that the address or URL exists). |
+
+### Converting and editing
+
+| Member | Does | Example |
+| --- | --- | --- |
+| `toBoolean()` | `true` for `'true'` or `'1'` (case-insensitive), otherwise `false`. | `'TRUE'.toBoolean()` → `true` |
+| `toIntOrNull()`, `toDoubleOrNull()` | Parse, or `null`. | `'42'.toIntOrNull()` → `42` |
+| `removeWhitespace()` | Removes all whitespace. | `' a b '` → `'ab'` |
+| `removeHtmlTags()` | Strips basic HTML tags. | `'<b>Hi</b>'` → `'Hi'` |
+| `replaceAfter(delimiter, replacement, [defaultValue])` | Replaces everything after the first `delimiter` (the delimiter stays). | `'key=old'.replaceAfter('=', 'new')` → `'key=new'` |
+| `replaceBefore(delimiter, replacement, [defaultValue])` | Replaces everything before the first `delimiter`. | `'old=value'.replaceBefore('=', 'new')` → `'new=value'` |
+
+For safer conversions of unknown values see [`toIntOrNull`/`toInt`… in Utilities](utilities.md#safe-conversion).
+
+### Nullable strings
+
+```dart
+String? name;
+name.isNullOrEmpty;              // true
+name.isNotNullOrEmpty;           // false
+name.ifNullOrEmpty('Anonymous'); // 'Anonymous'
+```
+
+## Iterable
+
+Methods are on every `Iterable<T>` (lists, sets…). Note `firstOrNull()` and `lastOrNull()` are **methods**.
+
+### Counting and picking
+
+| Member | Does |
+| --- | --- |
+| `countWhere([predicate])` | Number of elements matching (all elements without a predicate). |
+| `countNotNull()` | Number of non-null elements. |
+| `random` | A random element, or `null` when empty. |
+| `firstOrNull()`, `lastOrNull()` | First / last element, or `null`. |
+| `firstOr(value)`, `lastOr(value)` | First / last element, or `value`. |
+| `isIndexValid(index)` | Whether `index` is in range. |
+| `atOrNull(index)`, `atOr(index, value)` | Element at `index`, or `null` / `value`. |
+| `firstWhereOrNull(test)`, `firstWhereOr(test, value)` | First match, or `null` / `value`. |
+| `lastWhereOrNull(test)`, `lastWhereOr(test, value)` | Last match, or `null` / `value`. |
+
+### Transforming
+
+| Member | Does | Example |
+| --- | --- | --- |
+| `withoutDuplicate()` | List without duplicates. | `[1, 1, 2]` → `[1, 2]` |
+| `mapWithIndex((i, e) => …)` | Map with the index. | `['a', 'b']` → `['0a', '1b']` |
+| `chunked(size)` | Splits into lists of `size` (throws `ArgumentError` for `size <= 0`). | `[1, 2, 3].chunked(2)` → `[[1, 2], [3]]` |
+| `groupBy(keySelector)` | `Map<K, List<T>>`. | `[1, 2, 3].groupBy((e) => e.isEven)` |
+| `sortedBy(key)`, `sortedByDescending(key)` | A sorted copy (the source is untouched). | `words.sortedBy((w) => w.length)` |
+
+### Asynchronous mapping
+
+```dart
+final doubled = await [1, 2, 3].asyncMap(mapper: (e) async => e * 2);
+final parsed = await files.asyncMapInIsolate(mapper: parseFile);   // runs each item in an isolate
+```
+
+`asyncMapInIsolate` takes `useWorkManager` (use the `worker_manager` pool started by `bootCore`, default `true`), `printError` and `printEachItemError`. The mapper must be a top-level or static function (it is sent to another isolate). See also [`MapUtils`](utilities.md#maputils-and-mapasync).
+
+### Nested iterables
+
+```dart
+final nested = [[1, 2], [3], <int>[]];
+nested.flatten();                                      // [1, 2, 3]
+nested.flatMap(mapper: (e) => e * 10);                 // 10, 20, 30
+await nested.flatMapAsync(mapper: (e) async => e + 1); // [2, 3, 4]
+```
+
+`asyncFlatMap` is deprecated; use `flatMapAsync`.
+
+### Numbers
+
+```dart
+[1, 2, 3, 4].sum;       // 10
+[1, 2, 3, 4].average;   // 2.5
+<int>[].sum;            // 0 (empty collections give 0)
+```
+
+## DateTime
+
+| Member | Does |
+| --- | --- |
+| `isAm` | Whether the hour is before 12. |
+| `nextDay`, `previousDay` | ±1 day. |
+| `sameDayNextWeek`, `sameDayPreviousWeek` | ±7 days. |
+| `nextMonth`, `previousMonth` | **±30 days**, not a calendar month. |
+| `isToday`, `isTomorrow`, `isYesterday` | Relative to now. |
+| `isSameDay(date)`, `isSameMonth(date)`, `isSameYear(date)` | Compare calendar parts. |
+| `isSameWeek(date: …, firstDay: …)` | Same week, for a configurable first weekday. |
+| `isInThisWeek({firstDay})`, `isInThisMonth`, `isInThisYear` | Relative to now. |
+| `isInTheFuture`, `isInThePast` | Compared with now. |
+| `dayOfTheWeekIndex({firstDay})` | 0-6, counted from `firstDay` (default Monday). |
+| `dayOfTheWeek()` → `Weekday`, `monthOfTheYear()` → `Month` | Enums with a `fromDate` constructor. |
+| `isLeapYear` | Leap-year check. |
+| `withoutTime()` | Midnight of the same day. |
+| `copyWith({year, month, day, hour, minute, second, millisecond})` | Replace parts. |
+| `startOfDay`, `endOfDay` | `00:00:00.000` / `23:59:59.999`. |
+| `startOfMonth`, `endOfMonth` | First moment / last millisecond of the month. |
+| `startOfWeek({firstDay})`, `endOfWeek({firstDay})` | Boundaries of the week; Monday-first by default. |
+
+```dart
+final date = DateTime(2024, 5, 15);          // a Wednesday
+date.startOfWeek();                           // 2024-05-13
+date.startOfWeek(firstDay: Weekday.sunday);   // 2024-05-12
+date.endOfMonth;                              // 2024-05-31 23:59:59.999
+date.dayOfTheWeek();                          // Weekday.wednesday
+```
+
+## Duration
+
+Total and remaining parts, as strings with an optional leading zero (default `true`):
+
+| Member | Example for `27h 5m 9s` |
+| --- | --- |
+| `toDays()`, `toHours()`, `toMinutes()`, `toSeconds()`, `toMilliSeconds()` | `toHours()` → `'27'` (total hours) |
+| `toRemainingHours()`, `toRemainingMinutes()`, `toRemainingSeconds()` | `'03'`, `'05'`, `'09'` |
+| `toFormattedDuration(...)` | see below |
+| `delay([callback])` | Waits for the duration, then runs `callback` (if given) and returns its result |
+
+```dart
+const d = Duration(hours: 27, minutes: 5, seconds: 9);
+
+d.toRemainingMinutes();                            // '05'
+d.toRemainingMinutes(leadingZero: false);          // '5'
+
+d.toFormattedDuration(
+  days: 'd', hours: 'h', minutes: 'm', seconds: 's', spacer: ', ',
+);                                                  // '01 d, 03 h, 05 m, 09 s'
+
+await const Duration(seconds: 2).delay(() => 'done');   // 'done' after 2 seconds
+```
+
+Parts you don't pass (`days:`, `hours:`…) are left out. `leaveSpaceBetweenTimeAndText: false` removes the space (`'3h5m'`). `twoDigits(int)` is also exported.
+
+## Color
+
+```dart
+const color = Color(0xFF336699);
+
+color.toHex();                               // '#336699'
+color.toHex(leadingHashSign: false);         // '336699'
+color.toHex(includeAlpha: true);             // '#ff336699'
+
+PlayxColorExtensions.fromHex('#336699');     // Color(0xFF336699)
+PlayxColorExtensions.fromHex('80336699');    // with alpha
+
+color.copyWith(alpha: 0.5, red: 1);          // channels are 0.0-1.0
+color.lighten(0.2);                          // lightness +0.2, clamped
+color.darken();                              // lightness -0.1 by default
+color.isDark;                                // luminance < 0.5: pick a text color
+```
+
+`ColorUtils.fromHex(hex:, alpha:)` and `ColorUtils.fromRGB(...)` are also available, see [Utilities](utilities.md#colors).
+
+## bool
+
+```dart
+true.toInt();        // 1
+false.toInt();       // 0
+true.toggle();       // false
+
+bool? value;
+value.isTrue;        // true only for an explicit true
+value.isFalse;       // true only for an explicit false
+```
+
+## Locale
+
+| Member | Does |
+| --- | --- |
+| `isRTL` | Right-to-left languages: Arabic, Farsi, Hebrew, Pashto, Urdu. |
+| `direction` | The matching `TextDirection`. |
+| `isArabic`, `isEnglish` | Language checks. |
+
+## Future
+
+```dart
+final length = await fetchName().map((name) => name.length);
+```
+
+`map` transforms the result of a future (`FutureOr` transform allowed).
+
+## BuildContext
+
+### Theme
+
+| Member | Same as |
+| --- | --- |
+| `theme`, `textTheme`, `brightness` | `Theme.of(context)`, `.textTheme`, `.brightness` |
+| `isDark`, `isLight` | whether the brightness is dark / light |
+
+### Colors
+
+Shortcuts for `Theme.of(context)` colors: `primaryColor`, `primaryColorDark`, `primaryColorLight`, `backgroundColor`, `scaffoldBackgroundColor`, `bottomAppBarColor`, `cardColor`, `dividerColor`, `disabledColor`, `focusColor`, `hoverColor`, `highlightColor`, `splashColor`, `unselectedWidgetColor`, `secondaryHeaderColor`, `hintColor`, `errorColor`, `colorScheme`, `secondary`, `buttonPrimaryColor`.
+
+And every Material 3 `ColorScheme` role: `primary`, `onPrimary`, `primaryContainer`, `onPrimaryContainer`, `secondary` (+ `on…`, `…Container`), `tertiary` (+ `on…`, `…Container`), `surface`, `onSurface`, `error`, `onError`, `errorContainer`, `onErrorContainer`, `outline`, `outlineVariant`, `shadow`, `scrim`, `inverseSurface`, `onInverseSurface`, `inversePrimary`.
+
+```dart
+Container(color: context.primaryContainer, child: Text('Hi', style: TextStyle(color: context.onPrimaryContainer)));
+```
+
+### Media query
+
+| Member | Does |
+| --- | --- |
+| `mediaQuery` | `MediaQuery.of(context)` |
+| `width`, `height`, `aspectRatio` | Screen size values |
+| `mediaQueryPadding` | System padding (notches, bars) |
+| `orientation`, `isPortrait`, `isLandscape` | Orientation |
+| `alwaysUse24HourFormat` | The platform setting |
+| `crossAxisCount({mediumBreakpoint, wideBreakpoint, compact, medium, wide})` | Grid columns for the width: `1` below 840, `2` from 840, `3` from 1400 |
+
+```dart
+GridView.count(crossAxisCount: context.crossAxisCount(), children: items);
+context.crossAxisCount(mediumBreakpoint: 600, medium: 3, wide: 5);
+```
+
+> **`context.size` is not the screen size.** `BuildContext` already has a member named `size` (the size of the widget's render object), and a real member wins over an extension getter. Use `context.width`, `context.height` and `context.aspectRatio` for the screen.
+
+### Navigation
+
+| Member | Same as |
+| --- | --- |
+| `navigator`, `rootNavigator` | `Navigator.of(context)` / `…, rootNavigator: true` |
+| `canPop` | `Navigator.of(context).canPop()` |
+| `pop()` | `Navigator.of(context).pop()` |
+| `focusScope` | `FocusScope.of(context)` |
+| `form` | `Form.maybeOf(context)`: `null` when there is no `Form` above |
+
+### Localization
+
+`directionality`, `isRtl`, `isLtr`, `locale`.
+
+## Padding
+
+Helpers to create `EdgeInsets` from numbers, and to wrap widgets in `Padding`. Values are unscaled (see [conventions](README.md#conventions-used-in-these-guides)).
+
+### On numbers
+
+| Member | Creates |
+| --- | --- |
+| `p`, `pAll` | `EdgeInsets.all(n)` |
+| `px`, `pLR` | `EdgeInsets.symmetric(horizontal: n)` |
+| `py`, `pTB` | `EdgeInsets.symmetric(vertical: n)` |
+| `pt`, `pb`, `pl`, `pr` | One side: top, bottom, left, right |
+| `ps`, `pe` | `EdgeInsetsDirectional` start / end (follows RTL) |
+| `pZero` | `EdgeInsets.zero` |
+
+```dart
+Container(padding: 16.p);
+Container(padding: 8.px + 4.py);          // insets add up
+Container(padding: 12.ps);                // start side: left in LTR, right in RTL
+```
+
+Insets of the same kind combine with `+`. To mix absolute and directional insets, use `add`, which returns an `EdgeInsetsGeometry` resolved against the text direction:
+
+```dart
+Container(padding: 12.ps.add(4.pt));      // start 12 + top 4
+```
+
+### On widgets
+
+| Member | Does |
+| --- | --- |
+| `withPadding(EdgeInsetsGeometry)` | Wrap with any padding, e.g. `16.px`. |
+| `pAll(value)` | Equal padding on all sides. |
+| `pSymmetric({horizontal, vertical})` | Symmetric padding. |
+| `pOnly({left, top, right, bottom})` | Per-side padding. |
+| `pDirectional({start, top, end, bottom})` | RTL-aware padding. |
+| `pZero()` | `EdgeInsets.zero`: a placeholder padding. |
+
+```dart
+Text('Hello').pAll(16);
+Text('Hello').pSymmetric(horizontal: 12, vertical: 6);
+Text('Hello').pDirectional(start: 8);
+Text('Hello').withPadding(24.px);
+```
+
+All of them return a `Padding`.
+
+## Borders and radius
+
+### On numbers
+
+| Member | Creates |
+| --- | --- |
+| `radius` | `Radius.circular(n)` |
+| `ellipticalRadius(y)` | `Radius.elliptical(n, y)` |
+| `borderRadius` | `BorderRadius.circular(n)` |
+| `borderRadiusTop`, `borderRadiusBottom`, `borderRadiusLeft`, `borderRadiusRight` | Rounded on one side |
+| `borderRadiusStart`, `borderRadiusEnd` | `BorderRadiusDirectional` start / end (RTL-aware) |
+| `roundedShape` | `RoundedRectangleBorder`, e.g. for `Card.shape` |
+| `border([color])` | `Border.all(width: n)` |
+| `borderSide([color])` | `BorderSide(width: n)` |
+
+```dart
+DecoratedBox(
+  decoration: BoxDecoration(
+    borderRadius: 12.borderRadius,
+    border: 1.border(Colors.grey),
+  ),
+);
+Card(shape: 8.roundedShape);
+ClipRRect(borderRadius: 16.borderRadiusTop, child: image);
+```
+
+### On colors
+
+```dart
+Colors.grey.border(width: 2);   // Border.all
+Colors.grey.borderSide();       // BorderSide, width 1
+```
+
+### On widgets
+
+| Member | Does |
+| --- | --- |
+| `clipRounded(radius)` | `ClipRRect` with a circular radius. |
+| `clipBorderRadius(borderRadius)` | `ClipRRect` with any radius, e.g. `16.borderRadiusTop`. |
+| `bordered({color, width, radius})` | Draws a border (rounded when `radius > 0`). |
+
+```dart
+Image.network(url).clipRounded(12);
+Text('Tag').pSymmetric(horizontal: 8, vertical: 4).bordered(color: Colors.grey, radius: 8);
+```
+
+---
+
+<!-- https://playx-flutter.github.io/playx_core/utilities/ -->
+# Utilities
+
+- [Safe conversion](#safe-conversion)
+- [Safe JSON access](#safe-json-access)
+- [MapUtils and mapAsync](#maputils-and-mapasync)
+- [System UI helpers](#system-ui-helpers)
+- [Clipboard](#clipboard)
+- [Platform checks](#platform-checks)
+- [WebUtils](#webutils)
+- [Colors](#colors)
+- [Scroll behavior](#scroll-behavior)
+
+## Safe conversion
+
+Functions that turn an unknown value (`dynamic`, for example from JSON or a map) into a typed one **without throwing** unless you ask them to. Every type has three forms:
+
+| Form | Returns |
+| --- | --- |
+| `toXOrNull(value)` | the converted value, or `null` |
+| `toXOr(value, fallback: …)` | the converted value, or the fallback |
+| `toX(value)` | the converted value, or throws a `FormatException` |
+
+| Type | Functions | Converts |
+| --- | --- | --- |
+| `int` | `toIntOrNull`, `toIntOr` (`0`), `toInt` | `int`, `double` (truncated), `bool` (`1`/`0`), numeric `String` (`"3.9"` → `3`) |
+| `num` | `toNumOrNull`, `toNumOr`, `toNum` | `num`, `bool`, numeric `String` |
+| `double` | `toDoubleOrNull`, `toDoubleOr` (`0.0`), `toDouble` | `double`, `int`, `bool`, numeric `String` |
+| `bool` | `toBoolOrNull`, `toBoolOr`, `toBool` | `bool`, `1`/`0`, `'true'`/`'false'`/`'1'`/`'0'` (case-insensitive). Anything else is `null`. |
+| `String` | `toStringOrNull`, `toStringOr`, `toString` | `String`, `bool`, `num` |
+| `DateTime` | `toDateTimeOrNull`, `toDateTimeOr`, `toDateTime` | `DateTime`, ISO-8601 `String`, epoch milliseconds (`int`) |
+| local `DateTime` | `toLocalDateTimeOrNull`, `toLocalDateTimeOr`, `toLocalDateTime` | same, converted to local time; see `utcOffset` below |
+| `Map<K, V>` | `toMapOrNull`, `toMapOr`, `toMap` | a `Map<K, V>` (or an empty map) |
+| `List<T>` | `toListOrNull`, `toListOr`, `toList` | a `List<T>`; with `fromJson`, each item is converted |
+| enum | `toEnumOrNull(value, Mode.values)`, `toEnumOr`, `toEnum` | the enum value whose name matches, case-insensitive |
+| `Uri` | `toUriOrNull`, `toUriOr`, `toUri` | `Uri` or a parseable `String` |
+| any `T` | `toTOrNull(value, fromJson:)`, `toTOr`, `toT` | runs your `fromJson`; errors become `null` |
+
+```dart
+toIntOrNull('42');                          // 42
+toIntOrNull('abc');                         // null
+toIntOr('abc', fallback: -1);               // -1
+toBoolOrNull('TRUE');                       // true
+toBoolOrNull('maybe');                      // null
+toEnumOrNull('dark', Mode.values);          // Mode.dark
+toListOrNull<int>(['1', '2'], fromJson: (e) => int.parse(e as String));  // [1, 2]
+toUri('https://example.com');
+toInt('abc');                               // throws FormatException
+```
+
+### Dates in a fixed time zone
+
+Servers often send local times without a zone, such as `2024-05-01 10:00:00` in Saudi time. Pass the zone's offset to read them correctly:
+
+```dart
+const saudi = Duration(hours: 3);
+toLocalDateTime('2024-05-01 10:00:00', utcOffset: saudi);   // 07:00 UTC, shown in local time
+```
+
+Values that already carry a zone (`Z`, `+03:00`) and epoch integers are absolute and unaffected by `utcOffset`. Without it, a value without a zone is read as local time.
+
+## Safe JSON access
+
+The same conversions, reading a **key** from decoded JSON. Functions are named `asX`, with the same three forms (`asXOrNull`, `asXOr`, `asX`):
+
+```dart
+final json = jsonDecode(body);
+
+final name = asString(json, 'name');                       // throws if missing
+final age = asIntOr(json, 'age', fallback: 0);
+final city = asStringOrNull(json, 'address.city');         // nested key
+final firstTag = asStringOrNull(json, 'tags.0');           // list index
+final created = asDateTimeOrNull(json, 'createdAt');
+final mode = asEnumOr(json, 'mode', Mode.values, fallback: Mode.light);
+final tags = asListString(json, 'tags');
+final scores = asListInt(json, 'scores');                  // [1, '2', 3.0] -> [1, 2, 3]
+final settings = asMapOrNull<String, dynamic>(json, 'settings');
+final owner = asTOrNull<User>(json, 'owner', fromJson: User.fromJson);
+```
+
+- **Nested keys** use dot notation and list indexes (`'data.users.0.name'`). A key that literally contains a dot is matched first, so `{'a.b': 1}` still works.
+- Available types: `int`, `double`, `num`, `bool`, `String`, `DateTime` (and local), enums, `Uri`, `Map`, `List`, `List<int>`, `List<String>`, and any `T` through `asT*`.
+- A missing key, a `null` json, or a value that can't be converted all give `null` / the fallback (or a `FormatException` for the throwing form).
+- `asLocalDateTime*` accept `utcOffset`, like the `to*` versions.
+
+This pairs well with `fromJson` factories:
+
+```dart
+factory User.fromJson(dynamic json) => User(
+      name: asString(json, 'name'),
+      age: asIntOr(json, 'age'),
+      email: asStringOrNull(json, 'contact.email'),
+    );
+```
+
+## MapUtils and mapAsync
+
+Run a mapping function asynchronously, optionally in an isolate, with built-in error handling.
+
+```dart
+// Asynchronously, in the current isolate
+final dto = await MapUtils.mapAsync<String, User>(
+  data: body,
+  mapper: (body) => User.fromJson(jsonDecode(body)),
+);
+
+// In an isolate: keeps the UI thread free for heavy parsing
+final users = await MapUtils.mapAsyncInIsolate<String, List<User>>(
+  data: body,
+  mapper: parseUsers,                 // top-level or static function
+);
+
+// The same, as an extension on any value
+final user = await body.mapAsync(mapper: parseUser);
+final list = await body.mapAsyncInIsolate(mapper: parseUsers);
+```
+
+| Parameter | Meaning |
+| --- | --- |
+| `data`, `mapper` | The input and the function (`FutureOr<S> Function(T)`). |
+| `printError` | Log errors with the `PLAYX CORE` logger. Defaults to `kDebugMode`. |
+| `onError` | `S Function(T data, Object error, StackTrace stack)`. When given, errors are caught and its return value is returned instead of rethrowing. |
+| `useWorkManager` | (`mapAsyncInIsolate`) Run on the `worker_manager` pool started by `bootCore` (default `true`), or with Flutter's `compute` when `false`. |
+
+```dart
+final user = await body.mapAsync(
+  mapper: parseUser,
+  onError: (data, error, stack) => User.guest(),   // never throws
+);
+```
+
+**Isolate rules.** The mapper and the data are sent to another isolate, so the mapper must be a **top-level or static function** (not a closure capturing objects), and the data and result must be sendable. For lists, see [`asyncMapInIsolate`](extensions.md#asynchronous-mapping).
+
+## System UI helpers
+
+Top-level functions for the status bar, navigation bar, orientation, keyboard and full screen:
+
+| Function | Does |
+| --- | --- |
+| `setStatusBarColor({color, isDark})` | Status bar color (default transparent). `isDark: true` gives dark icons, for light backgrounds. |
+| `setNavigationBarColor({color, isDark})` | Bottom navigation bar color (default black) and icon brightness. |
+| `setOrientation({isPortrait, allowRotation})` | Locks the orientation. Portrait only by default; `allowRotation` adds upside-down (portrait) or both directions (landscape). |
+| `hideKeyboard()` | Hides the on-screen keyboard. |
+| `showKeyboard()` | Asks the system to show it for the focused field. |
+| `enterFullScreen()` / `exitFullScreen()` | Immersive mode that hides the system bars, and restores them. |
+
+```dart
+setStatusBarColor(color: Colors.white, isDark: true);
+setOrientation(isPortrait: false, allowRotation: true);   // landscape, both directions
+hideKeyboard();
+```
+
+## Clipboard
+
+```dart
+await copyToClipboard('hello');
+final text = await getClipboardText();      // 'hello', or null when empty
+await clearClipboard();
+```
+
+## Platform checks
+
+`PlayxPlatform` wraps `defaultTargetPlatform` and `kIsWeb`, so it works on every platform and can be overridden in tests with `debugDefaultTargetPlatformOverride`.
+
+| Getter | `true` for |
+| --- | --- |
+| `isWeb`, `isWasm` | web / WebAssembly |
+| `isAndroid`, `isIOS`, `isMacOS`, `isWindows`, `isLinux`, `isFuchsia` | that platform (never on web) |
+| `isMobile` | Android or iOS |
+| `isDesktop` | Windows, Linux or macOS |
+| `isCupertino` | iOS or macOS |
+| `isMaterial` | Android, Fuchsia, Windows or Linux, or web |
+
+```dart
+if (PlayxPlatform.isMobile) { /* ... */ }
+```
+
+## WebUtils
+
+Helpers for browser behavior. On the web they use the DOM; on every other platform the same calls compile and are **safe no-ops**, so you don't need `kIsWeb` guards.
+
+| Function | On web | Elsewhere |
+| --- | --- | --- |
+| `updateUrl(Uri)` | Replaces the URL in the address bar without navigating | no-op |
+| `updateQueryParameters(Map<String, String>)` | Replaces the query parameters of the current URL | no-op |
+| `setBodyBackgroundColor(String colorHex)` | Sets the `<body>` background | no-op |
+| `setAppTitle({required title, primaryColor, webOnly = true})` | Sets the tab title and the app-switcher description | with `webOnly: false`, sets the app-switcher description only |
+| `isFullScreen()` | Whether the page is full screen | `false` |
+| `enterFullScreen()`, `exitFullScreen()`, `toggleFullScreen()` | Browser full screen | no-op |
+| `reloadPage()` | Reloads | no-op |
+| `openInNewTab(String url)` | Opens a new tab | no-op |
+
+```dart
+WebUtils.setAppTitle(title: 'Playx Core');
+WebUtils.updateQueryParameters({'tab': 'settings'});
+WebUtils.openInNewTab('https://example.com');
+```
+
+Works with both dart2js and WebAssembly builds.
+
+## Colors
+
+```dart
+ColorUtils.fromHex(hex: '#336699');                 // opaque
+ColorUtils.fromHex(hex: '336699', alpha: 128);      // 50% alpha
+ColorUtils.fromRGB(red: 51, green: 102, blue: 153, alpha: 200);
+```
+
+For hex strings with the alpha included (`#80336699`) and other helpers, see the [`Color` extensions](extensions.md#color).
+
+## Scroll behavior
+
+`DefaultAppScrollBehavior` lets scrollables be dragged with touch, mouse **and** trackpad, which is handy for web and desktop apps:
+
+```dart
+MaterialApp(
+  scrollBehavior: DefaultAppScrollBehavior(),
+  home: const HomePage(),
+);
+```
+
+---
+
+<!-- https://playx-flutter.github.io/playx_core/logging/ -->
+# Logging
+
+`PlayxLogger` is a small logging facade: static methods that forward to a **default logger**, plus support for any number of **named loggers**. The built-in implementation uses [`talker_logger`](https://pub.dev/packages/talker_logger), and you can plug in any other backend.
+
+## Quick start
+
+`PlayxCore.bootCore` creates a logger named `PLAYX CORE` and makes it the default, so you can log straight away:
+
+```dart
+PlayxLogger.i('App started');
+PlayxLogger.d('Cart loaded', tag: 'cart');
+PlayxLogger.w('Slow response');
+PlayxLogger.e('Request failed', error: error, stackTrace: stackTrace);
+```
+
+Not using `bootCore`? Create a logger yourself:
+
+```dart
+PlayxLogger.initLogger(name: 'APP');
+```
+
+If no default logger exists, the static methods do nothing.
+
+## Levels
+
+| Method | Short | Level |
+| --- | --- | --- |
+| `PlayxLogger.verbose(msg)` | `v` | verbose |
+| `PlayxLogger.debug(msg)` | `d` | debug |
+| `PlayxLogger.info(msg)` | `i` | info |
+| `PlayxLogger.warning(msg)` | `w` | warning |
+| `PlayxLogger.error(msg, {error, stackTrace})` | `e` | error |
+| `PlayxLogger.critical(msg)` | `c` | critical |
+| `PlayxLogger.log(msg)` | | unspecified |
+
+Every method takes a `message` (anything: it is converted with `toString`, and `null` prints as `null`) and an optional `tag`, which is shown in brackets next to the logger name:
+
+```
+[APP] [cart] Cart loaded
+```
+
+`error` also accepts an `error` and a `stackTrace`, appended below the message.
+
+## Named loggers
+
+```dart
+final network = PlayxLogger.initLogger(name: 'NETWORK', setAsDefault: false);
+final storage = PlayxLogger.initLogger(name: 'STORAGE', setAsDefault: false);
+
+network.i('GET /users');                       // log with a specific logger
+PlayxLogger.getLogger('STORAGE')?.w('Disk almost full');
+
+PlayxLogger.hasLogger('NETWORK');              // true
+PlayxLogger.setDefaultLogger(network);         // make it the target of PlayxLogger.i(...)
+```
+
+| Member | Does |
+| --- | --- |
+| `initLogger({name, settings, setAsDefault = true, useColoredFormatter = false})` | Creates a `TalkerPlayxLogger`, registers it under `name` (`PLAYX LOGGER` when omitted), and returns it. It becomes the default when `setAsDefault` is `true`, or when there is no default yet. |
+| `getLogger(name)` | The logger registered under `name`, or `null`. |
+| `hasLogger(name)` | Whether it exists. |
+| `setDefaultLogger(logger)` | Sets any `PlayxBaseLogger` as the default. |
+
+`PlayxCore.logger` returns the `PLAYX CORE` logger created by `bootCore`.
+
+## Message layout
+
+Every message is written as:
+
+```
+[time] [LEVEL] [name] [tag] message
+```
+
+Each part is optional: the **time** with `printDateTime`, the **level** with `printLevel`, the **logger name** with `printLoggerName` (on by default), and the **tag** when you pass one.
+
+```dart
+PlayxLogger.initLogger(
+  name: 'APP',
+  settings: PlayxLoggerSettings(
+    printDateTime: true,
+    printLevel: true,
+    useColors: false,
+    formatter: const DefaultColoredLoggerFormatter(),   // plain lines, no box
+  ),
+);
+
+PlayxLogger.w('Slow response', tag: 'net');
+// [13:45:30.123] [WARNING] [APP] [net] Slow response
+```
+
+| Option | Default | Result |
+| --- | --- | --- |
+| `printLoggerName` | `true` | `[APP] …` |
+| `printDateTime` | `false` | `[13:45:30.123] …` |
+| `dateTimeFormat` | `PlayxLogDateTimeFormat.time` | `time`: `13:45:30.123`, `dateTime`: `2024-05-15 13:45:30.123`, `iso8601`: `2024-05-15T13:45:30.123` |
+| `dateTimeFormatter` | `null` | Your own function (for example with `intl`); overrides `dateTimeFormat`. |
+| `printLevel` | `false` | `[INFO] …`: handy when colors are off, because the level is otherwise only shown by color. |
+
+> **Single lines instead of boxes.** The default formatter (`ExtendedLoggerFormatter`) draws a box around each message. `DefaultColoredLoggerFormatter()` prints plain lines, colored only when `useColors` is on. It is what the `PLAYX CORE` logger uses by default.
+
+## Colors and the `flutter:` prefix
+
+Two things can make console output look noisy, and they have different causes.
+
+**1. Escape codes such as `^[[38;5;4m`.** These are ANSI color codes. Terminals render them as colors; some consoles (Xcode, some IDE panels) show them as text. Turn them off:
+
+```dart
+PlayxLoggerSettings(useColors: false)
+```
+
+Colors are also switched off automatically when they can't be shown, see [Color detection](#color-detection).
+
+**2. The `flutter: ` prefix.** The platform adds it to everything written with `print` or `debugPrint` (`flutter: ` on iOS and macOS, `I/flutter` on Android). The logger can't remove it, but it can use another channel with `target`:
+
+| `target` | Console shows | Notes |
+| --- | --- | --- |
+| `PlayxLogTarget.debugPrint` (default) | `flutter: [APP] hello` | Shown by every console. Safe for long messages. |
+| `PlayxLogTarget.stdout` | `[APP] hello` | **No prefix** in a terminal running the app. Some consoles only collect `print` output, such as a mobile device's system log, and may not show it. Falls back to `debugPrint` on web. |
+| `PlayxLogTarget.developerLog` | `[APP] hello` under the logger's name, no ANSI codes | Appears in DevTools and IDE debug consoles. **Not** shown in the terminal of `flutter run`. |
+
+These behaviors were checked with `flutter run -d macos`. Try your own console and device: where each channel shows up varies by tool. A custom `output` overrides `target`.
+
+```dart
+PlayxLoggerSettings(
+  useColors: false,
+  target: PlayxLogTarget.stdout,
+  formatter: const DefaultColoredLoggerFormatter(),
+)
+```
+
+### Color detection
+
+With `useColors: true` (the default), colors are still dropped when something says the console can't show them:
+
+| Situation | Colors |
+| --- | --- |
+| Web, or `target: PlayxLogTarget.developerLog` | off |
+| `--dart-define=PLAYX_LOG_COLORS=true` or `false` | forced, whatever else is set (not on web or `developerLog`) |
+| `useColors: false` | off |
+| `NO_COLOR` environment variable set (non-empty), or `TERM=dumb` | off |
+| `target: PlayxLogTarget.stdout` in a terminal that doesn't support ANSI | off |
+| Anything else | on |
+
+An app can't see which console shows its `print` output, so on a phone or in an IDE panel colors stay on unless one of the signals above applies.
+
+### Android Studio and IntelliJ
+
+The Run panel doesn't interpret ANSI codes: it prints them as text. Based on the Flutter plugin's source (not tested on every version), there are two ways to get a clean panel:
+
+- **Turn colors off** with a build define. In the run configuration, set *Additional run args* to `--dart-define=PLAYX_LOG_COLORS=false`. No code change is needed, and other developers keep their colors.
+- **Use `PlayxLogTarget.developerLog`** for real styling. The IDE shows the logger name as a gray `[name]` prefix, and the `error` and `stackTrace` of `logger.error(...)` in red. The log level is also passed, so DevTools can filter by severity. No ANSI codes are written, and the name is not repeated in the text. The cost: these entries are not printed in the terminal of `flutter run`.
+
+```dart
+PlayxLoggerSettings(target: PlayxLogTarget.developerLog)
+```
+
+## Configuring the `PLAYX CORE` logger
+
+`bootCore` creates the logger that writes the boot messages (`Booting Preferences...`) and the package's own warnings. Configure it with `loggerSettings`:
+
+```dart
+await PlayxCore.bootCore(
+  loggerSettings: PlayxLoggerSettings(
+    useColors: false,
+    printDateTime: true,
+    formatter: const DefaultColoredLoggerFormatter(),
+  ),
+);
+```
+
+| Goal | Settings |
+| --- | --- |
+| No escape codes | `useColors: false` |
+| Hide the boot messages, keep warnings and errors | `level: LogLevel.warning` |
+| Silence the package completely | `enabled: false` |
+| Time on every line | `printDateTime: true` |
+| Send the package's logs elsewhere | `output: (message) => ...` |
+
+Without `loggerSettings`, the core logger prints single-line colored messages with `debugPrint` in debug builds, as before. The same logger is the default one for `PlayxLogger.i(...)`, so these settings apply to your own messages too, unless you create another logger and make it the default.
+
+## Settings
+
+```dart
+PlayxLogger.initLogger(
+  name: 'APP',
+  settings: PlayxLoggerSettings(
+    enabled: true,                 // log in release builds too
+    level: LogLevel.info,          // ignore verbose and debug
+    useColors: false,
+  ),
+);
+```
+
+`PlayxLoggerSettings`:
+
+| Option | Default | Meaning |
+| --- | --- | --- |
+| `enabled` | `kDebugMode` | Master switch. When `false`, nothing is logged. |
+| `printToConsole` | `kDebugMode` | Whether formatted messages are passed to `output` / `target`. When `false` they are discarded (see the note below). |
+| `level` | `LogLevel.verbose` | Messages with a lower priority than this are ignored. |
+| `useColors` | `true` | ANSI colors. Dropped automatically where they can't be shown: see [Color detection](#color-detection). |
+| `colors` | red/yellow/blue/gray per level | Colors per `LogLevel` (`AnsiPen`). |
+| `printLoggerName`, `printDateTime`, `dateTimeFormat`, `dateTimeFormatter`, `printLevel` | see [Message layout](#message-layout) | What each message starts with. |
+| `formatter` | `ExtendedLoggerFormatter()` | How messages are laid out: `ExtendedLoggerFormatter` (boxed), `ColoredLoggerFormatter`, `DefaultColoredLoggerFormatter` (plain lines), or your own `LoggerFormatter`. `useColoredFormatter: true` in `initLogger` uses the plain one. |
+| `lineSymbol` | `─` | The symbol of the separator line. |
+| `maxLineWidth` | `140` | Width of the separator line. |
+| `target` | `PlayxLogTarget.debugPrint` | The channel used when there is no `output`. See [Colors and the `flutter:` prefix](#colors-and-the-flutter-prefix). |
+| `output` | `null` | Where formatted messages go; overrides `target`. |
+| `filter` | `null` | A `LoggerFilter` to drop messages. |
+
+> **`printToConsole` and `output`.** With `printToConsole: true` messages go to `output` (or to the `target` when none is given). With `printToConsole: false` nothing is printed, even if you passed an `output`. To send logs somewhere else (a file, a crash reporter), keep `printToConsole: true` and pass `output`.
+
+`LogLevel`, `AnsiPen`, `LoggerFormatter`, `LoggerFilter`, `LoggerOutput`, `LogDetails`, `ExtendedLoggerFormatter`, `ColoredLoggerFormatter` and `TalkerLoggerSettings` are re-exported by `playx_core`, so you don't need to depend on `talker_logger` yourself.
+
+### Sending logs elsewhere
+
+```dart
+PlayxLogger.initLogger(
+  name: 'APP',
+  settings: PlayxLoggerSettings(
+    enabled: true,
+    printToConsole: true,
+    output: (message) => crashReporter.addBreadcrumb(message),
+  ),
+);
+```
+
+### Release builds
+
+`enabled` and `printToConsole` default to `kDebugMode`, so a default logger is **silent in release builds**. Enable it explicitly (as above) if you want logs in production, ideally with a `level` of `warning` or higher and an `output` that goes to your reporting tool.
+
+## Your own logger
+
+Implement `PlayxBaseLogger` to use another backend (for example `package:logger`, Sentry or Crashlytics) and make it the default:
+
+```dart
+class SentryLogger extends PlayxBaseLogger {
+  const SentryLogger() : super(name: 'SENTRY');
+
+  @override
+  void debug(message, {String? tag}) => Sentry.addBreadcrumb(Breadcrumb(message: '$message'));
+
+  @override
+  void info(message, {String? tag}) => Sentry.addBreadcrumb(Breadcrumb(message: '$message'));
+
+  @override
+  void warning(message, {String? tag}) => Sentry.captureMessage('$message', level: SentryLevel.warning);
+
+  @override
+  void error(message, {Object? error, StackTrace? stackTrace, String? tag}) =>
+      Sentry.captureException(error ?? message, stackTrace: stackTrace);
+
+  @override
+  void critical(message, {String? tag}) => Sentry.captureMessage('$message', level: SentryLevel.fatal);
+
+  @override
+  void verbose(message, {String? tag}) {}
+
+  @override
+  void log(message, {String? tag}) {}
+}
+
+PlayxLogger.setDefaultLogger(const SentryLogger());
+```
+
+You only implement the seven level methods: the short aliases (`d`, `i`, `w`, `e`, `c`, `v`, `l`) are provided by the base class.
+
+## What `playx_core` logs
+
+The package logs through the `PLAYX CORE` logger, for example:
+
+- startup steps (`Booting Preferences...`), configurable with [`bootCore(loggerSettings:)`](#configuring-the-playx-core-logger);
+- skipped env files and reads before `PlayxEnv.load`;
+- secure storage fallbacks and failures (`auto` choosing another backend, an unreadable key, a lost key);
+- errors in `MapUtils` helpers when `printError` is set.
+
+Messages never include secret values. In release builds nothing is printed unless you enabled the logger.
+
+---
+
+<!-- https://playx-flutter.github.io/playx_core/testing/ -->
+# Testing
+
+How to test your own code that uses `playx_core`, and how to run this package's tests.
+
+- [A typical test setup](#a-typical-test-setup)
+- [Preferences](#preferences)
+- [Secure preferences](#secure-preferences)
+- [Environment configuration](#environment-configuration)
+- [Platform behavior](#platform-behavior)
+- [Logging](#logging)
+- [Web tests](#web-tests)
+- [Testing the `secure_env` command](#testing-the-secure_env-command)
+- [Running this package's tests](#running-this-packages-tests)
+
+## A typical test setup
+
+Boot the core with in-memory storage and no isolates, and dispose it after each test:
+
+```dart
+import 'package:flutter_test/flutter_test.dart';
+import 'package:playx_core/playx_core.dart';
+import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
+import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
+
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUp(() async {
+    PlayxPrefs.setMockInitialValues({});
+    SharedPreferencesAsyncPlatform.instance = InMemorySharedPreferencesAsync.empty();
+
+    await PlayxCore.bootCore(
+      securePrefsSettings: const PlayxSecurePrefsSettings(
+        storageType: PlayxSecureStorageType.memory,
+        clearOnReinstall: false,
+      ),
+      workerManagerSettings: const WorkManagerSettings(initWorkerManager: false),
+    );
+  });
+
+  tearDown(PlayxCore.dispose);
+
+  test('stores the counter', () async {
+    await PlayxPrefs.setInt('counter', 3);
+    expect(PlayxPrefs.getInt('counter'), 3);
+  });
+}
+```
+
+Add `shared_preferences_platform_interface` as a `dev_dependency` to use the in-memory async store.
+
+## Preferences
+
+| Store | How to prepare it in tests |
+| --- | --- |
+| `PlayxPrefs` | `PlayxPrefs.setMockInitialValues({...})`, then `await PlayxPrefs.create()` |
+| `PlayxAsyncPrefs`, `PlayxPrefsWithCache` | `SharedPreferencesAsyncPlatform.instance = InMemorySharedPreferencesAsync.empty()` (or `.withData({...})`), then `create()` |
+
+```dart
+PlayxPrefs.setMockInitialValues({'name': 'Jane'});
+await PlayxPrefs.create();
+expect(PlayxPrefs.getString('name'), 'Jane');
+```
+
+Reset between tests with `PlayxPrefs.clear()` / `dispose()`, or `PlayxCore.dispose()`.
+
+## Secure preferences
+
+Use the `memory` backend: no plugins, no platform channels.
+
+```dart
+await PlayxSecurePrefs.create(
+  securePrefsSettings: const PlayxSecurePrefsSettings(
+    storageType: PlayxSecureStorageType.memory,
+    clearOnReinstall: false,
+  ),
+);
+```
+
+`clearOnReinstall: false` avoids touching `SharedPreferences` during setup. Call `await PlayxSecurePrefs.dispose()` afterwards.
+
+To test **your fallback handling** (what happens when secure storage fails), fake the plugins' platform interfaces. This package's own tests do it, see [`test/prefs/secure_prefs_test.dart`](https://github.com/playx-flutter/playx_core/blob/main/test/prefs/secure_prefs_test.dart):
+
+```dart
+// Fakes for simple_secure_storage and flutter_secure_storage:
+SimpleSecureStoragePlatform.instance = FakeSimpleSecureStorage()..failInitialize = true;
+FlutterSecureStoragePlatform.instance = FakeFlutterSecureStorage();
+
+await PlayxSecurePrefs.create(
+  securePrefsSettings: const PlayxSecurePrefsSettings(storageType: PlayxSecureStorageType.auto),
+);
+expect(PlayxSecurePrefs.storageType, PlayxSecureStorageType.flutterSecureStorage);
+```
+
+## Environment configuration
+
+Three ways, from simplest to most realistic:
+
+**1. Set the values directly.**
+
+```dart
+PlayxEnv.setMockValues({'API_URL': 'http://localhost', 'RETRIES': '3'});
+// ...
+await PlayxEnv.dispose();
+```
+
+**2. Load `.env` text.**
+
+```dart
+PlayxEnv.loadFromString(
+  'API_URL=http://localhost\nRETRIES=3',
+  mergeWith: {'RETRIES': '5'},
+  usePlayxDefines: false,   // ignore --dart-define values of the test run
+);
+```
+
+**3. Load the real asset files.** `PlayxEnv.load` reads Flutter assets. In unit tests, serve them from memory:
+
+```dart
+void mockAssets(Map<String, String> files) {
+  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+      .setMockMessageHandler('flutter/assets', (message) async {
+    final key = utf8.decode(message!.buffer.asUint8List());
+    final content = files[Uri.decodeFull(key)];
+    if (content == null) return null;                          // missing file
+    return ByteData.sublistView(Uint8List.fromList(utf8.encode(content)));
+  });
+}
+
+setUp(() => mockAssets({
+      '.env': 'API_URL=https://api.example.com',
+      '.env.prod': 'API_URL=https://api.prod.example.com',
+    }));
+
+test('prod overrides the base', () async {
+  await PlayxEnv.load(const PlayxEnvSettings(environment: 'prod'));
+  expect(PlayxEnv.getString('API_URL'), 'https://api.prod.example.com');
+});
+```
+
+Or load the files your app actually ships, as the [example app's tests](https://github.com/playx-flutter/playx_core/blob/main/example/test/env_test.dart) do (widget tests can read real assets).
+
+**Build flags.** Tests can run with defines and flavors to cover those code paths:
+
+```sh
+flutter test --dart-define=PLAYX_ENV=prod
+flutter test --dart-define=PLAYX_DEFINES="DEBUG=true"
+flutter test --flavor staging
+```
+
+Because `usePlayxDefines` is on by default, a `PLAYX_DEFINES` value passed to the test run also applies to tests that don't expect it. Pass `usePlayxDefines: false` in such tests.
+
+**Secure env.** Build `PlayxSecureEnvData` in the test with the same codec the command uses, or point a test at the generated file of your app:
+
+```dart
+import 'generated/playx_secure_env.g.dart';
+
+await PlayxEnv.load(const PlayxEnvSettings(secureEnv: playxSecureEnv));
+expect(PlayxEnv.isSecure('STRIPE_KEY'), isTrue);
+```
+
+## Platform behavior
+
+**Platform checks** (`PlayxPlatform`) follow Flutter's override:
+
+```dart
+debugDefaultTargetPlatformOverride = TargetPlatform.android;
+addTearDown(() => debugDefaultTargetPlatformOverride = null);
+
+expect(PlayxPlatform.isAndroid, isTrue);
+```
+
+**System UI, orientation and clipboard** go through the `SystemChannels.platform` channel. Mock it to assert what is sent:
+
+```dart
+final calls = <MethodCall>[];
+TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+    .setMockMethodCallHandler(SystemChannels.platform, (call) async {
+  calls.add(call);
+  return null;
+});
+
+setOrientation(isPortrait: false);
+
+expect(calls.single.method, 'SystemChrome.setPreferredOrientations');
+expect(calls.single.arguments, ['DeviceOrientation.landscapeLeft']);
+```
+
+`WebUtils` is a no-op outside the browser, so it needs no setup in VM tests.
+
+## Logging
+
+Capture output by giving the logger an `output`:
+
+```dart
+final lines = <String>[];
+final logger = TalkerPlayxLogger(
+  settings: PlayxLoggerSettings(enabled: true, printToConsole: true, useColors: false, output: lines.add),
+  name: 'TEST',
+);
+logger.info('hello');
+expect(lines.join(), contains('hello'));
+```
+
+`PlayxLogger.setDefaultLogger(...)` with a recording `PlayxBaseLogger` lets you assert on what the package logs. See [Logging](logging.md#your-own-logger).
+
+## Web tests
+
+Code that behaves differently on the web (`WebUtils`, the WebCrypto key store, secure prefs on web) is tested in a browser:
+
+```dart
+@TestOn('browser')
+library;
+```
+
+```sh
+flutter test --platform chrome test/utils/web_utils_web_test.dart
+```
+
+## Testing the `secure_env` command
+
+The command is a function you can call from tests, with temporary directories and captured output:
+
+```dart
+import 'package:playx_core/secure_env_cli.dart';
+
+final out = StringBuffer();
+final code = await runSecureEnvCli(
+  ['--env', 'prod'],
+  environment: {'PLAYX_ENV': 'prod'},   // instead of the process environment
+  workingDirectory: tempDir.path,
+  stdoutSink: out,
+  stderrSink: StringBuffer(),
+  executableName: 'playx_core:secure_env',
+);
+expect(code, 0);
+```
+
+See [`test/env/secure_env_cli_test.dart`](https://github.com/playx-flutter/playx_core/blob/main/test/env/secure_env_cli_test.dart) for many examples, including decrypting the generated file.
+
+## Running this package's tests
+
+```sh
+flutter test                                              # VM tests
+flutter test --coverage                                   # writes coverage/lcov.info
+flutter test --platform chrome test/prefs/secure_prefs_web_test.dart \
+  test/env/secure_env_web_test.dart test/utils/web_utils_web_test.dart   # browser tests
+```
+
+Some tests only run when the matching build flag is passed, and are skipped otherwise:
+
+```sh
+flutter test test/env --dart-define=PLAYX_ENV=prod
+flutter test test/env --flavor staging
+flutter test test/env '--dart-define=PLAYX_DEFINES=PD_DEBUG=true;PD_NAME=define'
+```
+
+The `secure_env` define tests need `PLAYX_ENV_KEY` and `PLAYX_SECURE_DEFINES`; see the comments in [`test/env/secure_env_test.dart`](https://github.com/playx-flutter/playx_core/blob/main/test/env/secure_env_test.dart) for how to create them with the command.
+
+---
+
+<!-- https://playx-flutter.github.io/playx_core/migration-2.0/ -->
+# Migrating from 1.x to 2.0
+
+2.0 raises the minimum SDK and changes a few APIs, mostly in `PlayxEnv` and `PlayxSecurePrefs`. Most apps need only a handful of edits. Work through the checklist in order, then run `flutter analyze`: nearly every change below is caught at compile time.
+
+- [Checklist](#checklist)
+- [1. Upgrade Dart and Flutter](#1-upgrade-dart-and-flutter)
+- [2. PlayxEnv](#2-playxenv)
+- [3. Secure preferences settings](#3-secure-preferences-settings)
+- [4. Secure preferences on web](#4-secure-preferences-on-web)
+- [5. Smaller behavior changes](#5-smaller-behavior-changes)
+- [6. Dependencies](#6-dependencies)
+- [What did not change](#what-did-not-change)
+- [New in 2.0](#new-in-20)
+
+## Checklist
+
+| | Change | Affects you if… |
+| --- | --- | --- |
+| ☐ | Dart ≥ 3.12 and Flutter ≥ 3.44 | always |
+| ☐ | `PlayxEnv` getters are synchronous | you call `PlayxEnv.get*` / `maybeGet*` |
+| ☐ | `PlayxEnv.load` takes a `PlayxEnvSettings` | you call `PlayxEnv.load(...)` yourself |
+| ☐ | `PlayxEnv.instance` is removed | you read `PlayxEnv.instance` or `dotenv` |
+| ☐ | Bool parsing is stricter | you read bools from env or secure prefs |
+| ☐ | `PlayxSecurePrefsSettings` options are grouped | you customize secure storage options |
+| ☐ | `AndroidOptions(encryptedSharedPreferences: …)` is gone | you set it |
+| ☐ | Secure storage on web uses WebCrypto | you target web |
+| ☐ | `WebUtils.setAppTitle` takes named arguments | you call it |
+| ☐ | `context.form` returns `null` outside a `Form` | you use it |
+| ☐ | Dependency versions | your app pins `flutter_secure_storage`, `flutter_dotenv` or `get_it` |
+
+## 1. Upgrade Dart and Flutter
+
+| | 1.x | 2.0 |
+| --- | --- | --- |
+| Dart | 3.5 | **3.12** |
+| Flutter | 3.24 | **3.44** |
+
+```yaml
+environment:
+  sdk: '>=3.12.0 <4.0.0'
+  flutter: '>=3.44.0'
+```
+
+The new floor comes from `simple_secure_storage` (see [Secure preferences](secure-prefs.md)). If you can't upgrade yet, stay on 1.x.
+
+## 2. PlayxEnv
+
+`PlayxEnv` was rewritten around synchronous reads and a settings object. Details: [Environment configuration](env.md).
+
+### Getters are synchronous
+
+Values are in memory after `load`, so there is nothing to await.
+
+```dart
+// 1.x
+final url = await PlayxEnv.getString('API_URL');
+final retries = await PlayxEnv.getInt('RETRIES', fallback: 3);
+
+// 2.0
+final url = PlayxEnv.getString('API_URL');
+final retries = PlayxEnv.getInt('RETRIES', fallback: 3);
+```
+
+A leftover `await` still compiles (and `flutter analyze` flags it with `await_only_futures`), but code that treated the result as a `Future` (`.then(...)`, `Future<String>` variables) no longer compiles. Search for `PlayxEnv.` in your project.
+
+### `load` takes a `PlayxEnvSettings`
+
+```dart
+// 1.x
+await PlayxEnv.load(fileName: '.env.dev', mergeWith: {'A': '1'}, isOptional: false);
+
+// 2.0
+await PlayxEnv.load(
+  const PlayxEnvSettings(fileName: '.env.dev', mergeWith: {'A': '1'}, isOptional: false),
+);
+```
+
+`PlayxEnvSettings` keeps its four original options (`fileName`, `parser`, `mergeWith`, `isOptional`), so the `envSettings:` argument of `bootCore` needs no change.
+
+### `PlayxEnv.instance` is removed
+
+`PlayxEnv` no longer fills `flutter_dotenv`'s global `dotenv`.
+
+| 1.x | 2.0 |
+| --- | --- |
+| `PlayxEnv.instance.env` / `dotenv.env` | `PlayxEnv.all` (secure values excluded) |
+| `PlayxEnv.instance.isInitialized` | `PlayxEnv.isLoaded` |
+| `PlayxEnv.instance.isEveryDefined([...])` | `requiredKeys` in the settings, or `PlayxEnv.values.missingKeys([...]).isEmpty` |
+| `dotenv.get('KEY')` | `PlayxEnv.getString('KEY')` |
+
+### Stricter bool parsing
+
+| Value | 1.x `getBool` | 2.0 `getBool` |
+| --- | --- | --- |
+| `true`, `TRUE`, `1` | `true` | `true` |
+| `false`, `0` | `false` | `false` |
+| `yes`, `maybe`, garbage | `false` | the **fallback** (`maybeGetBool` gives `null`) |
+
+If you relied on "anything else is false", pass an explicit `fallback: false` (the default), or normalize your values.
+
+`getInt` and `getDouble` also became more lenient: `"3.9"` reads as `3` for ints and `3` as `3.0` for doubles.
+
+### Missing files and keys
+
+Missing env files are now **logged and skipped** (as before for optional files), and you can add `requiredKeys` to fail at startup with a `PlayxEnvException` listing everything that is missing.
+
+## 3. Secure preferences settings
+
+The native `flutter_secure_storage` options moved into one object, and `webOptions` was removed (see [web](#4-secure-preferences-on-web)).
+
+```dart
+// 1.x
+const PlayxSecurePrefsSettings(
+  iosOptions: IOSOptions(accessibility: KeychainAccessibility.unlocked),
+  androidOptions: AndroidOptions(encryptedSharedPreferences: true),
+);
+
+// 2.0
+const PlayxSecurePrefsSettings(
+  flutterSecureStorageOptions: PlayxFlutterSecureStorageOptions(
+    iosOptions: IOSOptions(accessibility: KeychainAccessibility.unlocked),
+    androidOptions: AndroidOptions(),
+  ),
+);
+```
+
+Moved options: `iosOptions`, `androidOptions`, `linuxOptions`, `windowsOptions`, `macOsOptions`. `clearOnReinstall` and `createSecurePrefs` are unchanged.
+
+### `encryptedSharedPreferences` is gone
+
+`flutter_secure_storage` 11 removed it and migrates existing Android data automatically on first access. Delete the argument (or the whole `AndroidOptions`).
+
+### Staying on the same storage
+
+The default is still `flutter_secure_storage`, so nothing changes about **where** your data lives. To move to the new backends, follow [Switching an existing app](secure-prefs.md#switching-an-existing-app-from-flutter_secure_storage).
+
+## 4. Secure preferences on web
+
+On web, `PlayxSecurePrefs` now encrypts with a **non-extractable WebCrypto key** kept in IndexedDB for every storage type except `memory`, instead of `flutter_secure_storage`'s web implementation (which kept its key in `localStorage`).
+
+- Existing values are **migrated automatically** on the first start.
+- Remove `webOptions` and any wrap-key configuration: there is nothing to configure now.
+- Values written directly to `PlayxSecurePrefs.securePrefs` on web are no longer where playx reads and writes. Use the `PlayxSecurePrefs` API instead.
+
+Details: [Secure preferences, Web](secure-prefs.md#web).
+
+## 5. Smaller behavior changes
+
+| Area | 1.x | 2.0 | Action |
+| --- | --- | --- | --- |
+| `WebUtils.setAppTitle` | positional on web (`setAppTitle('x')`), named on other platforms | named everywhere: `setAppTitle(title: 'x')` | Use the named form. The two forms could not compile on both platforms before. |
+| `WebUtils` on WebAssembly | silently the no-op version | the real web version | none |
+| `context.form` | threw outside a `Form` | returns `null` | none (a fix) |
+| `asListInt` / `asListIntOr` | rejected `[1, '2', 3.0]` | convert like `asListIntOrNull`: `[1, 2, 3]` | none (a fix) |
+| `PlayxSecurePrefs.maybeGetInt` / `Double` / `Bool` | `int.parse`, `double.parse`, `== 'true'` or `'1'` | `safe_convert` helpers | See [stricter bool parsing](#stricter-bool-parsing) |
+| `PlayxAsyncPrefs.maybeGet*` | async errors escaped | errors return `null` as documented | none (a fix) |
+| `clearOnReinstall` | required `PlayxPrefs` to be created | reads `SharedPreferences` itself, with the same flag | none |
+
+## 6. Dependencies
+
+| Package | 1.x | 2.0 |
+| --- | --- | --- |
+| `flutter_secure_storage` | `^10` | `^11.2` |
+| `simple_secure_storage` | not used | `^0.4.3` |
+| `flutter_dotenv` | `^6.0` | `^6.0.1` |
+| `pointycastle` | not used | `>=3.9.1 <5.0.0` |
+| `get_it` | `^9.2` | `>=8.0.0 <10.0.0` |
+| `shared_preferences` | `^2.5.5` | `>=2.3.0 <3.0.0` |
+| `equatable` | `^2.0.8` | `>=2.0.7 <4.0.0` |
+
+If `flutter pub get` reports a version conflict, check that your app doesn't pin `flutter_secure_storage` below 11. New plugins mean new native code: run a full rebuild after upgrading (`flutter clean`, and `pod install` on iOS and macOS).
+
+## What did not change
+
+- `PlayxCore.bootCore`, `getIt`, `PlayxCore.dispose`.
+- The `PlayxPrefs`, `PlayxAsyncPrefs` and `PlayxPrefsWithCache` APIs (new methods were added).
+- The `PlayxSecurePrefs` API and its default backend.
+- The `PlayxLogger` API.
+- All `safe_convert` and `safe_json_convert` functions (new optional parameters only).
+
+## New in 2.0
+
+Not required for the upgrade, but worth a look:
+
+- **More secure storage backends and a resilient `auto` mode:** [Secure preferences](secure-prefs.md).
+- **Hiding key names** with `encryptKeys`: [Secure preferences](secure-prefs.md#hiding-key-names-encryptkeys).
+- **Environments, flavors, `--dart-define` and typed getters:** [Environment configuration](env.md).
+- **Encrypted secrets** generated by a command: [Secure env](secure-env.md).
+- **Maps, lists and objects** in every preference store: [Preferences](preferences.md#maps-lists-and-objects).
+- **Padding, border and radius helpers** and more: [Extensions](extensions.md).
+- A full list in the [changelog](https://pub.dev/packages/playx_core/changelog).
